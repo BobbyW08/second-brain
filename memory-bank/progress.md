@@ -13,7 +13,7 @@
 
 ## Phase 1: Auth, Invite System & App Shell
 
-- [ ] Ticket 1-A: Invite-only signup gate
+- [x] Ticket 1-A: Invite-only signup gate
 - [ ] Ticket 1-B: App shell layout (sidebar, dark mode, mobile)
 - [ ] Ticket 1-C: User settings page
 

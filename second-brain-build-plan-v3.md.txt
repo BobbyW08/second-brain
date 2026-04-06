@@ -1,0 +1,1528 @@
+﻿Second Brain — Complete Build Plan V3
+Coding Environment: Claude Code (terminal, planning + ticketing + review) + Cline/Qwen3-235B (VS Code, actual code writing) Project folder: C:\dev\second_brain Template folder: C:\dev\coding_templates Backup/Archive folder: C:\backup-archive
+
+
+________________
+
+
+Part 0 — Project Cleanup Instructions
+Before writing a single line of new code, clean the C:\dev\second_brain folder.
+Deliver the following instructions to Claude Code or Cline in a single session. The agent should follow each step sequentially and confirm completion before moving to the next.
+
+
+________________
+
+
+
+
+Step 0-A: Audit the existing folder
+Read the full directory tree of C:\dev\second_brain recursively.
+
+
+List all files by folder. Do not delete anything yet.
+
+
+Output the full tree so I can review it.
+
+
+________________
+
+
+
+
+Step 0-B: Identify and extract template-worthy code
+Before moving anything, scan for patterns worth saving. Ask the agent to check for:
+
+
+* Any working Supabase client setup (typed client, auth helpers)
+* Any working Google OAuth flow code
+* Any .env or .env.example with the correct variable names
+* Any working TanStack Query useQuery or useMutation hooks
+* Any working RLS migration files
+* Any utility functions (date helpers, debounce, formatters)
+
+
+For each item found, the agent should:
+
+
+1. Strip project-specific names and replace with [PROJECT_NAME], [TABLE_NAME], [YOUR_VALUE] placeholders
+2. Save to the correct subfolder of C:\dev\coding_templates\
+
+
+Template folder structure:
+
+
+C:\dev\coding_templates\
+
+
+  supabase\
+
+
+    typed-client.ts          ← Supabase typed client setup
+
+
+    auth-context.tsx         ← Auth provider + hook
+
+
+    auth-hook.ts             ← useAuth() hook
+
+
+    rls-policy-template.sql  ← RLS policy block patterns
+
+
+    gen-types.sh             ← supabase gen types script
+
+
+    profiles-trigger.sql     ← new user → profiles insert trigger
+
+
+    invite-pattern.ts        ← shouldCreateUser:false + generateLink pattern
+
+
+    google-token-storage.ts  ← provider_refresh_token storage on auth callback
+
+
+  tanstack\
+
+
+    protected-route.tsx      ← beforeLoad auth guard pattern
+
+
+    query-hook.ts            ← useQuery + useMutation pattern
+
+
+    optimistic-update.ts     ← optimistic update pattern
+
+
+    server-function.ts       ← TanStack Start server function template
+
+
+  ai\
+
+
+    stream-route.ts          ← streamText + toDataStreamResponse route
+
+
+    tone-prompt.ts           ← TONE_SYSTEM_PROMPT constant
+
+
+    use-ai-context.ts        ← context builder hook
+
+
+  components\
+
+
+    auth-form.tsx            ← shadcn auth form (zod + RHF)
+
+
+    autosave-hook.ts         ← debounced useMutation autosave
+
+
+    empty-state.tsx          ← empty state with icon/title/cta
+
+
+    inline-create-input.tsx  ← inline create field pattern
+
+
+  google-calendar\
+
+
+    calendar-server-fn.ts    ← googleapis read/write server function
+
+
+    token-refresh.ts         ← offline access + refresh token pattern
+
+
+  env\
+
+
+    .env.example             ← all required env variable names
+
+
+________________
+
+
+
+
+Step 0-C: Move old code to archive
+After saving templates, move everything from C:\dev\second_brain to C:\backup-archive\second_brain_old_[DATE].
+
+
+Command for the agent:
+
+
+Move all contents of C:\dev\second_brain to C:\backup-archive\second_brain_old_[today's date].
+
+
+Do NOT delete the C:\dev\second_brain folder itself — just empty it.
+
+
+Confirm each subfolder was moved before proceeding.
+
+
+________________
+
+
+
+
+Step 0-D: Verify the folder is clean
+List the contents of C:\dev\second_brain.
+
+
+It should be empty (or contain only a .git folder if version control was initialized).
+
+
+Confirm it is ready for a fresh project scaffold.
+
+
+________________
+
+
+
+
+Step 0-E: Initialize the new project
+Clone the repo https://github.com/domgaulton/tanstack-start-supabase-auth-protected-routes
+
+
+into C:\dev\second_brain.
+
+
+Rename the project in package.json to "second-brain".
+
+
+Delete the cloned repo's .git folder and run git init to start fresh version control.
+
+
+Run npm install to verify all dependencies resolve.
+
+
+________________
+
+
+
+
+Step 0-F: Create CLAUDE.md and Cline memory bank
+Create C:\dev\second_brain\CLAUDE.md:
+
+
+# Second Brain Project
+
+
+## Stack
+
+
+TanStack Start + Nitro | Supabase (PostgreSQL + RLS + Auth + Realtime) | shadcn/ui + Tailwind v4 | FullCalendar v6 | BlockNote + @blocknote/xl-ai | Zustand | Vercel AI SDK | assistant-ui | react-arborist | Sonner
+
+
+## Hard Rules
+
+
+- No Vite config. No separate api/ folder. All server logic in TanStack Start server functions.
+
+
+- All Supabase calls use .throwOnError(). Never swallow errors silently.
+
+
+- TONE: Never use "overdue", "late", "missed", "behind", "you should", "you need to", "failed", "incomplete" in any JSX, variable names, comments, or UI copy.
+
+
+- Block size S/M/L = visual height only. Never a timer. Never evaluative.
+
+
+- Every AI route MUST import TONE_SYSTEM_PROMPT from src/lib/aiConstants.ts. Never inline the system prompt.
+
+
+- After completing each phase, save reusable patterns to C:\dev\coding_templates\ with placeholders.
+
+
+- Use Zustand for client state. Use TanStack Query for server state. Never mix them.
+
+
+## File Naming Conventions
+
+
+- Components: PascalCase → src/components/[feature]/ComponentName.tsx
+
+
+- Queries: camelCase → src/queries/featureName.ts
+
+
+- Hooks: useCamelCase → src/hooks/useHookName.ts
+
+
+- Server functions: camelCase → src/server/serverFnName.ts
+
+
+- Types: PascalCase → src/types/TypeName.ts
+
+
+- Constants: SCREAMING_SNAKE_CASE for values, camelCase for objects
+
+
+## Template Saves
+
+
+After each phase ticket is complete and accepted, extract reusable patterns to:
+
+
+C:\dev\coding_templates\[subfolder]\template-name.ts
+
+
+Strip all project-specific names. Add [PLACEHOLDER] comments everywhere a value changes per project.
+
+
+Create Cline memory bank:
+
+
+Create the following files in C:\dev\second_brain\memory-bank\:
+
+
+  projectbrief.md   → Purpose: invite-only personal productivity app (Second Brain). Stack summary. Core tone rule.
+
+
+  techContext.md    → Full stack list, key library versions, folder structure, env variable names.
+
+
+  activeContext.md  → Current ticket being worked. Last completed ticket. Next 3 tickets queued.
+
+
+  progress.md       → Checklist of all phases and tickets. Check off as completed.
+
+
+  decisionLog.md    → Record why each major tool was chosen over alternatives.
+
+
+________________
+
+
+Part 1 — Architecture & Technology Stack
+Confirmed Stack (No Vite — No Exceptions)
+Layer
+	Tool
+	Version
+	Reason
+	Framework
+	TanStack Start + Nitro
+	latest
+	SSR + server functions + Vercel deploy without separate API folder
+	Routing
+	TanStack Router
+	latest
+	File-based, type-safe, beforeLoad auth guard
+	Database
+	Supabase PostgreSQL
+	—
+	Free tier, RLS, Auth, Realtime, Storage
+	Auth
+	Supabase Auth
+	—
+	Google OAuth, invite-only, magic links, sessions
+	UI components
+	shadcn/ui
+	latest
+	Tailwind v4, copy-paste, fully owned
+	Styling
+	Tailwind CSS v4
+	4.x
+	Utility-first, responsive prefixes
+	Calendar
+	FullCalendar v6 React
+	6.x
+	timeGrid, drag-drop, external drag, nowIndicator
+	Block editor
+	BlockNote
+	latest
+	Slash commands, drag-drop blocks, custom content types
+	AI editor
+	@blocknote/xl-ai
+	latest
+	AI toolbar + /ai command + streaming — GPL-3
+	Folder tree
+	react-arborist
+	latest
+	Drag-drop, inline rename, keyboard nav — MIT
+	AI chat UI
+	assistant-ui
+	latest
+	Streaming thread UI, markdown, WAI-ARIA — MIT
+	AI SDK
+	Vercel AI SDK
+	latest
+	streamText, useChat, useCompletion, Anthropic adapter
+	AI model
+	Anthropic Claude
+	API
+	claude-3-5-sonnet for chat; claude-3-haiku for suggestions
+	State (client)
+	Zustand
+	latest
+	Persist, devtools, zero boilerplate
+	State (server)
+	TanStack Query
+	latest
+	Caching, invalidation, optimistic updates
+	Forms
+	React Hook Form + zod
+	latest
+	Type-safe validation, shadcn Form integration
+	Toasts
+	Sonner (shadcn)
+	latest
+	Non-blocking, undo button, promise handling
+	Linting
+	Biome
+	latest
+	ESLint + Prettier replacement, faster
+	Testing
+	Vitest
+	latest
+	Unit tests for pure functions (date logic, etc.)
+	Deployment
+	Vercel Hobby
+	free
+	Nitro adapter handles SSR + edge functions
+	
+
+________________
+
+
+Part 2 — Database Schema
+Core Tables
+-- Users (managed by Supabase Auth)
+
+
+-- profiles: extended user data
+
+
+create table profiles (
+
+
+  id uuid references auth.users on delete cascade primary key,
+
+
+  email text not null,
+
+
+  display_name text,
+
+
+  avatar_url text,
+
+
+  google_access_token text,        -- encrypted at rest
+
+
+  google_refresh_token text,       -- encrypted at rest
+
+
+  google_token_expiry timestamptz,
+
+
+  google_calendar_id text,
+
+
+  tone_preference text default 'encouraging',
+
+
+  ai_usage_count integer default 0,
+
+
+  created_at timestamptz default now(),
+
+
+  updated_at timestamptz default now()
+
+
+);
+
+
+-- folders: nested hierarchy for pages
+
+
+create table folders (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  parent_id uuid references folders(id) on delete cascade,
+
+
+  name text not null,
+
+
+  icon text,
+
+
+  position integer default 0,
+
+
+  created_at timestamptz default now()
+
+
+);
+
+
+-- pages: rich text content nodes
+
+
+create table pages (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  folder_id uuid references folders(id) on delete set null,
+
+
+  title text not null default 'Untitled',
+
+
+  content jsonb,                   -- BlockNote JSON
+
+
+  page_type text default 'page',  -- 'page' | 'journal'
+
+
+  journal_date date,               -- for journal pages
+
+
+  is_pinned boolean default false,
+
+
+  created_at timestamptz default now(),
+
+
+  updated_at timestamptz default now()
+
+
+);
+
+
+-- tasks: priority bucket items
+
+
+create table tasks (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  title text not null,
+
+
+  priority text not null,          -- 'urgent' | 'important' | 'someday'
+
+
+  block_size text not null default 'M', -- 'S' | 'M' | 'L' (visual only)
+
+
+  status text default 'active',    -- 'active' | 'completed_today' | 'archived'
+
+
+  completed_at timestamptz,
+
+
+  position integer default 0,
+
+
+  notes jsonb,                     -- optional BlockNote JSON
+
+
+  created_at timestamptz default now(),
+
+
+  updated_at timestamptz default now()
+
+
+);
+
+
+-- calendar_blocks: scheduled time slots
+
+
+create table calendar_blocks (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  task_id uuid references tasks(id) on delete set null,
+
+
+  title text not null,
+
+
+  start_time timestamptz not null,
+
+
+  end_time timestamptz not null,
+
+
+  block_type text default 'task',  -- 'task' | 'event' | 'focus' | 'break'
+
+
+  google_event_id text,
+
+
+  color text,
+
+
+  is_synced boolean default false,
+
+
+  created_at timestamptz default now(),
+
+
+  updated_at timestamptz default now()
+
+
+);
+
+
+-- tables_schema: dynamic field tables
+
+
+create table tables_schema (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  folder_id uuid references folders(id) on delete set null,
+
+
+  name text not null,
+
+
+  columns jsonb not null default '[]', -- array of { id, name, type, options }
+
+
+  created_at timestamptz default now()
+
+
+);
+
+
+-- table_rows: rows for dynamic tables
+
+
+create table table_rows (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  table_id uuid references tables_schema(id) on delete cascade,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  data jsonb not null default '{}',
+
+
+  notes jsonb,                     -- optional BlockNote JSON for row detail
+
+
+  position integer default 0,
+
+
+  created_at timestamptz default now(),
+
+
+  updated_at timestamptz default now()
+
+
+);
+
+
+-- links: bidirectional page/item linking
+
+
+create table links (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  source_type text not null,       -- 'page' | 'task' | 'table_row'
+
+
+  source_id uuid not null,
+
+
+  target_type text not null,
+
+
+  target_id uuid not null,
+
+
+  created_at timestamptz default now()
+
+
+);
+
+
+-- invites: admin-issued invite tokens
+
+
+create table invites (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  email text not null unique,
+
+
+  token text not null unique,
+
+
+  used boolean default false,
+
+
+  invited_by uuid references profiles(id),
+
+
+  created_at timestamptz default now(),
+
+
+  expires_at timestamptz default (now() + interval '7 days')
+
+
+);
+
+
+-- ai_usage: per-user AI consumption tracking
+
+
+create table ai_usage (
+
+
+  id uuid default gen_random_uuid() primary key,
+
+
+  user_id uuid references profiles(id) on delete cascade,
+
+
+  feature text not null,           -- 'chat' | 'writing' | 'scheduling' | 'journal'
+
+
+  tokens_used integer,
+
+
+  created_at timestamptz default now()
+
+
+);
+
+
+RLS Policies (apply to all tables)
+-- Enable RLS on all tables
+
+
+alter table profiles enable row level security;
+
+
+alter table folders enable row level security;
+
+
+alter table pages enable row level security;
+
+
+alter table tasks enable row level security;
+
+
+alter table calendar_blocks enable row level security;
+
+
+alter table tables_schema enable row level security;
+
+
+alter table table_rows enable row level security;
+
+
+alter table links enable row level security;
+
+
+alter table ai_usage enable row level security;
+
+
+-- Standard pattern (repeat for each table):
+
+
+create policy "Users can only see their own [table]"
+
+
+  on [table] for all
+
+
+  using (auth.uid() = user_id);
+
+
+________________
+
+
+Part 3 — Phase Plan
+Phase 0: Project Setup (1 session)
+Ticket 0-A: Clone starter repo and initialize project
+
+
+* Clone domgaulton/tanstack-start-supabase-auth-protected-routes
+* Rename project in package.json to second-brain
+* Reset git history: delete .git, run git init
+* Install all dependencies: npm install
+* Verify dev server runs: npm run dev
+
+
+Ticket 0-B: Configure Supabase project
+
+
+* Create new Supabase project
+* Enable Google OAuth in Supabase Auth dashboard
+* Run all database migrations from Part 2 schema above
+* Enable RLS on all tables
+* Run supabase gen types typescript --project-id [id] > src/types/database.types.ts
+* Create .env.local with all required variables (see template)
+
+
+Ticket 0-C: Configure Google OAuth scopes
+
+
+* In Supabase dashboard → Auth → Providers → Google: add scope https://www.googleapis.com/auth/calendar
+* In signInWithOAuth call: add options: { queryParams: { access_type: 'offline', prompt: 'consent' } }
+* In auth callback: extract provider_refresh_token from session and save to profiles table
+* Test full Google OAuth flow
+
+
+Ticket 0-D: Create CLAUDE.md and memory bank
+
+
+* Create CLAUDE.md at project root using template in Part 0 above
+* Create memory-bank/ folder with all 5 files
+* Test: open Cline in VS Code, ask it to "read memory bank" — verify it reads all files
+
+
+Acceptance criteria: Dev server runs. Supabase connection works. Google OAuth login completes. profiles row created. provider_refresh_token stored.
+
+
+TEMPLATE SAVE (0-B): Extract typed Supabase client, auth callback with token storage, gen-types.sh script, and RLS policy block to C:\dev\coding_templates\supabase\
+
+
+________________
+
+
+
+
+Phase 1: Auth, Invite System & App Shell (2–3 sessions)
+Ticket 1-A: Invite-only signup gate
+
+
+* Set shouldCreateUser: false on signInWithOtp and Google OAuth
+* Build /admin/invite page (protected, admin email check only)
+* Use supabase.auth.admin.generateLink({ type: 'invite', email }) to generate invite links
+* Send invite via email (Supabase built-in email or Resend)
+* Test: non-invited email cannot create account
+
+
+Ticket 1-B: App shell layout
+
+
+* Build AppLayout.tsx using shadcn SidebarProvider + Sidebar components
+* Left panel: collapsible folder/nav tree (placeholder for Phase 4)
+* Main content area: <Outlet /> from TanStack Router
+* Top bar: user avatar, ⌘K search trigger (placeholder), notifications bell
+* Mobile: sidebar collapses to bottom nav sheet
+* Dark mode: shadcn ThemeProvider with localStorage persistence
+
+
+Ticket 1-C: User settings page
+
+
+* Route /settings
+* Sections: Profile (display name, avatar), Appearance (dark/light mode), AI Preferences (placeholder), Google Calendar connection status + disconnect button
+* Update profiles via Supabase update().eq('id', user.id)
+
+
+Acceptance criteria: App loads after login. Sidebar renders. Non-invited users blocked. Settings page saves changes.
+
+
+TEMPLATE SAVE (1-A): Extract invite-only pattern to C:\dev\coding_templates\supabase\invite-pattern.ts TEMPLATE SAVE (1-B): Extract app shell layout to C:\dev\coding_templates\components\app-shell.tsx
+
+
+________________
+
+
+
+
+Phase 2: Priority Bucket (Tasks) (2–3 sessions)
+Ticket 2-A: Task data layer
+
+
+* src/queries/tasks.ts: useTasksByPriority(), useCreateTask(), useMoveTask(), useCompleteTask(), useArchiveTask()
+* Zustand useTaskStore: selected task, drag state
+* TanStack Query cache key: ['tasks', userId]
+
+
+Ticket 2-B: Priority Bucket UI
+
+
+* PriorityBucket.tsx: three sections — Urgent, Important, Someday
+* TaskPill.tsx: title, block_size badge (S/M/L), complete circle button
+   * Add data attributes: data-task-id, data-title, data-block-size, data-priority
+   * These are required for Phase 3's FullCalendar Draggable — add them now
+* Inline create: click "+" or press Enter → inline <Input> appears → blur/Enter saves
+* Optimistic updates on complete and reorder
+
+
+Ticket 2-C: Completed today section
+
+
+* shadcn Collapsible for "Completed Today" section below each bucket
+* Auto-archives at midnight via Supabase scheduled function (pg_cron) or client-side on app load
+* Completed tasks show strikethrough title, muted color — no guilt indicators
+
+
+Acceptance criteria: Tasks create, reorder, complete. Sections collapse. Data persists after refresh.
+
+
+TEMPLATE SAVE (2-A): Extract TanStack Query hook pattern with optimistic update to C:\dev\coding_templates\tanstack\query-hook.ts
+
+
+________________
+
+
+
+
+Phase 3: Calendar & Scheduling (3–4 sessions)
+Ticket 3-A: FullCalendar base setup
+
+
+* Install: @fullcalendar/react, @fullcalendar/timegrid, @fullcalendar/interaction, @fullcalendar/daygrid
+* CalendarView.tsx with:
+   * Default view: timeGridThreeDay (config below)
+   * Three-day view: views: { timeGridThreeDay: { type: 'timeGrid', duration: { days: 3 }, buttonText: '3 day' } }
+   * nowIndicator: true
+   * allDaySlot: true (Anytime zone)
+   * slotMinTime: '06:00:00', slotMaxTime: '22:00:00'
+   * Header toolbar: prev,next today | timeGridDay,timeGridThreeDay,dayGridMonth
+
+
+Ticket 3-B: Morning/Afternoon/Evening zones
+
+
+* Use slotLaneContent render prop on FullCalendar
+* Check arg.time milliseconds:
+   * Before noon (< 43200000ms): inject "MORNING" label + very subtle tint
+   * 12:00–18:00: inject "AFTERNOON" label + tint
+   * After 18:00: inject "EVENING" label + tint
+* Tint is a low-opacity background color only — not a line, not a border
+
+
+Ticket 3-C: Calendar data layer
+
+
+* src/queries/calendarBlocks.ts: useCalendarBlocks(dateRange), useCreateBlock(), useUpdateBlock(), useDeleteBlock()
+* eventDrop callback → useUpdateBlock with new start_time and end_time
+* eventResize callback → useUpdateBlock with new end_time
+* eventReceive callback (from bucket drag) → useCreateBlock + useCompleteTask if block_type === 'task'
+
+
+Ticket 3-D: Drag from bucket to calendar
+
+
+* In PriorityBucket.tsx: on mount, initialize FullCalendar Draggable on the bucket container
+
+
+new Draggable(bucketEl, {
+
+
+  itemSelector: '.task-pill',
+
+
+  eventData: (el) => ({
+
+
+    id: el.dataset.taskId,
+
+
+    title: el.dataset.title,
+
+
+    duration: BLOCK_SIZE_DURATIONS[el.dataset.blockSize], // S=30m, M=60m, L=90m
+
+
+  })
+
+
+});
+
+
+* eventReceive in CalendarView.tsx → call createCalendarBlock server function
+* Do NOT use dnd-kit or react-dnd — they conflict with FullCalendar's event model
+
+
+Ticket 3-E: Create blocks directly on calendar
+
+
+* selectable: true on FullCalendar
+* select callback → opens a small Dialog (shadcn) with title input and block type selector
+* Confirm → useCreateBlock()
+
+
+Ticket 3-F: Google Calendar sync
+
+
+* TanStack Start server function: src/server/googleCalendar.ts
+* On app load: fetch Google Calendar events for ±14 days, upsert to calendar_blocks where google_event_id matches
+* On calendar_blocks create/update/delete: call Google Calendar API to mirror change
+* Token refresh: call oauth2Client.refreshAccessToken() on every API call, update google_refresh_token in profiles on refresh
+* Mark synced blocks with is_synced: true, show Google logo on FullCalendar event
+
+
+Acceptance criteria: Calendar renders 3-day view. Zone labels visible. Tasks drag from bucket to calendar and create blocks. Move and resize save. Google events appear after connect.
+
+
+TEMPLATE SAVE (3-F): Extract src/server/googleCalendar.ts to C:\dev\coding_templates\google-calendar\calendar-server-fn.ts with all project-specific values replaced
+
+
+________________
+
+
+
+
+Phase 4: Pages, Folders & Journal (3–4 sessions)
+Ticket 4-A: Folder tree
+
+
+* Install: npm install react-arborist
+* FolderTree.tsx in left sidebar panel
+* Custom FolderNode renderer: folder icon, page icon, title, ... context menu
+* Wire onCreate, onRename, onMove, onDelete to Supabase mutations
+* Create page button → useCreatePage() → navigate to /pages/[id]
+* position field updated on drag reorder
+
+
+Ticket 4-B: BlockNote page editor
+
+
+* Install: npm install @blocknote/react @blocknote/mantine
+* PageView.tsx at route /pages/$pageId
+* useCreateBlockNote({ initialContent: page.content })
+* onChange → debounced autosave (800ms) → useUpdatePage()
+* Show "Saving..." spinner during autosave in top bar
+* Custom slash commands: /link (Phase 6), /ai (Phase 7)
+* Page title: inline editable <h1> above editor, same autosave pattern
+
+
+Ticket 4-C: Journal section
+
+
+* Route: /journal
+* Auto-create journal page for current day if none exists: title = "Journal — [Day], [Month] [D]"
+* Cross-day title logic: "Journal — [Mon] – [Fri], [Month] [D–D]" (same month), "[Month D] – [Month D]" (cross-month)
+* Journal entries listed by date in left panel (most recent first)
+* Same BlockNote editor as pages
+* Write unit tests in Vitest for getJournalTitle(createdAt, updatedAt)
+
+
+Acceptance criteria: Folder tree renders. Drag reorder works. Pages save. Journal auto-creates daily entry. Title logic unit tests pass.
+
+
+TEMPLATE SAVE (4-B): Extract autosave hook to C:\dev\coding_templates\components\autosave-hook.ts
+
+
+________________
+
+
+
+
+Phase 5: Tables (3–4 sessions)
+Ticket 5-A: Table data layer
+
+
+* src/queries/tables.ts: useTables(), useCreateTable(), useTableSchema($tableId), useTableRows($tableId)
+* src/queries/tableRows.ts: useCreateRow(), useUpdateRow(), useDeleteRow()
+* Column types: text, checkbox, select, date, number, url
+
+
+Ticket 5-B: Table schema builder
+
+
+* Route: /tables/$tableId/settings
+* Add, rename, reorder, delete columns
+* Column type selector (dropdown)
+* select type: manage option list inline
+* Save schema to tables_schema.columns JSONB
+
+
+Ticket 5-C: Table view with inline editing
+
+
+* Route: /tables/$tableId
+* Use TanStack Table + shadcn Data Table as base
+* Build column renderers per type:
+   * text: <Input> on click
+   * checkbox: <Checkbox> toggle
+   * select: shadcn <Select> dropdown
+   * date: shadcn <Calendar> popover
+   * number: <Input type="number">
+   * url: <a> tag display, <Input> on edit
+* Sort, filter, column visibility via TanStack Table built-ins
+* New row: "+ Add row" button at bottom → inline empty row
+
+
+Ticket 5-D: Row detail page
+
+
+* Route: /tables/$tableId/rows/$rowId
+* Show all fields in a vertical form layout
+* BlockNote editor for row notes (same autosave pattern)
+* "← Back to table" breadcrumb
+
+
+Acceptance criteria: Tables create with custom columns. All cell types edit inline. Rows save on blur. Row detail page opens.
+
+
+________________
+
+
+
+
+Phase 6: Universal Linking & Global Search (2 sessions)
+Ticket 6-A: ⌘K global search
+
+
+* Install via npx shadcn@latest add command
+* CommandDialog.tsx: opens on ⌘K / Ctrl+K via useEffect keydown listener
+* Search groups: Pages, Tasks, Folders, Table rows
+* Each group queries Supabase ilike on title/content
+* Keyboard nav with arrow keys, Enter to navigate
+* Show type icon + title + path in each result
+
+
+Ticket 6-B: Inline page linking in BlockNote
+
+
+* Register custom LinkChip inline content type in BlockNote
+* Displays: [📄 Page Title] chip inline in editor content
+* Register /link custom slash command that opens CommandDialog in "link mode"
+* On selection: inserts LinkChip with selected item's type and id
+* Save chip data as custom BlockNote inline content JSON
+
+
+Ticket 6-C: Backlinks panel
+
+
+* In PageView.tsx: below editor, show "Linked from" section
+* Query links table for all records where target_id = page.id
+* Display as a list of linked item titles (clickable)
+* On LinkChip insert: write to links table (source_id → target_id)
+
+
+Acceptance criteria: ⌘K opens, searches, navigates. /link in BlockNote inserts chip. Backlinks panel shows references.
+
+
+________________
+
+
+
+
+Phase 7: AI Features (3–4 sessions)
+Ticket 7-A: Tone system prompt and AI constants
+
+
+* Create src/lib/aiConstants.ts
+* Define TONE_SYSTEM_PROMPT: supportive, forward-focused language. Explicitly prohibits words: overdue, late, missed, behind, failed, incomplete, you should, you need to.
+* Define AI_MODELS: { chat: 'claude-3-5-sonnet-20241022', suggestions: 'claude-3-haiku-20240307' }
+* Every AI route imports from this file — never inline system prompts
+
+
+Ticket 7-B: AI chat sidebar
+
+
+* Install: npm install assistant-ui @ai-sdk/anthropic ai
+* TanStack Start server function: src/server/aiChat.ts using streamText + toDataStreamResponse()
+* AIChatPanel.tsx using assistant-ui Thread, ThreadMessages, Composer components
+* useAIContext.ts: builds context string from current page/task/date for every message
+* Panel toggles from top bar icon; on mobile renders as full bottom sheet
+* Streaming renders word by word via useChat
+
+
+Ticket 7-C: AI writing in BlockNote
+
+
+* Install: npm install @blocknote/xl-ai
+* TanStack Start server function: src/server/aiWriting.ts (same streamText pattern)
+* Configure @blocknote/xl-ai to use the custom backend route (not direct Anthropic API key on client)
+* AI toolbar button and /ai slash command are provided by @blocknote/xl-ai automatically
+* Actions available: continue writing, summarize, rewrite, brainstorm below
+
+
+Ticket 7-D: Scheduling suggestions
+
+
+* src/server/schedulingSuggestions.ts server function
+* Input: current tasks (urgent + important), current calendar blocks for next 7 days
+* Output: array of { taskId, suggestedStart, suggestedEnd, reason } (using claude-3-haiku for cost)
+* Display as non-blocking cards above the calendar bucket — "Consider scheduling: [task] on [day] at [time]"
+* User can accept (creates block) or dismiss (hides for 24h)
+
+
+Ticket 7-E: Journal AI prompts
+
+
+* On journal page open: if page is new/empty, fetch an AI-generated prompt
+* Server function: src/server/journalPrompt.ts
+* Input: day of week, recent task completions, tone preference from profiles
+* Output: single reflective prompt in a subtle banner above editor
+* Banner has "Start writing" (focuses editor) and "Dismiss" buttons
+
+
+Ticket 7-F: AI usage tracking
+
+
+* useLogAIUsage(feature) hook: inserts to ai_usage on every AI call
+* Features tracked: chat, writing, scheduling, journal_prompt
+* In settings page: show "AI calls this month: [n]" as informational only — never as a warning or limit message
+
+
+Acceptance criteria: AI chat streams. BlockNote AI toolbar works. Scheduling suggestions render. Journal prompt appears on new entries.
+
+
+TEMPLATE SAVE (7-B): Extract streamText server function to C:\dev\coding_templates\ai\stream-route.ts TEMPLATE SAVE (7-A): Extract TONE_SYSTEM_PROMPT and aiConstants.ts structure to C:\dev\coding_templates\ai\tone-prompt.ts
+
+
+________________
+
+
+
+
+Phase 8: Polish, Mobile & Testing (2–3 sessions)
+Ticket 8-A: Toast notifications (Sonner)
+
+
+* npx shadcn@latest add sonner
+* Add <Toaster /> to root layout
+* Replace all current alert() / temporary error states with toast.success(), toast.error(), toast.warning()
+* Add undo button to task complete: toast.success("Task complete", { action: { label: "Undo", onClick: () => undoComplete(taskId) } })
+* Add undo button to task delete and block delete
+
+
+Ticket 8-B: Empty states
+
+
+* Use shadcnblocks.com empty state pattern for all empty views:
+   * No tasks in bucket: "Your [Priority] list is clear. Add something when you're ready."
+   * No pages: "Start a page — add it to a folder or leave it loose."
+   * No table rows: "Nothing here yet. Add a row to get started."
+   * New journal day: Journal prompt renders (from Ticket 7-E) — no generic empty state
+
+
+Ticket 8-C: Mobile layout
+
+
+* Test all views on 375px viewport
+* Priority Bucket: renders as bottom sheet (shadcn Drawer) triggered by floating + button
+* Calendar: initialView switches to timeGridDay on useMediaQuery('(pointer: coarse)')
+* AI Chat: renders as full-screen bottom sheet on mobile
+* Folder tree: collapses to modal sheet on mobile
+* All tap targets minimum 44×44px
+
+
+Ticket 8-D: Loading and error states
+
+
+* Add shadcn Skeleton to all data loading states
+* Add ErrorBoundary component wrapping each major view
+* Handle Supabase .throwOnError() consistently with toast.error() in a global query error handler
+
+
+Ticket 8-E: Unit tests
+
+
+* Vitest tests for:
+   * getJournalTitle() — all date range combinations
+   * buildAIContext() — correct string for each route
+   * BLOCK_SIZE_DURATIONS — correct minute values
+   * buildSchedulingPayload() — correct task/block serialization
+
+
+Acceptance criteria: All views show loading skeletons. Toasts appear on all user actions. Mobile layout functional. All Vitest tests pass.
+
+
+TEMPLATE SAVE (8-B): Extract empty state component to C:\dev\coding_templates\components\empty-state.tsx
+
+
+________________
+
+
+Part 4 — Feature Checklist Against Product Spec
+Every feature from the original product spec is mapped to a ticket:
+
+
+Product Spec Feature
+	Ticket
+	Status
+	Invite-only access
+	1-A
+	Planned
+	Google OAuth login
+	0-C
+	Planned
+	Priority Bucket (Urgent/Important/Someday)
+	2-B
+	Planned
+	Task S/M/L block size
+	2-B
+	Planned
+	Drag task from bucket to calendar
+	3-D
+	Planned
+	3-day calendar view
+	3-A
+	Planned
+	Morning/Afternoon/Evening zones
+	3-B
+	Planned
+	Move + resize calendar blocks
+	3-C
+	Planned
+	nowIndicator red line
+	3-A
+	Planned
+	"Anytime" all-day slot
+	3-A
+	Planned
+	Create blocks directly on calendar
+	3-E
+	Planned
+	Google Calendar read sync
+	3-F
+	Planned
+	Google Calendar write sync
+	3-F
+	Planned
+	Folder tree with drag reorder
+	4-A
+	Planned
+	Inline rename folders/pages
+	4-A
+	Planned
+	Rich text block editor
+	4-B
+	Planned
+	Autosave
+	4-B
+	Planned
+	Journal section
+	4-C
+	Planned
+	Journal auto-date title
+	4-C
+	Planned
+	Custom tables with column types
+	5-A/5-B/5-C
+	Planned
+	Inline cell editing
+	5-C
+	Planned
+	Row detail page with notes
+	5-D
+	Planned
+	⌘K global search
+	6-A
+	Planned
+	Inline linking (/link command)
+	6-B
+	Planned
+	Backlinks panel
+	6-C
+	Planned
+	AI chat sidebar
+	7-B
+	Planned
+	AI writing toolbar in editor
+	7-C
+	Planned
+	/ai slash command in editor
+	7-C
+	Planned
+	Scheduling suggestions
+	7-D
+	Planned
+	Journal AI prompts
+	7-E
+	Planned
+	Tone: supportive language only
+	7-A
+	Planned
+	AI usage tracking
+	7-F
+	Planned
+	Toast notifications + undo
+	8-A
+	Planned
+	Dark mode
+	1-B
+	Planned
+	Mobile layout
+	8-C
+	Planned
+	Empty states
+	8-B
+	Planned
+	Loading/error states
+	8-D
+	Planned
+	User settings
+	1-C
+	Planned
+	
+
+________________
+
+
+Part 5 — Coding Agent Workflow
+Claude Code (terminal) — Planning, Ticketing, Review
+Claude Code runs in the terminal and handles:
+
+
+1. Reviewing each ticket before Cline starts coding
+2. Breaking tickets into atomic sub-tasks if needed
+3. Reviewing completed code for correctness, CLAUDE.md compliance, and tone
+4. Updating memory-bank/activeContext.md and memory-bank/progress.md after each ticket
+
+
+Session start command for Claude Code:
+
+
+Read CLAUDE.md and memory-bank/activeContext.md.
+
+
+Tell me the current ticket and what Cline needs to do to complete it.
+
+
+Break it into the smallest possible sub-tasks.
+
+
+Session end command for Claude Code:
+
+
+Review the code Cline just wrote for Ticket [X-Y].
+
+
+Check: CLAUDE.md rules, tone compliance, .throwOnError() usage, no Vite references, template save done.
+
+
+Mark ticket complete in memory-bank/progress.md.
+
+
+Set the next ticket in memory-bank/activeContext.md.
+
+
+Cline + Qwen3 (VS Code) — Actual Coding
+Cline handles all file creation and editing. At the start of every Cline session:
+
+
+Read memory-bank/activeContext.md and memory-bank/techContext.md.
+
+
+The current ticket is [X-Y].
+
+
+Sub-tasks are: [paste from Claude Code output].
+
+
+Follow all rules in CLAUDE.md.
+
+
+Do not use Vite. Do not create files in api/. Use TanStack Start server functions only.
+
+
+After completing all sub-tasks, run the dev server and confirm no console errors.
+
+
+Avoiding Context Blowouts with Cline
+* Keep each Cline session to one ticket maximum
+* If a ticket has more than 5 sub-tasks, split it across two sessions
+* After each session, run "update memory bank" in Cline to persist progress
+* Never ask Cline to read the entire codebase — point it to specific files
+
+
+________________
+
+
+Part 6 — Environment Variables
+Create C:\dev\second_brain\.env.local with:
+
+
+# Supabase
+
+
+VITE_SUPABASE_URL=https://[project-ref].supabase.co
+
+
+VITE_SUPABASE_ANON_KEY=[anon-key]
+
+
+SUPABASE_SERVICE_ROLE_KEY=[service-role-key]   # server functions only, never client
+
+
+# Anthropic
+
+
+ANTHROPIC_API_KEY=[key]
+
+
+# Google OAuth (set in Supabase dashboard, not .env)
+
+
+# Store google tokens in profiles table, not .env
+
+
+# App
+
+
+VITE_APP_URL=http://localhost:3000             # change to Vercel URL in production
+
+
+ADMIN_EMAIL=[your-email]                       # for invite admin page access check
+
+
+Save a copy of the variable names (no values) to C:\dev\coding_templates\env\.env.example.
+
+
+________________
+
+
+Part 7 — Deployment
+Vercel setup:
+
+
+* Connect GitHub repo to Vercel
+* TanStack Start with Nitro adapter deploys automatically — no custom vercel.json needed
+* Add all .env.local variables to Vercel Environment Variables dashboard
+* Supabase: set VITE_APP_URL to Vercel production URL in Auth → URL Configuration
+
+
+No separate serverless functions folder. No separate API deployment. All handled by TanStack Start + Nitro + Vercel.

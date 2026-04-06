@@ -2,7 +2,7 @@
 
 ## Current Ticket
 
-**Ticket 1-A: Invite-only signup gate** — IN PROGRESS
+**Ticket 1-B: App shell layout** — NEXT
 
 ## Last Completed Ticket
 
