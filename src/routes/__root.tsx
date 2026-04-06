@@ -3,6 +3,7 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "../components/ui/theme-provider";
 import { AuthProvider } from "../context/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -38,6 +39,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<ThemeProvider defaultTheme="system" storageKey="second-brain-theme">
 					<AuthProvider>
 						{children}
+						<Toaster />
 						<TanStackDevtools
 							config={{
 								position: "bottom-right",

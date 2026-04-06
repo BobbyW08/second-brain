@@ -833,42 +833,596 @@ ________________
 
 
 
+Here's the updated Phase 1 section to drop in — replace everything from ### Phase 1: Auth, Invite System & App Shell (2–3 sessions) through the end of that phase (stopping before ### Phase 2):
+
 Phase 1: Auth, Invite System & App Shell (2–3 sessions)
-Ticket 1-A: Invite-only signup gate
 
+Ticket 1-A: Invite-Only Signup Gate
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before 
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
 
-* Set shouldCreateUser: false on signInWithOtp and Google OAuth
-* Build /admin/invite page (protected, admin email check only)
-* Use supabase.auth.admin.generateLink({ type: 'invite', email }) to generate invite links
-* Send invite via email (Supabase built-in email or Resend)
-* Test: non-invited email cannot create account
+---
 
+TICKET 1-A: Invite-Only Signup Gate
+Project folder: C:\dev\second_brain
+Current phase: Phase 1 — Auth, Invite System & App Shell
 
-Ticket 1-B: App shell layout
+---
 
+CONTEXT
 
-* Build AppLayout.tsx using shadcn SidebarProvider + Sidebar components
-* Left panel: collapsible folder/nav tree (placeholder for Phase 4)
-* Main content area: <Outlet /> from TanStack Router
-* Top bar: user avatar, ⌘K search trigger (placeholder), notifications bell
-* Mobile: sidebar collapses to bottom nav sheet
-* Dark mode: shadcn ThemeProvider with localStorage persistence
+The app is invite-only. Nobody can create an account unless an admin has generated an 
+invite for their email address. This is enforced at the Supabase Auth level — not just 
+a UI gate. The starter repo is already cloned, running, and all dependencies from this 
+ticket have already been installed by Claude Code. Do not run any installs. Go straight 
+to writing code.
 
+All of the following are already installed and ready to use:
+- @supabase/supabase-js
+- @tanstack/react-query
+- The TanStack Start createServerFn API is available via the framework
 
-Ticket 1-C: User settings page
+---
 
+SUB-TASKS
 
-* Route /settings
-* Sections: Profile (display name, avatar), Appearance (dark/light mode), AI Preferences (placeholder), Google Calendar connection status + disconnect button
-* Update profiles via Supabase update().eq('id', user.id)
+1. LOCK DOWN OPEN SIGNUPS
 
+Find every place in the codebase where signInWithOtp or signInWithOAuth is called.
+Add shouldCreateUser: false to each call's options object.
 
-Acceptance criteria: App loads after login. Sidebar renders. Non-invited users blocked. Settings page saves changes.
+For signInWithOAuth (Google), the full options block must look like this:
 
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      scopes: 'https://www.googleapis.com/auth/calendar',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+      shouldCreateUser: false,
+    },
+  })
 
-TEMPLATE SAVE (1-A): Extract invite-only pattern to C:\dev\coding_templates\supabase\invite-pattern.ts TEMPLATE SAVE (1-B): Extract app shell layout to C:\dev\coding_templates\components\app-shell.tsx
+This means: if the email doesn't already exist as a Supabase Auth user, the login 
+attempt is rejected. Non-invited users cannot create accounts even if they reach the 
+login page.
 
+2. BUILD THE ADMIN INVITE PAGE
 
+Create a new route at /admin/invite using TanStack Router file-based routing.
+File path: src/routes/admin/invite.tsx
+
+Protection: At the top of the route, add a beforeLoad guard that checks if the 
+logged-in user's email matches the ADMIN_EMAIL environment variable 
+(import.meta.env.VITE_ADMIN_EMAIL). If it doesn't match, redirect to '/'.
+
+The page UI is a single form:
+- Email input (text, required, type="email")
+- "Send Invite" button
+- Do NOT use HTML <form> tags. Use a controlled input with useState and an onClick 
+  handler on the button.
+- Show a success message inline after invite sends (e.g. "Invite sent to 
+  user@example.com")
+- Show an error message inline if it fails
+- After a successful invite, also display the action link on the page as a fallback: 
+  "Or copy this link manually: [link]" — useful for local testing where email 
+  delivery may not work
+
+3. CREATE THE SERVER FUNCTION FOR GENERATING INVITE LINKS
+
+File path: src/server/inviteUser.ts
+
+Use TanStack Start's createServerFn. The function takes { email: string } as input.
+
+Inside the function:
+- Create a Supabase admin client using SUPABASE_SERVICE_ROLE_KEY (never the anon 
+  key — admin operations require the service role key)
+- Call supabase.auth.admin.generateLink({ type: 'invite', email })
+- Insert a record into the invites table: 
+  { email, token: data.properties.hashed_token, invited_by: currentUserId }
+- Return the action_link from data.properties.action_link
+
+The admin client is created like this:
+  import { createClient } from '@supabase/supabase-js'
+  const adminClient = createClient(
+    import.meta.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+After generateLink succeeds, insert to the invites table:
+  await adminClient
+    .from('invites')
+    .insert({
+      email: email,
+      token: data.properties.hashed_token,
+      invited_by: currentUser.id,
+    })
+    .throwOnError()
+
+All Supabase calls end with .throwOnError(). No silent error swallowing.
+
+---
+
+FILES TO CREATE OR MODIFY
+
+- src/routes/admin/invite.tsx — new file
+- src/server/inviteUser.ts — new file
+- Whichever file(s) contain the existing signInWithOtp / signInWithOAuth calls — 
+  modify to add shouldCreateUser: false
+
+---
+
+HARD RULES REMINDER
+
+- All server logic goes in src/server/ using createServerFn. No api/ folder. No Vite.
+- All Supabase calls end with .throwOnError()
+- No HTML <form> tags — use controlled inputs and onClick handlers
+- SUPABASE_SERVICE_ROLE_KEY is used only in server functions, never on the client
+- No tone violations: avoid "failed", "missed", "you need to" in any UI copy
+
+---
+
+ACCEPTANCE CRITERIA
+
+- /admin/invite is only accessible to the admin email — all other logged-in users 
+  are redirected to '/'
+- Submitting an email generates a Supabase invite link and writes a record to the 
+  invites table
+- The generated action link is displayed on the page after a successful invite
+- A non-invited email cannot create an account via Google OAuth or magic link
+- No console errors on any of the above flows
+
+---
+
+WHEN DONE
+
+1. Run npm run dev and confirm no console errors
+2. Update memory-bank/activeContext.md: mark 1-A complete, set 1-B as current ticket
+3. Update memory-bank/progress.md: check off Ticket 1-A
+4. Save the invite pattern to C:\dev\coding_templates\supabase\invite-pattern.ts — 
+   strip all project-specific values, replace with [PROJECT_NAME], [ADMIN_EMAIL], 
+   [TABLE_NAME] placeholders
+
+Ticket 1-B: App Shell Layout
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before 
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+TICKET 1-B: App Shell Layout
+Project folder: C:\dev\second_brain
+Current phase: Phase 1 — Auth, Invite System & App Shell
+
+---
+
+CONTEXT
+
+This ticket builds the persistent layout that wraps every authenticated page in the 
+app. It is the visual skeleton — sidebar, top bar, and main content area — that all 
+future features will live inside. The folder tree in the left panel is a placeholder 
+only; the real tree is built in Phase 4. This ticket must produce a complete, 
+functional shell that looks intentional, not like scaffolding.
+
+All of the following shadcn components and packages have already been installed by 
+Claude Code. Do not run any installs. Go straight to writing code.
+
+Already installed and ready to import:
+- shadcn Sidebar → SidebarProvider, Sidebar, SidebarContent, SidebarHeader, 
+  SidebarFooter, SidebarTrigger, SidebarMenu, SidebarMenuItem
+- shadcn Drawer → Drawer, DrawerContent, DrawerTrigger
+- shadcn Avatar → Avatar, AvatarImage, AvatarFallback
+- shadcn Separator
+- shadcn Tooltip → Tooltip, TooltipContent, TooltipTrigger, TooltipProvider
+- shadcn DropdownMenu → DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, 
+  DropdownMenuItem
+- shadcn ThemeProvider + useTheme (ModeToggle pattern)
+- lucide-react (icons)
+- @tanstack/react-router → Outlet, Link, useNavigate
+
+---
+
+SUB-TASKS
+
+1. BUILD AppLayout.tsx
+
+File path: src/components/layout/AppLayout.tsx
+
+This component wraps all authenticated routes. Structure:
+
+  <SidebarProvider>
+    <div className="flex h-screen w-full overflow-hidden">
+      <AppSidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <TopBar />
+        <main className="flex-1 overflow-y-auto p-4">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  </SidebarProvider>
+
+Import Outlet from '@tanstack/react-router'.
+
+2. BUILD AppSidebar.tsx
+
+File path: src/components/layout/AppSidebar.tsx
+
+Use shadcn's Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarTrigger.
+
+Structure:
+- SidebarHeader: App name/logo text "Second Brain" + SidebarTrigger (collapse button)
+- SidebarContent:
+  - Static nav items using SidebarMenu and SidebarMenuItem, each a Link:
+    - 📅 Calendar → /calendar
+    - 📝 Pages → /pages
+    - 📓 Journal → /journal
+    - 🗃️ Tables → /tables
+  - Below nav: a section labeled "Pages" with 2–3 static dummy folder/page items 
+    showing the tree shape. No data fetching. Clearly comment: 
+    // TODO: Phase 4 — replaced by react-arborist FolderTree
+- SidebarFooter: User avatar (from Supabase auth session) + display name + settings 
+  gear icon linking to /settings
+
+The sidebar must be collapsible. SidebarTrigger handles this automatically via 
+SidebarProvider context — no custom collapse state needed.
+
+3. BUILD TopBar.tsx
+
+File path: src/components/layout/TopBar.tsx
+
+A horizontal bar at the top of the main content area (not the sidebar). Height: h-12.
+
+Contents left to right:
+- Left: Static breadcrumb text "Second Brain" — will be dynamic in a later phase
+- Center: empty
+- Right (left to right):
+  - Search icon button (magnifying glass) labeled "⌘K". onClick does nothing yet.
+    Add comment: // TODO: Phase 6 — open CommandDialog on click
+  - Bell icon button. onClick does nothing yet.
+    Add comment: // TODO: Phase 8 — notifications
+  - Theme toggle (sun/moon icon) using useTheme() — toggles light/dark/system
+  - User avatar with DropdownMenu:
+    - Shows avatar_url from Supabase session, or initials fallback from display_name
+    - Dropdown items: "Settings" (Link to /settings), "Sign out" (calls 
+      supabase.auth.signOut())
+
+All icon buttons must be at least 44×44px tap targets.
+
+4. DARK MODE
+
+Wrap the root app entry point (not just AppLayout) with ThemeProvider:
+
+  <ThemeProvider defaultTheme="system" storageKey="second-brain-theme">
+    ...
+  </ThemeProvider>
+
+The ModeToggle in TopBar reads and sets theme via useTheme(). Theme persists to 
+localStorage automatically via the storageKey prop.
+
+5. MOBILE: SIDEBAR → BOTTOM DRAWER
+
+On screens smaller than md (768px):
+- Hide AppSidebar: className="hidden md:flex" on the sidebar wrapper
+- Add a floating ☰ button: className="fixed bottom-4 right-4 md:hidden z-50"
+  - Minimum size: 44×44px
+  - Opens a shadcn Drawer from the bottom
+- Inside the Drawer: render the same nav items as AppSidebar
+- Drawer closes automatically after a nav item is tapped (call setOpen(false) in 
+  each item's onClick)
+
+6. WIRE AppLayout INTO THE AUTHENTICATED ROUTE TREE
+
+Find the authenticated route layout file in the TanStack Router file structure 
+(likely src/routes/_authenticated.tsx — check what the starter repo uses).
+
+If the file exists, modify it to render AppLayout as its component:
+
+  export const Route = createFileRoute('/_authenticated')({
+    beforeLoad: async ({ context }) => {
+      if (!context.user) throw redirect({ to: '/login' })
+    },
+    component: AppLayout,
+  })
+
+If the starter repo uses a different pattern, adapt accordingly — do not break 
+the existing auth guard, only add AppLayout as the component.
+
+---
+
+FILES TO CREATE OR MODIFY
+
+- src/components/layout/AppLayout.tsx — new file
+- src/components/layout/AppSidebar.tsx — new file
+- src/components/layout/TopBar.tsx — new file
+- src/routes/_authenticated.tsx (or equivalent) — modify to use AppLayout
+- Root app entry point — add ThemeProvider wrapper
+
+---
+
+HARD RULES REMINDER
+
+- No api/ folder. No Vite config. No installs — everything is already set up.
+- All Supabase calls (signOut, profile reads) end with .throwOnError()
+- No HTML <form> tags
+- No tone violations in any text strings, variable names, comments, or class names
+- All tap targets minimum 44×44px
+
+---
+
+ACCEPTANCE CRITERIA
+
+- App loads after login and shows sidebar + top bar + main content area
+- Sidebar collapses and expands via SidebarTrigger
+- Dark mode toggle works and persists after page refresh
+- On a 375px viewport, the sidebar is hidden and the bottom drawer trigger appears 
+  and opens correctly
+- Tapping a nav item in the mobile drawer closes the drawer
+- Sign out from the top bar avatar dropdown works
+- No console errors at 375px and 1280px viewport widths
+
+---
+
+WHEN DONE
+
+1. Run npm run dev and confirm no console errors at both 375px and 1280px
+2. Update memory-bank/activeContext.md: mark 1-B complete, set 1-C as current ticket
+3. Update memory-bank/progress.md: check off Ticket 1-B
+4. Save the app shell pattern to C:\dev\coding_templates\components\app-shell.tsx — 
+   strip all project-specific copy, replace with [APP_NAME], [NAV_ITEMS], 
+   [PLACEHOLDER] comments
+
+Ticket 1-C: User Settings Page
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before 
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+TICKET 1-C: User Settings Page
+Project folder: C:\dev\second_brain
+Current phase: Phase 1 — Auth, Invite System & App Shell
+
+---
+
+CONTEXT
+
+The settings page is where users manage their profile, appearance, and connected 
+services. It reads from and writes to the profiles table in Supabase. The app shell 
+from Ticket 1-B is already in place — this page renders inside it automatically.
+
+All packages and shadcn components needed for this ticket have already been installed 
+by Claude Code. Do not run any installs. Go straight to writing code.
+
+Already installed and ready to import:
+- react-hook-form
+- zod + @hookform/resolvers/zod
+- shadcn Form → Form, FormControl, FormField, FormItem, FormLabel, FormMessage
+- shadcn Input
+- shadcn Label
+- shadcn Button
+- shadcn Separator
+- shadcn Badge
+- shadcn Avatar → Avatar, AvatarImage, AvatarFallback
+- shadcn Sonner → toast (from 'sonner'), Toaster component
+- @tanstack/react-query → useQuery, useMutation, useQueryClient
+- @supabase/supabase-js (Supabase client already configured in the project)
+
+Toaster: confirm <Toaster /> is present in the root layout from Ticket 1-B. If it 
+is not there yet, add it now to the root layout file.
+
+---
+
+SUB-TASKS
+
+1. CREATE THE SETTINGS ROUTE
+
+File path: src/routes/settings.tsx
+
+This route sits inside the authenticated layout and is covered by the _authenticated 
+beforeLoad guard automatically. No additional auth guard needed on this file.
+
+The route renders <SettingsPage />.
+
+2. BUILD THE DATA LAYER
+
+File path: src/queries/profile.ts
+
+Create two TanStack Query hooks. All Supabase calls end with .throwOnError().
+
+useProfile(userId: string):
+  export function useProfile(userId: string) {
+    return useQuery({
+      queryKey: ['profile', userId],
+      queryFn: async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+          .throwOnError()
+        return data
+      },
+    })
+  }
+
+useUpdateProfile():
+  export function useUpdateProfile() {
+    const queryClient = useQueryClient()
+    return useMutation({
+      mutationFn: async ({ 
+        userId, 
+        updates 
+      }: { 
+        userId: string
+        updates: Partial<Profile> 
+      }) => {
+        await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId)
+          .throwOnError()
+      },
+      onSuccess: (_data, { userId }) => {
+        queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+      },
+    })
+  }
+
+Profile type comes from src/types/database.types.ts (generated from Supabase schema 
+in Phase 0). Use the correct generated type — do not define a manual Profile type.
+
+3. BUILD THE SETTINGS PAGE COMPONENT
+
+File path: src/components/settings/SettingsPage.tsx
+
+Container: max-w-2xl mx-auto px-4 py-8
+
+Page title: "Settings" as an h1 at the top.
+
+Four sections separated by shadcn Separators:
+
+---
+
+SECTION 1 — PROFILE
+
+Use React Hook Form + zod for this section.
+
+Schema:
+  const profileSchema = z.object({
+    display_name: z.string().min(1, 'Name is required').max(100),
+    avatar_url: z.string().url('Must be a valid URL').or(z.literal('')),
+  })
+
+Wire defaultValues from useProfile(). Use useEffect to reset the form when profile 
+data loads:
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        display_name: profile.display_name ?? '',
+        avatar_url: profile.avatar_url ?? '',
+      })
+    }
+  }, [profile])
+
+Fields:
+- Display name — FormField with Input
+- Avatar URL — FormField with Input
+  - Below the input: live avatar preview using shadcn Avatar
+    - If avatar_url is a valid URL, show AvatarImage
+    - If empty, show AvatarFallback with initials derived from display_name
+
+Save button: "Save profile" — triggers form submit → calls useUpdateProfile()
+
+On success: toast.success('Profile updated')
+On error: toast.error('Could not save profile. Try again.')
+
+---
+
+SECTION 2 — APPEARANCE
+
+Label "Theme" on the left, ModeToggle on the right (reuse the same toggle built in 
+Ticket 1-B using useTheme()). No save button — theme changes apply instantly.
+
+---
+
+SECTION 3 — AI PREFERENCES (PLACEHOLDER)
+
+Heading: "AI Preferences"
+Description: "Personalization options for your AI assistant will appear here."
+Badge: "Coming soon" in muted/secondary styling.
+No interactive elements. Add comment: // TODO: Phase 7 — AI preferences
+
+---
+
+SECTION 4 — CONNECTED SERVICES
+
+Read google_calendar_id and google_refresh_token from the profiles row.
+
+If both are present:
+- Show a green "Connected" badge
+- Show the google_calendar_id value in small muted text
+- Show a "Disconnect" button
+
+If either is missing:
+- Show a "Connect Google Calendar" button
+
+"Connect Google Calendar" button:
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      scopes: 'https://www.googleapis.com/auth/calendar',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+      shouldCreateUser: false,
+    },
+  })
+
+"Disconnect" button — calls useUpdateProfile() with:
+  {
+    google_access_token: null,
+    google_refresh_token: null,
+    google_token_expiry: null,
+    google_calendar_id: null,
+  }
+
+On disconnect success: toast.success('Google Calendar disconnected')
+On disconnect error: toast.error('Could not disconnect. Try again.')
+
+Does NOT revoke the OAuth token on Google's side — out of scope for MVP.
+
+---
+
+FILES TO CREATE OR MODIFY
+
+- src/routes/settings.tsx — new file
+- src/components/settings/SettingsPage.tsx — new file
+- src/queries/profile.ts — new file
+- Root layout file — confirm <Toaster /> is present; add it if missing
+
+---
+
+HARD RULES REMINDER
+
+- All Supabase calls end with .throwOnError()
+- Do not write raw <form> tags with action attributes. Use shadcn Form (which wraps 
+  React Hook Form's handleSubmit) — that is the correct pattern.
+- No tone violations anywhere — the placeholder copy above is already tone-safe, 
+  use it exactly as written
+- SUPABASE_SERVICE_ROLE_KEY is never used here — all profile reads and writes use 
+  the anon client with RLS
+- All data fetching and mutation goes through TanStack Query hooks in 
+  src/queries/profile.ts — no direct Supabase calls inside the component
+
+---
+
+ACCEPTANCE CRITERIA
+
+- /settings renders inside the app shell
+- Profile section loads display name and avatar from Supabase on mount
+- Saving profile updates the profiles row and shows a success toast
+- Refreshing the page after a save shows the updated values
+- Theme toggle works and persists across refresh (from Ticket 1-B, just verify it 
+  still works here)
+- Google Calendar section shows "Connected" + calendar ID when tokens are present
+- Google Calendar section shows "Connect" button when tokens are absent
+- Disconnect button clears all four token fields and shows a success toast
+- No console errors
+
+---
+
+WHEN DONE
+
+1. Run npm run dev and confirm no console errors
+2. Manual test: change display name → save → refresh → confirm new name persists
+3. Update memory-bank/activeContext.md: mark 1-C complete, set Ticket 2-A as next
+4. Update memory-bank/progress.md: check off Ticket 1-C and mark Phase 1 complete
+5. No template save required for this ticket
+Acceptance criteria (Phase 1): App loads after login. Sidebar renders. Non-invited users blocked. Settings page saves changes.
+TEMPLATE SAVE (1-A): Extract invite-only pattern to C:\dev\coding_templates\supabase\invite-pattern.ts
+TEMPLATE SAVE (1-B): Extract app shell layout to C:\dev\coding_templates\components\app-shell.tsx
 ________________
 
 
