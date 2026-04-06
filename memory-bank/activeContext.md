@@ -2,9 +2,15 @@
 
 ## Current Ticket
 
-**Ticket 1-B: App shell layout** — NEXT
+**Ticket 1-B: App shell layout** — CURRENT
 
 ## Last Completed Ticket
+
+**Ticket 1-A: Invite-only signup gate**
+- shouldCreateUser: false on OAuth
+- /admin/invite page (admin email check only)
+- generateLink invite flow
+- Test: non-invited email blocked
 
 **Ticket 0-C: Configure Google OAuth scopes**
 - Added Google sign-in button to login page with calendar scope, offline access, consent prompt
@@ -14,9 +20,8 @@
 
 ## Next 3 Tickets Queued
 
-1. **Ticket 1-A: Invite-only signup gate**
-2. **Ticket 1-B: App shell layout**
-3. **Ticket 1-C: User settings page**
+1. **Ticket 1-B: App shell layout**
+2. **Ticket 1-C: User settings page**
    - Add calendar scope in Supabase dashboard
    - Add offline access + prompt consent to signInWithOAuth
    - Extract provider_refresh_token in auth callback → save to profiles

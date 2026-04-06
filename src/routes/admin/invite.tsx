@@ -1,105 +1,93 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useId, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { getSessionReady } from "@/utils/supabase";
 import { inviteUser } from "@/server/inviteUser";
-import { requireAuth } from "@/utils/auth";
 
 export const Route = createFileRoute("/admin/invite")({
-	beforeLoad: async () => {
-		const session = await requireAuth();
-		if (session.user.email !== import.meta.env.VITE_ADMIN_EMAIL) {
-			throw redirect({ to: "/dashboard" });
+	async beforeLoad() {
+		const session = await getSessionReady();
+		if (!session || session.user.email !== import.meta.env.VITE_ADMIN_EMAIL) {
+			throw redirect({ to: "/" });
 		}
 	},
-	component: InvitePage,
+	component: AdminInvitePage,
 });
 
-function InvitePage() {
-	const emailId = useId();
+function AdminInvitePage() {
 	const [email, setEmail] = useState("");
-	const [message, setMessage] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
-	const [link, setLink] = useState<string | null>(null);
+	const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
+		null,
+	);
+	const [actionLink, setActionLink] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	async function handleSendInvite() {
-		if (!email) return;
-		setError(null);
+	const handleSendInvite = async () => {
 		setMessage(null);
-		setLink(null);
+		setActionLink(null);
 		setIsSubmitting(true);
 
 		try {
-			const result = await inviteUser({ data: { email } });
-			setMessage(`Invite sent to ${email}`);
-			setLink(result.link);
+			const link = await inviteUser({ email });
+			setMessage({ type: "success", text: `Invite sent to ${email}` });
+			setActionLink(link);
 			setEmail("");
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Something went wrong");
+		} catch (error) {
+			setMessage({ type: "error", text: error.message });
 		} finally {
 			setIsSubmitting(false);
 		}
-	}
+	};
 
 	return (
 		<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
-			<div className="w-full max-w-md space-y-6">
-				<div>
-					<h1 className="text-2xl font-bold">Send Invite</h1>
-					<p className="text-muted-foreground mt-1">
-						Enter an email address to send an invite link.
-					</p>
-				</div>
-
-				<div className="space-y-4">
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle className="text-2xl">Invite User</CardTitle>
+					<CardDescription>Send an invite link to a new user.</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{message && (
+						<Alert variant={message.type === "error" ? "destructive" : "default"}>
+							<AlertDescription>{message.text}</AlertDescription>
+						</Alert>
+					)}
+					{actionLink && message?.type === "success" && (
+						<Alert>
+							<AlertDescription>
+								Or copy this link manually:{" "}
+								<a href={actionLink} target="_blank" rel="noreferrer" className="underline">
+									{actionLink}
+								</a>
+							</AlertDescription>
+						</Alert>
+					)}
 					<div className="space-y-2">
-						<label htmlFor={emailId} className="block text-sm font-medium">
-							Email
-						</label>
+						<Label htmlFor="email">Email</Label>
 						<Input
-							id={emailId}
+							id="email"
 							type="email"
+							placeholder="user@example.com"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
-							placeholder="user@example.com"
+							required
 						/>
 					</div>
-
-					<Button
-						onClick={handleSendInvite}
-						className="w-full"
-						disabled={!email || isSubmitting}
-					>
-						{isSubmitting ? "Sending..." : "Send Invite"}
+					<Button onClick={handleSendInvite} disabled={isSubmitting} className="w-full">
+						{isSubmitting ? "Sending Invite..." : "Send Invite"}
 					</Button>
-
-					{message && (
-						<Alert>
-							<AlertDescription>{message}</AlertDescription>
-						</Alert>
-					)}
-
-					{error && (
-						<Alert variant="destructive">
-							<AlertDescription>{error}</AlertDescription>
-						</Alert>
-					)}
-
-					{link && (
-						<div className="rounded-md border p-4 bg-muted">
-							<p className="text-sm text-muted-foreground">
-								Copy this link manually if the email doesn't arrive:
-							</p>
-							<p className="mt-1 font-mono text-xs break-all select-all">
-								{link}
-							</p>
-						</div>
-					)}
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

@@ -71,7 +71,7 @@
 ## Template Saves Checklist
 
 - [x] 0-B: Typed Supabase client, auth callback, gen-types.sh, RLS policy → `supabase/`
-- [ ] 1-A: Invite-only pattern → `supabase/invite-pattern.ts`
+- [x] 1-A: Invite-only pattern → `supabase/invite-pattern.ts`
 - [ ] 1-B: App shell layout → `components/app-shell.tsx`
 - [ ] 2-A: TanStack Query hook with optimistic update → `tanstack/query-hook.ts`
 - [ ] 3-F: Google Calendar server function → `google-calendar/calendar-server-fn.ts`

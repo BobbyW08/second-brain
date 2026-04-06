@@ -79,6 +79,7 @@ function LoginPage() {
 					prompt: "consent",
 				},
 				redirectTo: GOOGLE_CALLBACK_URL,
+				shouldCreateUser: false,
 			},
 		});
 		if (error) setError(error.message);
