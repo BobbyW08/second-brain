@@ -15,18 +15,18 @@
 
 - [x] Ticket 1-A: Invite-only signup gate
 - [x] Ticket 1-B: App shell layout (sidebar, dark mode, mobile)
-- [ ] Ticket 1-C: User settings page
+- [x] Ticket 1-C: User settings page
 
 ## Phase 2: Priority Bucket (Tasks)
 
-- [ ] Ticket 2-A: Task data layer (queries, Zustand store)
-- [ ] Ticket 2-B: Priority Bucket UI (TaskPill with data attributes)
-- [ ] Ticket 2-C: Completed today section + auto-archive
+- [x] Ticket 2-A: Task data layer (queries, Zustand store)
+- [x] Ticket 2-B: Priority Bucket UI (TaskPill with data attributes)
+- [x] Ticket 2-C: Completed today section + auto-archive
 
 ## Phase 3: Calendar & Scheduling
 
-- [ ] Ticket 3-A: FullCalendar base setup (3-day view, nowIndicator)
-- [ ] Ticket 3-B: Morning/Afternoon/Evening zones
+- [x] Ticket 3-A: FullCalendar base setup (3-day view, nowIndicator)
+- [x] Ticket 3-B: Morning/Afternoon/Evening zones
 - [ ] Ticket 3-C: Calendar data layer (CRUD + drag/resize handlers)
 - [ ] Ticket 3-D: Drag from bucket to calendar (FullCalendar Draggable)
 - [ ] Ticket 3-E: Create blocks directly on calendar (select + Dialog)

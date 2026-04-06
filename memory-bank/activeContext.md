@@ -2,35 +2,31 @@
 
 ## Current Ticket
 
-**Ticket 1-B: App shell layout** — COMPLETED
+**Ticket 1-B: App shell layout** — CURRENT
 
 ## Last Completed Ticket
 
-**Ticket 1-A: Invite-only signup gate**
-- shouldCreateUser: false on OAuth
-- /admin/invite page (admin email check only)
-- generateLink invite flow
-- Test: non-invited email blocked
-
-**Ticket 0-C: Configure Google OAuth scopes**
-- Added Google sign-in button to login page with calendar scope, offline access, consent prompt
-- Created /auth/callback route: exchanges OAuth code, saves provider_refresh_token to profiles
-- routeTree.gen.ts updated (will auto-regenerate on next dev server start)
-- Template saved to coding_templates/supabase/google-token-storage.ts
+**Ticket 1-C: User settings page**
+- Settings page component implemented
+- Profile management
+- Theme toggle
+- Google Calendar integration
 
 ## Next 3 Tickets Queued
 
-1. **Ticket 1-C: User settings page** — CURRENT
-   - Add calendar scope in Supabase dashboard
-   - Add offline access + prompt consent to signInWithOAuth
-   - Extract provider_refresh_token in auth callback → save to profiles
-   - Test full Google OAuth flow
+1. **Ticket 2-A: Task data layer** — NEXT
+   - Task data layer with TanStack Query hooks
+   - Zustand store
+   - Block size constants
 
-3. **Ticket 1-A: Invite-only signup gate**
-   - shouldCreateUser: false on OAuth
-   - /admin/invite page (admin email check only)
-   - generateLink invite flow
-   - Test: non-invited email blocked
+2. **Ticket 2-B: Priority Bucket UI**
+   - Priority Bucket component with TaskPill components
+   - Completed today section added
+   - Auto-archive functionality already implemented
+
+3. **Ticket 2-C: Completed today section + auto-archive**
+   - Completed today section in Priority Bucket
+   - Auto-archive functionality
 
 ## Session Instructions for Cline
 

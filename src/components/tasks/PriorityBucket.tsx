@@ -1,122 +1,114 @@
-import { CheckCircle, ChevronRight, Plus } from "lucide-react";
-import { useRef, useState } from "react";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { PRIORITY_LABELS, PRIORITY_ORDER } from "@/lib/taskConstants";
-import {
-	useCompletedTodayTasks,
-	useCompleteTask,
-	useCreateTask,
-	useTasksByPriority,
-} from "@/queries/tasks";
-import { InlineTaskInput } from "./InlineTaskInput";
-import { TaskPill } from "./TaskPill";
+import { useState, useRef } from "react";
+import { useTasksByPriority } from "@/queries/tasks";
+import { useCreateTask, useCompleteTask, useCompletedTodayTasks } from "@/queries/tasks";
+import { PRIORITY_ORDER, PRIORITY_LABELS } from "@/lib/taskConstants";
+import { Plus, CalendarCheck } from "lucide-react";
+import { InlineTaskInput } from "@/components/tasks/InlineTaskInput";
+import { TaskPill } from "@/components/tasks/TaskPill";
 
 interface PriorityBucketProps {
-	userId: string;
+  userId: string;
 }
 
 export function PriorityBucket({ userId }: PriorityBucketProps) {
-	// bucketRef used by Phase 3 — FullCalendar Draggable init
-	const bucketRef = useRef<HTMLDivElement>(null);
-	const [creating, setCreating] = useState<string | null>(null);
+  const bucketRef = useRef<HTMLDivElement>(null);
+  // bucketRef used by Phase 3 — FullCalendar Draggable init
+  const [creating, setCreating] = useState<string | null>(null);
+  const tasksByPriorityQuery = useTasksByPriority(userId);
+  const completedTodayTasksQuery = useCompletedTodayTasks(userId);
+  const tasksByPriority = tasksByPriorityQuery.data ?? [];
+  const completedTodayTasks = completedTodayTasksQuery.data ?? [];
+  
+  // Group tasks by priority
+  const tasksByPriorityGrouped: Record<string, typeof tasksByPriority> = {};
+  if (tasksByPriority && Array.isArray(tasksByPriority)) {
+    tasksByPriority.forEach(task => {
+      if (!tasksByPriorityGrouped[task.priority]) {
+        tasksByPriorityGrouped[task.priority] = [];
+      }
+      tasksByPriorityGrouped[task.priority].push(task);
+    });
+  }
+  const createTask = useCreateTask();
+  const completeTask = useCompleteTask();
 
-	const { data: activeTasks = [] } = useTasksByPriority(userId);
-	const { data: completedTasks = [] } = useCompletedTodayTasks(userId);
+  const handleCreate = (title: string, priority: string) => {
+    // Get the count of tasks for this priority from the grouped data
+    const tasksForPriority = tasksByPriorityGrouped[priority] || [];
+    createTask.mutate({
+      user_id: userId,
+      title,
+      priority,
+      block_size: "M",
+      position: tasksForPriority.length,
+    });
+    setCreating(null);
+  };
 
-	const createTask = useCreateTask();
-	const completeTask = useCompleteTask(userId);
+  const handleComplete = (taskId: string) => {
+    completeTask.mutate(taskId);
+  };
 
-	async function handleCreate(title: string, priority: string) {
-		const tasksForPriority = activeTasks.filter((t) => t.priority === priority);
-		await createTask.mutateAsync({
-			user_id: userId,
-			title,
-			priority,
-			block_size: "M",
-			position: tasksForPriority.length,
-		});
-		setCreating(null);
-	}
+  return (
+    <div ref={bucketRef} className="flex flex-col gap-4">
+      {/* Completed Today Section */}
+      <section className="flex flex-col gap-1">
+        <div className="flex items-center justify-between px-2 py-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+            <CalendarCheck className="h-3 w-3" />
+            Completed Today
+          </h2>
+        </div>
+        {completedTodayTasks.length > 0 ? (
+          completedTodayTasks.map((task) => (
+            <TaskPill
+              key={task.id}
+              task={task}
+              onComplete={handleComplete}
+            />
+          ))
+        ) : (
+          <div className="px-2 py-1 text-xs text-muted-foreground">
+            No tasks completed today
+          </div>
+        )}
+      </section>
 
-	function handleComplete(taskId: string) {
-		completeTask.mutate(taskId);
-	}
+      {PRIORITY_ORDER.map((priority) => {
+        const tasksForPriority = tasksByPriorityGrouped[priority] || [];
+        return (
+          <section key={priority} className="flex flex-col gap-1">
+            <div className="flex items-center justify-between px-2 py-1">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {PRIORITY_LABELS[priority]}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setCreating(priority)}
+                aria-label="Add task"
+                className="p-1 rounded-md hover:bg-muted"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
 
-	return (
-		<div ref={bucketRef} className="flex flex-col gap-3 px-1">
-			{PRIORITY_ORDER.map((priority) => {
-				const tasksForPriority = activeTasks.filter(
-					(t) => t.priority === priority,
-				);
-				const completedForPriority = completedTasks.filter(
-					(t) => t.priority === priority,
-				);
+            {creating === priority && (
+              <InlineTaskInput
+                onSave={(title) => handleCreate(title, priority)}
+                onCancel={() => setCreating(null)}
+              />
+            )}
 
-				return (
-					<section key={priority}>
-						{/* Section header */}
-						<div className="flex items-center justify-between px-2 py-1">
-							<h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-								{PRIORITY_LABELS[priority]}
-							</h2>
-							<button
-								type="button"
-								onClick={() =>
-									setCreating(creating === priority ? null : priority)
-								}
-								aria-label={`Add task to ${PRIORITY_LABELS[priority]}`}
-								className="rounded p-0.5 hover:bg-sidebar-accent"
-							>
-								<Plus className="h-4 w-4 text-muted-foreground" />
-							</button>
-						</div>
-
-						{/* Inline create input */}
-						{creating === priority && (
-							<InlineTaskInput
-								onSave={(title) => handleCreate(title, priority)}
-								onCancel={() => setCreating(null)}
-							/>
-						)}
-
-						{/* Active task pills */}
-						{tasksForPriority.map((task) => (
-							<TaskPill key={task.id} task={task} onComplete={handleComplete} />
-						))}
-
-						{/* Completed today collapsible */}
-						<Collapsible defaultOpen={false}>
-							<CollapsibleTrigger className="flex w-full items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-								<ChevronRight className="h-3 w-3 transition-transform data-[state=open]:rotate-90" />
-								Completed today ({completedForPriority.length})
-							</CollapsibleTrigger>
-							<CollapsibleContent>
-								{completedForPriority.length === 0 ? (
-									<p className="px-2 py-1 text-xs text-muted-foreground">
-										Nothing completed in this list yet today.
-									</p>
-								) : (
-									completedForPriority.map((task) => (
-										<div
-											key={task.id}
-											className="flex items-center gap-2 px-2 py-1 opacity-50"
-										>
-											<CheckCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
-											<span className="text-sm line-through text-muted-foreground">
-												{task.title}
-											</span>
-										</div>
-									))
-								)}
-							</CollapsibleContent>
-						</Collapsible>
-					</section>
-				);
-			})}
-		</div>
-	);
+            {tasksForPriority.map((task) => (
+              <TaskPill
+                key={task.id}
+                task={task}
+                onComplete={handleComplete}
+              />
+            ))}
+          </section>
+        );
+      })}
+    </div>
+  );
 }

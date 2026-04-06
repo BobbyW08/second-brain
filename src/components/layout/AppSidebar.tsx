@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+
 import { BookOpen, CalendarDays, LogOut, Settings, Table2 } from "lucide-react";
-import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -9,7 +9,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Sidebar,
 	SidebarContent,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
+import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 
 const NAV_ITEMS = [
 	{ label: "Calendar", icon: CalendarDays, to: "/dashboard" },
@@ -69,17 +69,19 @@ export function AppSidebar() {
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
-
-				{/* Priority Bucket — task list */}
-				{user && (
-					<SidebarGroup className="flex-1 overflow-hidden">
-						<SidebarGroupContent className="h-full">
-							<ScrollArea className="h-full">
-								<PriorityBucket userId={user.id} />
-							</ScrollArea>
-						</SidebarGroupContent>
-					</SidebarGroup>
-				)}
+				
+				{/* Priority Bucket - Task List */}
+				<SidebarGroup>
+					<SidebarGroupContent>
+						{user ? (
+							<PriorityBucket userId={user.id} />
+						) : (
+							<div className="p-4 text-center text-muted-foreground">
+								Please sign in to view tasks
+							</div>
+						)}
+					</SidebarGroupContent>
+				</SidebarGroup>
 			</SidebarContent>
 
 			<SidebarFooter className="p-2">

@@ -1,0 +1,37 @@
+/* Zone background tints — applied via slotLane rows */
+.fc-timegrid-slot[data-time^="06"],
+.fc-timegrid-slot[data-time^="07"],
+.fc-timegrid-slot[data-time^="08"],
+.fc-timegrid-slot[data-time^="09"],
+.fc-timegrid-slot[data-time^="10"],
+.fc-timegrid-slot[data-time^="11"] {
+  background-color: rgba(250, 240, 200, 0.08);
+}
+
+.fc-timegrid-slot[data-time^="12"],
+.fc-timegrid-slot[data-time^="13"],
+.fc-timegrid-slot[data-time^="14"],
+.fc-timegrid-slot[data-time^="15"],
+.fc-timegrid-slot[data-time^="16"],
+.fc-timegrid-slot[data-time^="17"] {
+  background-color: rgba(200, 220, 255, 0.08);
+}
+
+.fc-timegrid-slot[data-time^="18"],
+.fc-timegrid-slot[data-time^="19"],
+.fc-timegrid-slot[data-time^="20"],
+.fc-timegrid-slot[data-time^="21"] {
+  background-color: rgba(180, 160, 220, 0.08);
+}
+
+/* Zone label styling */
+.zone-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  padding-left: 4px;
+}

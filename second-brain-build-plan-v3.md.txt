@@ -2167,96 +2167,1143 @@ ________________
 
 
 
-Phase 3: Calendar & Scheduling (3–4 sessions)
-Ticket 3-A: FullCalendar base setup
+# Phase 3: Calendar & Scheduling — Tickets 3-A through 3-F
 
+---
 
-* Install: @fullcalendar/react, @fullcalendar/timegrid, @fullcalendar/interaction, @fullcalendar/daygrid
-* CalendarView.tsx with:
-   * Default view: timeGridThreeDay (config below)
-   * Three-day view: views: { timeGridThreeDay: { type: 'timeGrid', duration: { days: 3 }, buttonText: '3 day' } }
-   * nowIndicator: true
-   * allDaySlot: true (Anytime zone)
-   * slotMinTime: '06:00:00', slotMaxTime: '22:00:00'
-   * Header toolbar: prev,next today | timeGridDay,timeGridThreeDay,dayGridMonth
+## Ticket 3-A: FullCalendar Base Setup
 
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
 
-Ticket 3-B: Morning/Afternoon/Evening zones
+---
 
+### TICKET 3-A: FullCalendar Base Setup
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
 
-* Use slotLaneContent render prop on FullCalendar
-* Check arg.time milliseconds:
-   * Before noon (< 43200000ms): inject "MORNING" label + very subtle tint
-   * 12:00–18:00: inject "AFTERNOON" label + tint
-   * After 18:00: inject "EVENING" label + tint
-* Tint is a low-opacity background color only — not a line, not a border
+---
 
+### VERIFICATION — READ BEFORE WRITING ANY CODE
 
-Ticket 3-C: Calendar data layer
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else (`C:\dev`, `C:\Users\robwa`, etc.), your terminal is in the wrong location.
+Do not run any commands until this is correct. Open a new terminal rooted at `C:\dev\second_brain` if needed.
 
+**Step 2 — Install the FullCalendar packages (this ticket only — these are the ONLY installs in Phase 3).**
+Run this single command from `C:\dev\second_brain`:
 
-* src/queries/calendarBlocks.ts: useCalendarBlocks(dateRange), useCreateBlock(), useUpdateBlock(), useDeleteBlock()
-* eventDrop callback → useUpdateBlock with new start_time and end_time
-* eventResize callback → useUpdateBlock with new end_time
-* eventReceive callback (from bucket drag) → useCreateBlock + useCompleteTask if block_type === 'task'
+```
+npm install @fullcalendar/react @fullcalendar/timegrid @fullcalendar/interaction @fullcalendar/daygrid
+```
 
+The `.npmrc` file already contains `legacy-peer-deps=true`, so this install will resolve cleanly. Do not add `--legacy-peer-deps` manually — it is already handled.
 
-Ticket 3-D: Drag from bucket to calendar
+After installing, do not run any further `npm install` commands for any other ticket in Phase 3. All other dependencies are pre-installed.
 
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`. Running `cd second_brain` will silently drop you into a parent directory with a different `package.json` — this causes "Missing script" errors.
 
-* In PriorityBucket.tsx: on mount, initialize FullCalendar Draggable on the bucket container
+To verify your work, run these two commands only:
 
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
 
-new Draggable(bucketEl, {
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
 
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
 
-  itemSelector: '.task-pill',
+---
 
+### CONTEXT
 
-  eventData: (el) => ({
+This ticket sets up the FullCalendar base component that all calendar features in
+Phase 3 depend on. No drag, no zones, no data layer yet — just the calendar rendering
+correctly with the right view configuration. Get this right before any other Phase 3
+ticket begins.
 
+---
 
-    id: el.dataset.taskId,
+### SUB-TASKS
 
+#### 1. CREATE CalendarView.tsx
 
-    title: el.dataset.title,
+File path: `src/components/calendar/CalendarView.tsx`
 
+```tsx
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import dayGridPlugin from '@fullcalendar/daygrid'
 
-    duration: BLOCK_SIZE_DURATIONS[el.dataset.blockSize], // S=30m, M=60m, L=90m
+export function CalendarView() {
+  return (
+    <FullCalendar
+      plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
+      initialView="timeGridThreeDay"
+      views={{
+        timeGridThreeDay: {
+          type: 'timeGrid',
+          duration: { days: 3 },
+          buttonText: '3 day',
+        },
+      }}
+      nowIndicator={true}
+      allDaySlot={true}
+      slotMinTime="06:00:00"
+      slotMaxTime="22:00:00"
+      headerToolbar={{
+        left: 'prev,next today',
+        center: 'title',
+        right: 'timeGridDay,timeGridThreeDay,dayGridMonth',
+      }}
+      height="100%"
+    />
+  )
+}
+```
 
+#### 2. WIRE CalendarView INTO THE APP LAYOUT
 
+Place `<CalendarView />` in the main content area of the app shell (right of the
+sidebar). Replace the placeholder route content from Ticket 2-B's `/tasks` route
+or whatever placeholder currently occupies the main panel.
+
+Add a comment: `// TODO: Ticket 3-D — eventReceive wired here for bucket drag`
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/components/calendar/CalendarView.tsx` — new file
+- App layout/route file — wire CalendarView into main panel
+
+---
+
+### HARD RULES REMINDER
+
+- No tone violations in variable names, comments, or string values
+- Do not run additional `npm install` commands beyond the one specified above
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- Calendar renders in the main panel with the 3-day view as default
+- Three-day, day, and month view buttons appear in the toolbar
+- `nowIndicator` is visible
+- `allDaySlot` row is visible at the top
+- Time slots run from 06:00 to 22:00
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Update `memory-bank/activeContext.md`: mark 3-A complete, set 3-B as current ticket
+4. Update `memory-bank/progress.md`: check off Ticket 3-A
+
+---
+---
+
+## Ticket 3-B: Morning / Afternoon / Evening Zones
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 3-B: Morning / Afternoon / Evening Zones
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else, your terminal is in the wrong location. Do not proceed until corrected.
+
+**Step 2 — Do not run `npm install`.** All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true`.
+
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
+
+---
+
+### CONTEXT
+
+This ticket adds visual zone labels (Morning, Afternoon, Evening) to the FullCalendar
+time grid using the `slotLaneContent` render prop. No new packages needed — this is
+purely a render customization on the existing CalendarView from Ticket 3-A.
+
+---
+
+### SUB-TASKS
+
+#### 1. ADD slotLaneContent TO CalendarView.tsx
+
+Modify `src/components/calendar/CalendarView.tsx`.
+
+Add the `slotLaneContent` prop to `<FullCalendar>`:
+
+```tsx
+slotLaneContent={(arg) => {
+  const ms = arg.time.milliseconds
+
+  const NOON = 12 * 60 * 60 * 1000       // 43200000ms
+  const EVENING = 18 * 60 * 60 * 1000    // 64800000ms
+
+  // Only inject label at the start of each zone, not every slot
+  const isMorningStart = ms === 6 * 60 * 60 * 1000   // 06:00
+  const isAfternoonStart = ms === NOON                 // 12:00
+  const isEveningStart = ms === EVENING                // 18:00
+
+  if (isMorningStart) {
+    return (
+      <div className="zone-label zone-label--morning">
+        Morning
+      </div>
+    )
+  }
+  if (isAfternoonStart) {
+    return (
+      <div className="zone-label zone-label--afternoon">
+        Afternoon
+      </div>
+    )
+  }
+  if (isEveningStart) {
+    return (
+      <div className="zone-label zone-label--evening">
+        Evening
+      </div>
+    )
+  }
+  return null
+}}
+```
+
+#### 2. ADD ZONE TINT STYLES
+
+Add tint styles via CSS. Place in `src/styles/calendar.css` (create if it doesn't
+exist) and import it in `CalendarView.tsx`.
+
+The tint is a low-opacity background only — no borders, no lines.
+
+```css
+/* Zone background tints — applied via slotLane rows */
+.fc-timegrid-slot[data-time^="06"],
+.fc-timegrid-slot[data-time^="07"],
+.fc-timegrid-slot[data-time^="08"],
+.fc-timegrid-slot[data-time^="09"],
+.fc-timegrid-slot[data-time^="10"],
+.fc-timegrid-slot[data-time^="11"] {
+  background-color: rgba(250, 240, 200, 0.08);
+}
+
+.fc-timegrid-slot[data-time^="12"],
+.fc-timegrid-slot[data-time^="13"],
+.fc-timegrid-slot[data-time^="14"],
+.fc-timegrid-slot[data-time^="15"],
+.fc-timegrid-slot[data-time^="16"],
+.fc-timegrid-slot[data-time^="17"] {
+  background-color: rgba(200, 220, 255, 0.08);
+}
+
+.fc-timegrid-slot[data-time^="18"],
+.fc-timegrid-slot[data-time^="19"],
+.fc-timegrid-slot[data-time^="20"],
+.fc-timegrid-slot[data-time^="21"] {
+  background-color: rgba(180, 160, 220, 0.08);
+}
+
+/* Zone label styling */
+.zone-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  padding-left: 4px;
+}
+```
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/components/calendar/CalendarView.tsx` — add `slotLaneContent` prop
+- `src/styles/calendar.css` — new file (zone tints and label styles)
+
+---
+
+### HARD RULES REMINDER
+
+- Tint is background-color only — no borders, no lines, no shadows
+- Zone labels are informational — do not use language implying urgency or pressure
+- No tone violations
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- "Morning", "Afternoon", "Evening" labels appear at 06:00, 12:00, and 18:00 rows
+- Labels are visually subtle (low opacity)
+- Each zone has a distinct very-low-opacity background tint
+- No borders or lines added between zones
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Update `memory-bank/activeContext.md`: mark 3-B complete, set 3-C as current ticket
+4. Update `memory-bank/progress.md`: check off Ticket 3-B
+
+---
+---
+
+## Ticket 3-C: Calendar Data Layer
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 3-C: Calendar Data Layer
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else, your terminal is in the wrong location. Do not proceed until corrected.
+
+**Step 2 — Do not run `npm install`.** All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true`.
+
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
+
+---
+
+### CONTEXT
+
+This ticket builds the data layer for calendar blocks. No UI changes — only hooks
+and callbacks. Ticket 3-D wires the drag interaction; this ticket only provides the
+query/mutation layer that 3-D and 3-E will consume.
+
+Already installed and ready to import:
+- `@supabase/supabase-js` (client already configured)
+- `@tanstack/react-query` → `useQuery`, `useMutation`, `useQueryClient`
+
+---
+
+### SUB-TASKS
+
+#### 1. BUILD THE CALENDAR BLOCK QUERY HOOKS
+
+File path: `src/queries/calendarBlocks.ts`
+
+All Supabase calls end with `.throwOnError()`.
+
+**useCalendarBlocks(dateRange: { start: string, end: string })**
+Query key: `['calendar-blocks', dateRange.start, dateRange.end]`
+
+```ts
+export function useCalendarBlocks(dateRange: { start: string; end: string }) {
+  return useQuery({
+    queryKey: ['calendar-blocks', dateRange.start, dateRange.end],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('calendar_blocks')
+        .select('*')
+        .gte('start_time', dateRange.start)
+        .lte('end_time', dateRange.end)
+        .throwOnError()
+      return data
+    },
+  })
+}
+```
+
+**useCreateBlock()**
+Inserts a new calendar block.
+Input: `{ title, start_time, end_time, block_type, task_id?, user_id }`
+On success: invalidate `['calendar-blocks']`
+
+**useUpdateBlock()**
+Updates an existing block.
+Input: `{ blockId: string, updates: Partial<CalendarBlock> }`
+On success: invalidate `['calendar-blocks']`
+Used by `eventDrop` (new `start_time` + `end_time`) and `eventResize` (new `end_time`).
+
+**useDeleteBlock()**
+Deletes a block by ID.
+Input: `blockId: string`
+On success: invalidate `['calendar-blocks']`
+
+`CalendarBlock` type comes from `src/types/database.types.ts`. Use the generated
+type — do not define a manual type.
+
+#### 2. WIRE EVENT CALLBACKS INTO CalendarView.tsx
+
+Modify `src/components/calendar/CalendarView.tsx`.
+
+Import and call the hooks. Add these callback props to `<FullCalendar>`:
+
+```tsx
+// eventDrop — user drags an existing event to a new time
+eventDrop={(info) => {
+  updateBlock({
+    blockId: info.event.id,
+    updates: {
+      start_time: info.event.startStr,
+      end_time: info.event.endStr,
+    },
+  })
+}}
+
+// eventResize — user resizes an existing event
+eventResize={(info) => {
+  updateBlock({
+    blockId: info.event.id,
+    updates: {
+      end_time: info.event.endStr,
+    },
+  })
+}}
+
+// eventReceive — block dragged in from bucket (Ticket 3-D wires the source)
+// Add a comment: // TODO: Ticket 3-D — full eventReceive logic added here
+eventReceive={(info) => {
+  console.log('eventReceive stub — wired in Ticket 3-D', info.event)
+  info.revert() // revert until 3-D is wired
+}}
+```
+
+Pass `events` from `useCalendarBlocks` to the `events` prop, mapping each block to
+FullCalendar's event shape:
+```ts
+events={(calendarBlocks ?? []).map(block => ({
+  id: block.id,
+  title: block.title,
+  start: block.start_time,
+  end: block.end_time,
+  extendedProps: { block_type: block.block_type, task_id: block.task_id },
+}))}
+```
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/queries/calendarBlocks.ts` — new file
+- `src/components/calendar/CalendarView.tsx` — add event callbacks and data binding
+
+---
+
+### HARD RULES REMINDER
+
+- All Supabase calls end with `.throwOnError()`
+- No tone violations
+- `eventReceive` must revert (stub) until Ticket 3-D fully wires it — do not leave
+  a half-wired state that creates orphaned blocks
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- `useCalendarBlocks`, `useCreateBlock`, `useUpdateBlock`, `useDeleteBlock` are all
+  exported from `src/queries/calendarBlocks.ts`
+- `eventDrop` saves new `start_time` and `end_time` to Supabase
+- `eventResize` saves new `end_time` to Supabase
+- `eventReceive` stub reverts the drag and logs — does not create blocks yet
+- Calendar renders existing blocks from Supabase
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Update `memory-bank/activeContext.md`: mark 3-C complete, set 3-D as current ticket
+4. Update `memory-bank/progress.md`: check off Ticket 3-C
+
+---
+---
+
+## Ticket 3-D: Drag from Bucket to Calendar
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 3-D: Drag from Bucket to Calendar
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else, your terminal is in the wrong location. Do not proceed until corrected.
+
+**Step 2 — Do not run `npm install`.** All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true`.
+
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
+
+---
+
+### CONTEXT
+
+This ticket wires the drag-from-bucket-to-calendar interaction. The `bucketRef` and
+`task-pill` data attributes were added in Ticket 2-B specifically for this. The
+`eventReceive` stub from Ticket 3-C is replaced here with the full implementation.
+
+Do **NOT** use dnd-kit or react-dnd — they conflict with FullCalendar's event model.
+Use FullCalendar's built-in `Draggable` from `@fullcalendar/interaction` only.
+
+Already installed and ready to import:
+- `@fullcalendar/interaction` → `Draggable`
+- `src/lib/taskConstants.ts` → `BLOCK_SIZE_DURATIONS`
+- `src/queries/calendarBlocks.ts` → `useCreateBlock`
+- `src/queries/tasks.ts` → `useCompleteTask`
+
+---
+
+### SUB-TASKS
+
+#### 1. INITIALIZE FullCalendar Draggable IN PriorityBucket.tsx
+
+Modify `src/components/tasks/PriorityBucket.tsx`.
+
+Import `Draggable` from `@fullcalendar/interaction`.
+
+In a `useEffect` that runs once on mount, initialize `Draggable` on `bucketRef`:
+
+```ts
+useEffect(() => {
+  if (!bucketRef.current) return
+
+  const draggable = new Draggable(bucketRef.current, {
+    itemSelector: '.task-pill',
+    eventData: (el) => ({
+      id: el.dataset.taskId,
+      title: el.dataset.title,
+      duration: BLOCK_SIZE_DURATIONS[el.dataset.blockSize as 'S' | 'M' | 'L'],
+    }),
   })
 
+  return () => draggable.destroy()
+}, [])
+```
 
-});
+The `bucketRef` was created in Ticket 2-B. The `.task-pill` class and all four
+`data-*` attributes on `TaskPill` were added in Ticket 2-B. Do not modify them.
 
+#### 2. REPLACE eventReceive STUB IN CalendarView.tsx
 
-* eventReceive in CalendarView.tsx → call createCalendarBlock server function
-* Do NOT use dnd-kit or react-dnd — they conflict with FullCalendar's event model
+Modify `src/components/calendar/CalendarView.tsx`.
 
+Replace the stub `eventReceive` (from Ticket 3-C) with the full implementation:
 
-Ticket 3-E: Create blocks directly on calendar
+```tsx
+eventReceive={(info) => {
+  const taskId = info.event.id
+  const title = info.event.title
+  const start = info.event.startStr
+  const end = info.event.endStr
 
+  createBlock({
+    user_id: userId,
+    title,
+    start_time: start,
+    end_time: end,
+    block_type: 'task',
+    task_id: taskId,
+  })
 
-* selectable: true on FullCalendar
-* select callback → opens a small Dialog (shadcn) with title input and block type selector
-* Confirm → useCreateBlock()
+  completeTask(taskId)
 
+  // Remove the ghost event FullCalendar added — the real block comes from the DB
+  info.event.remove()
+}}
+```
 
-Ticket 3-F: Google Calendar sync
+`createBlock` comes from `useCreateBlock()`. `completeTask` comes from
+`useCompleteTask()`. Both are already in place from Phase 2 and Ticket 3-C.
 
+`userId` comes from the auth context — use the same pattern as the rest of the app.
 
-* TanStack Start server function: src/server/googleCalendar.ts
-* On app load: fetch Google Calendar events for ±14 days, upsert to calendar_blocks where google_event_id matches
-* On calendar_blocks create/update/delete: call Google Calendar API to mirror change
-* Token refresh: call oauth2Client.refreshAccessToken() on every API call, update google_refresh_token in profiles on refresh
-* Mark synced blocks with is_synced: true, show Google logo on FullCalendar event
+---
 
+### FILES TO MODIFY
 
-Acceptance criteria: Calendar renders 3-day view. Zone labels visible. Tasks drag from bucket to calendar and create blocks. Move and resize save. Google events appear after connect.
+- `src/components/tasks/PriorityBucket.tsx` — add Draggable init in useEffect
+- `src/components/calendar/CalendarView.tsx` — replace eventReceive stub
 
+---
 
-TEMPLATE SAVE (3-F): Extract src/server/googleCalendar.ts to C:\dev\coding_templates\google-calendar\calendar-server-fn.ts with all project-specific values replaced
+### HARD RULES REMINDER
+
+- Do NOT use dnd-kit or react-dnd
+- Do NOT leave the `Draggable` instance without a cleanup (`draggable.destroy()`)
+- The `.task-pill` selector and data attributes must not be changed — they are
+  load-bearing from Ticket 2-B
+- No tone violations
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- Dragging a TaskPill from the bucket onto the calendar creates a calendar block
+- The task moves to "Completed Today" in the bucket immediately (optimistic update)
+- The ghost event is removed after drop; the real block renders from the DB
+- `eventDrop` and `eventResize` from Ticket 3-C still work correctly
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Manually test: drag a task pill onto the calendar, confirm block appears and
+   task moves to Completed Today
+4. Update `memory-bank/activeContext.md`: mark 3-D complete, set 3-E as current ticket
+5. Update `memory-bank/progress.md`: check off Ticket 3-D
+
+---
+---
+
+## Ticket 3-E: Create Blocks Directly on Calendar
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 3-E: Create Blocks Directly on Calendar
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else, your terminal is in the wrong location. Do not proceed until corrected.
+
+**Step 2 — Do not run `npm install`.** All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true`.
+
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
+
+---
+
+### CONTEXT
+
+This ticket adds click-to-create for calendar blocks directly on the time grid.
+The user clicks and drags on an empty slot, a small Dialog appears for title and
+block type, and confirming calls `useCreateBlock()`.
+
+Already installed and ready to import:
+- shadcn `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` → from `@/components/ui/dialog`
+- shadcn `Button`, `Input` → from `@/components/ui/`
+- `src/queries/calendarBlocks.ts` → `useCreateBlock`
+
+---
+
+### SUB-TASKS
+
+#### 1. ADD selectable AND select CALLBACK TO CalendarView.tsx
+
+Modify `src/components/calendar/CalendarView.tsx`.
+
+Add `selectable={true}` to `<FullCalendar>`.
+
+Add state to hold the pending selection:
+
+```ts
+const [pendingBlock, setPendingBlock] = useState<{
+  start: string
+  end: string
+} | null>(null)
+```
+
+Add the `select` callback:
+
+```tsx
+select={(info) => {
+  setPendingBlock({ start: info.startStr, end: info.endStr })
+}}
+```
+
+#### 2. BUILD THE CREATE BLOCK DIALOG
+
+Add inline (in `CalendarView.tsx`) or extract to
+`src/components/calendar/CreateBlockDialog.tsx` if preferred.
+
+```tsx
+<Dialog open={!!pendingBlock} onOpenChange={(open) => { if (!open) setPendingBlock(null) }}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>New block</DialogTitle>
+    </DialogHeader>
+
+    <Input
+      placeholder="Title"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') handleConfirm() }}
+      autoFocus
+    />
+
+    {/* Block type selector */}
+    <div className="flex gap-2 mt-2">
+      {['focus', 'task', 'event'].map((type) => (
+        <button
+          key={type}
+          onClick={() => setBlockType(type)}
+          className={blockType === type ? 'ring-2 ring-primary rounded px-2 py-1 text-sm capitalize' : 'px-2 py-1 text-sm capitalize'}
+        >
+          {type}
+        </button>
+      ))}
+    </div>
+
+    <div className="flex justify-end gap-2 mt-4">
+      <Button variant="outline" onClick={() => setPendingBlock(null)}>Cancel</Button>
+      <Button onClick={handleConfirm} disabled={!title.trim()}>Add</Button>
+    </div>
+  </DialogContent>
+</Dialog>
+```
+
+`handleConfirm` calls `useCreateBlock()` with:
+```ts
+{
+  user_id: userId,
+  title: title.trim(),
+  start_time: pendingBlock.start,
+  end_time: pendingBlock.end,
+  block_type: blockType,
+}
+```
+After confirming: clear `title`, `blockType`, and `pendingBlock`.
+
+State needed:
+```ts
+const [title, setTitle] = useState('')
+const [blockType, setBlockType] = useState<string>('focus')
+```
+
+Do NOT use `<form>` tags. Use controlled inputs with `onKeyDown`.
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/components/calendar/CalendarView.tsx` — add `selectable`, `select` callback, Dialog
+- `src/components/calendar/CreateBlockDialog.tsx` — optional extraction
+
+---
+
+### HARD RULES REMINDER
+
+- No HTML `<form>` tags — use controlled inputs with `onKeyDown`
+- No tone violations
+- Block type labels (`focus`, `task`, `event`) are informational — no urgency language
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- Clicking and dragging on an empty calendar slot opens the Dialog
+- Pressing Enter or clicking Add with a title creates the block
+- Pressing Escape or clicking Cancel dismisses without creating
+- New block appears on calendar immediately after create
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Manually test: click-drag on calendar → Dialog opens → confirm → block appears
+4. Update `memory-bank/activeContext.md`: mark 3-E complete, set 3-F as current ticket
+5. Update `memory-bank/progress.md`: check off Ticket 3-E
+
+---
+---
+
+## Ticket 3-F: Google Calendar Sync
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 3-F: Google Calendar Sync
+Project folder: C:\dev\second_brain
+Current phase: Phase 3 — Calendar & Scheduling
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+**Step 1 — Confirm your working directory.**
+Run `cd` (Windows CMD) or check your terminal header. It must show `C:\dev\second_brain`.
+If it shows anything else, your terminal is in the wrong location. Do not proceed until corrected.
+
+**Step 2 — Do not run `npm install`.** All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true`.
+
+**Step 3 — Do not run `cd` commands.** You are already in the project root: `C:\dev\second_brain`.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, your terminal is not in `C:\dev\second_brain`. Check with `cd` first.
+
+---
+
+### CONTEXT
+
+This ticket adds Google Calendar sync via a TanStack Start server function. On app
+load, events are fetched for ±14 days and upserted into `calendar_blocks`. All
+create/update/delete operations on `calendar_blocks` mirror to Google Calendar.
+Token refresh happens on every API call.
+
+---
+
+### SUB-TASKS
+
+#### 1. CREATE THE GOOGLE CALENDAR SERVER FUNCTION
+
+File path: `src/server/googleCalendar.ts`
+
+```ts
+import { createServerFn } from '@tanstack/start'
+import { google } from 'googleapis'
+
+const getOAuth2Client = (accessToken: string, refreshToken: string) => {
+  const client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI,
+  )
+  client.setCredentials({ access_token: accessToken, refresh_token: refreshToken })
+  return client
+}
+
+// Fetch and upsert Google Calendar events for ±14 days
+export const syncGoogleCalendar = createServerFn('POST', async (
+  { userId, accessToken, refreshToken }: {
+    userId: string
+    accessToken: string
+    refreshToken: string
+  }
+) => {
+  const auth = getOAuth2Client(accessToken, refreshToken)
+
+  // Refresh token on every call
+  const { credentials } = await auth.refreshAccessToken()
+  auth.setCredentials(credentials)
+
+  // Persist refreshed token to profiles
+  if (credentials.refresh_token) {
+    await supabase
+      .from('profiles')
+      .update({ google_refresh_token: credentials.refresh_token })
+      .eq('id', userId)
+      .throwOnError()
+  }
+
+  const calendar = google.calendar({ version: 'v3', auth })
+
+  const now = new Date()
+  const timeMin = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
+  const timeMax = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data } = await calendar.events.list({
+    calendarId: 'primary',
+    timeMin,
+    timeMax,
+    singleEvents: true,
+    orderBy: 'startTime',
+  })
+
+  const events = data.items ?? []
+
+  // Upsert into calendar_blocks matching on google_event_id
+  for (const event of events) {
+    if (!event.id || !event.summary) continue
+    await supabase
+      .from('calendar_blocks')
+      .upsert({
+        user_id: userId,
+        title: event.summary,
+        start_time: event.start?.dateTime ?? event.start?.date,
+        end_time: event.end?.dateTime ?? event.end?.date,
+        block_type: 'event',
+        google_event_id: event.id,
+        is_synced: true,
+      }, { onConflict: 'google_event_id' })
+      .throwOnError()
+  }
+
+  return { synced: events.length }
+})
+
+// Mirror a create to Google Calendar
+export const createGoogleEvent = createServerFn('POST', async (
+  { block, accessToken, refreshToken }: {
+    block: { title: string; start_time: string; end_time: string }
+    accessToken: string
+    refreshToken: string
+  }
+) => {
+  const auth = getOAuth2Client(accessToken, refreshToken)
+  const { credentials } = await auth.refreshAccessToken()
+  auth.setCredentials(credentials)
+
+  const calendar = google.calendar({ version: 'v3', auth })
+
+  const { data } = await calendar.events.insert({
+    calendarId: 'primary',
+    requestBody: {
+      summary: block.title,
+      start: { dateTime: block.start_time },
+      end: { dateTime: block.end_time },
+    },
+  })
+
+  return { googleEventId: data.id }
+})
+
+// Mirror an update to Google Calendar
+export const updateGoogleEvent = createServerFn('POST', async (
+  { googleEventId, updates, accessToken, refreshToken }: {
+    googleEventId: string
+    updates: { title?: string; start_time?: string; end_time?: string }
+    accessToken: string
+    refreshToken: string
+  }
+) => {
+  const auth = getOAuth2Client(accessToken, refreshToken)
+  const { credentials } = await auth.refreshAccessToken()
+  auth.setCredentials(credentials)
+
+  const calendar = google.calendar({ version: 'v3', auth })
+
+  await calendar.events.patch({
+    calendarId: 'primary',
+    eventId: googleEventId,
+    requestBody: {
+      ...(updates.title && { summary: updates.title }),
+      ...(updates.start_time && { start: { dateTime: updates.start_time } }),
+      ...(updates.end_time && { end: { dateTime: updates.end_time } }),
+    },
+  })
+})
+
+// Mirror a delete to Google Calendar
+export const deleteGoogleEvent = createServerFn('POST', async (
+  { googleEventId, accessToken, refreshToken }: {
+    googleEventId: string
+    accessToken: string
+    refreshToken: string
+  }
+) => {
+  const auth = getOAuth2Client(accessToken, refreshToken)
+  const { credentials } = await auth.refreshAccessToken()
+  auth.setCredentials(credentials)
+
+  const calendar = google.calendar({ version: 'v3', auth })
+
+  await calendar.events.delete({
+    calendarId: 'primary',
+    eventId: googleEventId,
+  })
+})
+```
+
+#### 2. CALL syncGoogleCalendar ON APP LOAD
+
+In `AppLayout.tsx`, alongside the archive-on-mount effect from Ticket 2-C, add:
+
+```ts
+useEffect(() => {
+  if (userId && googleAccessToken && googleRefreshToken) {
+    syncGoogleCalendar({ userId, accessToken: googleAccessToken, refreshToken: googleRefreshToken })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['calendar-blocks'] })
+      })
+      .catch(console.error)
+  }
+}, [userId])
+```
+
+Get `googleAccessToken` and `googleRefreshToken` from the user's profile or session —
+use whatever pattern the auth context provides.
+
+#### 3. MIRROR MUTATIONS IN calendarBlocks.ts
+
+In `src/queries/calendarBlocks.ts`, update `useCreateBlock`, `useUpdateBlock`, and
+`useDeleteBlock` to call the corresponding server functions after Supabase succeeds:
+
+- `useCreateBlock` → after insert, call `createGoogleEvent` → update the block's
+  `google_event_id` with the returned ID
+- `useUpdateBlock` → if block has `google_event_id`, call `updateGoogleEvent`
+- `useDeleteBlock` → if block has `google_event_id`, call `deleteGoogleEvent`
+
+#### 4. SHOW GOOGLE LOGO ON SYNCED EVENTS
+
+In `CalendarView.tsx`, use the `eventContent` render prop to show a small Google
+logo on blocks where `extendedProps.is_synced === true`:
+
+```tsx
+eventContent={(arg) => (
+  <div className="fc-event-main-frame">
+    <div className="fc-event-title">{arg.event.title}</div>
+    {arg.event.extendedProps.is_synced && (
+      <span className="text-[10px] opacity-60 ml-1">G</span>
+    )}
+  </div>
+)}
+```
+
+Use a proper Google "G" logo SVG or icon if one is available in the project assets.
+A plain "G" text label is acceptable as a fallback.
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/server/googleCalendar.ts` — new file
+- `src/queries/calendarBlocks.ts` — add Google mirror calls to mutations
+- `src/components/calendar/CalendarView.tsx` — add `eventContent` for sync indicator
+- `src/components/layout/AppLayout.tsx` — add sync-on-mount effect
+
+---
+
+### HARD RULES REMINDER
+
+- All Supabase calls end with `.throwOnError()`
+- Token refresh runs on every Google API call — never skip it
+- No tone violations
+- `is_synced: true` is set only on blocks that came from Google — never on locally
+  created blocks unless they have been successfully pushed to Google
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- On app load, Google Calendar events for ±14 days appear in the calendar
+- Synced events show the Google "G" indicator
+- Creating a block mirrors to Google Calendar and stores `google_event_id`
+- Moving or resizing a synced block updates the Google event
+- Deleting a synced block deletes the Google event
+- Token refresh runs and updated `refresh_token` is persisted to `profiles`
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Manually test: connect Google account → verify events appear → create a block →
+   verify it appears in Google Calendar
+4. Update `memory-bank/activeContext.md`: mark 3-F complete, mark Phase 3 complete
+5. Update `memory-bank/progress.md`: check off Ticket 3-F and mark Phase 3 complete
+6. Save `src/server/googleCalendar.ts` to
+   `C:\dev\coding_templates\google-calendar\calendar-server-fn.ts` — replace all
+   project-specific values (`userId`, table names, env var names) with
+   `[USER_ID]`, `[TABLE_NAME]`, `[ENV_VAR]` placeholders
+
+---
+
+**Acceptance criteria (Phase 3):** Calendar renders 3-day view. Zone labels visible. Tasks drag from bucket to calendar and create blocks. Move and resize save. Google events appear after connect.
+
+**TEMPLATE SAVE (3-F):** Extract `src/server/googleCalendar.ts` to `C:\dev\coding_templates\google-calendar\calendar-server-fn.ts` with all project-specific values replaced.
 
 
 ________________
