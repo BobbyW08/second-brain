@@ -1426,41 +1426,741 @@ TEMPLATE SAVE (1-B): Extract app shell layout to C:\dev\coding_templates\compone
 ________________
 
 
+# Phase 2: Priority Bucket (Tasks) — Tickets 2-A, 2-B, 2-C
 
+---
 
-Phase 2: Priority Bucket (Tasks) (2–3 sessions)
-Ticket 2-A: Task data layer
+## Ticket 2-A: Task Data Layer
 
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
 
-* src/queries/tasks.ts: useTasksByPriority(), useCreateTask(), useMoveTask(), useCompleteTask(), useArchiveTask()
-* Zustand useTaskStore: selected task, drag state
-* TanStack Query cache key: ['tasks', userId]
+---
 
+### TICKET 2-A: Task Data Layer
+Project folder: C:\dev\second_brain
+Current phase: Phase 2 — Priority Bucket (Tasks)
 
-Ticket 2-B: Priority Bucket UI
+---
 
+### VERIFICATION — READ BEFORE WRITING ANY CODE
 
-* PriorityBucket.tsx: three sections — Urgent, Important, Someday
-* TaskPill.tsx: title, block_size badge (S/M/L), complete circle button
-   * Add data attributes: data-task-id, data-title, data-block-size, data-priority
-   * These are required for Phase 3's FullCalendar Draggable — add them now
-* Inline create: click "+" or press Enter → inline <Input> appears → blur/Enter saves
-* Optimistic updates on complete and reorder
+Do not run `npm install`. All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true` — do not attempt to install or reinstall any dependency. Running `npm install` without this flag active will trigger peer dependency conflicts with `@blocknote/mantine`. The file is already there; trust it.
 
+You are already in the project root: `C:\dev\second_brain`. Do not run `cd` commands. Running `cd second_brain` from this directory will fail because there is no nested folder by that name.
 
-Ticket 2-C: Completed today section
+To verify your work, run these two commands only:
 
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
 
-* shadcn Collapsible for "Completed Today" section below each bucket
-* Auto-archives at midnight via Supabase scheduled function (pg_cron) or client-side on app load
-* Completed tasks show strikethrough title, muted color — no guilt indicators
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
 
+If either command reports a missing script, you are likely in the wrong directory or package.json has not been re-read. Confirm you are in `C:\dev\second_brain`, open `package.json`, and check the `"scripts"` block before retrying. The `"typecheck"` script is defined as `"tsc --noEmit"` — if it appears missing, re-read the file rather than running installs.
 
-Acceptance criteria: Tasks create, reorder, complete. Sections collapse. Data persists after refresh.
+---
 
+### CONTEXT
 
-TEMPLATE SAVE (2-A): Extract TanStack Query hook pattern with optimistic update to C:\dev\coding_templates\tanstack\query-hook.ts
+This ticket builds the data layer that all task UI in Phase 2 depends on. No UI is
+built here — only queries, mutations, and the Zustand store. Get this right before
+any component work begins. All dependencies have already been installed by Claude Code.
+Do not run any installs. Go straight to writing code.
 
+Already installed and ready to import:
+- `@supabase/supabase-js` (client already configured in the project)
+- `@tanstack/react-query` → `useQuery`, `useMutation`, `useQueryClient`
+- `zustand`
+
+---
+
+### SUB-TASKS
+
+#### 1. BUILD THE TASK QUERY HOOKS
+
+File path: `src/queries/tasks.ts`
+
+All Supabase calls end with `.throwOnError()`. All hooks accept `userId` as a parameter
+or read it from the auth context — do not hardcode any user ID.
+
+**useTasksByPriority(userId: string)**
+Returns all tasks for the user where `status = 'active'`, ordered by `position`.
+Query key: `['tasks', userId]`
+
+```ts
+export function useTasksByPriority(userId: string) {
+  return useQuery({
+    queryKey: ['tasks', userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('position')
+        .throwOnError()
+      return data
+    },
+  })
+}
+```
+
+**useCreateTask()**
+Inserts a new task. Input: `{ user_id, title, priority, block_size?, position? }`
+On success: invalidate `['tasks', userId]`
+Include an optimistic update that appends the new task to the cache immediately.
+
+**useMoveTask()**
+Updates a task's `priority` and `position`. Input: `{ taskId, priority, position }`
+On success: invalidate `['tasks', userId]`
+Include an optimistic update.
+
+**useCompleteTask()**
+Updates `status` to `'completed_today'` and sets `completed_at` to `now()`.
+Input: `taskId` (string)
+On success: invalidate `['tasks', userId]`
+
+Full optimistic update pattern (use this exact shape for all mutations):
+
+```ts
+onMutate: async (taskId) => {
+  await queryClient.cancelQueries({ queryKey: ['tasks', userId] })
+  const previous = queryClient.getQueryData(['tasks', userId])
+  queryClient.setQueryData(['tasks', userId], (old: Task[]) =>
+    old.map(t => t.id === taskId
+      ? { ...t, status: 'completed_today', completed_at: new Date().toISOString() }
+      : t
+    )
+  )
+  return { previous }
+},
+onError: (_err, _taskId, context) => {
+  queryClient.setQueryData(['tasks', userId], context?.previous)
+},
+onSettled: () => queryClient.invalidateQueries({ queryKey: ['tasks', userId] }),
+```
+
+**useArchiveTask()**
+Updates `status` to `'archived'`. Input: `taskId` (string)
+Same optimistic update pattern as `useCompleteTask`.
+
+**useUpdateTask()**
+General-purpose update. Input: `{ taskId: string, updates: Partial<Task> }`
+On success: invalidate `['tasks', userId]`
+Used for title edits and `block_size` changes.
+
+`Task` type comes from `src/types/database.types.ts` (generated from Supabase schema).
+Use the generated type — do not define a manual `Task` type.
+
+---
+
+#### 2. BUILD THE TASK ZUSTAND STORE
+
+File path: `src/stores/taskStore.ts`
+
+This store holds UI-only state that does not belong in TanStack Query.
+
+```ts
+import { create } from 'zustand'
+
+interface TaskStore {
+  selectedTaskId: string | null
+  setSelectedTaskId: (id: string | null) => void
+  dragState: {
+    isDragging: boolean
+    taskId: string | null
+  }
+  setDragState: (state: { isDragging: boolean; taskId: string | null }) => void
+}
+
+export const useTaskStore = create<TaskStore>((set) => ({
+  selectedTaskId: null,
+  setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+  dragState: { isDragging: false, taskId: null },
+  setDragState: (dragState) => set({ dragState }),
+}))
+```
+
+---
+
+#### 3. DEFINE BLOCK SIZE CONSTANTS
+
+File path: `src/lib/taskConstants.ts`
+
+```ts
+export const BLOCK_SIZE_DURATIONS: Record<'S' | 'M' | 'L', string> = {
+  S: '00:30',  // 30 minutes
+  M: '01:00',  // 60 minutes
+  L: '01:30',  // 90 minutes
+}
+
+export const PRIORITY_LABELS: Record<string, string> = {
+  urgent: 'Urgent',
+  important: 'Important',
+  someday: 'Someday',
+}
+
+export const PRIORITY_ORDER = ['urgent', 'important', 'someday'] as const
+```
+
+These constants are imported by Phase 3 (FullCalendar drag) — define them exactly
+as shown. `BLOCK_SIZE_DURATIONS` values are FullCalendar duration strings.
+
+---
+
+### FILES TO CREATE
+
+- `src/queries/tasks.ts` — new file
+- `src/stores/taskStore.ts` — new file
+- `src/lib/taskConstants.ts` — new file
+
+---
+
+### HARD RULES REMINDER
+
+- All Supabase calls end with `.throwOnError()`
+- Use Zustand for UI/client state only. Use TanStack Query for all server state.
+- Never mix them — no Supabase calls inside the Zustand store
+- No tone violations in variable names, comments, or string values:
+  avoid "overdue", "late", "missed", "behind", "failed", "incomplete"
+- Task status values in the DB are `'active'`, `'completed_today'`, `'archived'` —
+  these are the only valid values, never invent others
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- All six hooks are exported from `src/queries/tasks.ts` and TypeScript compiles
+  with no errors
+- `useCompleteTask` includes a full optimistic update with rollback on error
+- `useCreateTask` includes a full optimistic update
+- Zustand store is typed correctly and exported
+- `BLOCK_SIZE_DURATIONS` values match exactly: `S='00:30'`, `M='01:00'`, `L='01:30'`
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Update `memory-bank/activeContext.md`: mark 2-A complete, set 2-B as current ticket
+4. Update `memory-bank/progress.md`: check off Ticket 2-A
+5. Save the TanStack Query hook pattern with optimistic update to
+   `C:\dev\coding_templates\tanstack\query-hook.ts` — strip all project-specific
+   names, replace with `[TABLE_NAME]`, `[QUERY_KEY]`, `[USER_ID]` placeholders
+
+---
+---
+
+## Ticket 2-B: Priority Bucket UI
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 2-B: Priority Bucket UI
+Project folder: C:\dev\second_brain
+Current phase: Phase 2 — Priority Bucket (Tasks)
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+Do not run `npm install`. All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true` — do not attempt to install or reinstall any dependency.
+
+You are already in the project root: `C:\dev\second_brain`. Do not run `cd` commands.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, confirm you are in `C:\dev\second_brain` and re-read `package.json` before retrying. The `"typecheck"` script runs `tsc --noEmit` — if it appears missing, the issue is directory context or a stale shell, not a missing package.
+
+---
+
+### CONTEXT
+
+This ticket builds the Priority Bucket — the three-section task list (Urgent,
+Important, Someday) that lives in the left panel of the app. The data layer from
+Ticket 2-A is already in place. This ticket is UI only — wire to the existing hooks,
+do not rewrite them.
+
+The `TaskPill` component MUST include specific data attributes required by Phase 3's
+FullCalendar Draggable. Add them now exactly as specified even though drag is not
+wired until Phase 3.
+
+All dependencies have already been installed by Claude Code. Do not run any installs.
+
+Already installed and ready to import:
+- shadcn `Button`, `Input`, `Badge`, `Collapsible` →
+  `CollapsibleTrigger`, `CollapsibleContent`
+- `lucide-react` (icons)
+- `@tanstack/react-query` (hooks from `src/queries/tasks.ts`)
+- `zustand` (store from `src/stores/taskStore.ts`)
+- `src/lib/taskConstants.ts` (`PRIORITY_LABELS`, `PRIORITY_ORDER`, `BLOCK_SIZE_DURATIONS`)
+
+---
+
+### SUB-TASKS
+
+#### 1. BUILD TaskPill.tsx
+
+File path: `src/components/tasks/TaskPill.tsx`
+
+This is the individual task card. Props:
+
+```ts
+interface TaskPillProps {
+  task: Task  // from database.types.ts
+  onComplete: (taskId: string) => void
+}
+```
+
+Structure:
+
+```tsx
+<div
+  className="task-pill ..."
+  data-task-id={task.id}
+  data-title={task.title}
+  data-block-size={task.block_size}
+  data-priority={task.priority}
+>
+  {/* Complete circle button — left side */}
+  <button
+    onClick={() => onComplete(task.id)}
+    className="..."  {/* minimum 44x44px tap target */}
+    aria-label="Mark complete"
+  >
+    <Circle className="..." />  {/* lucide-react */}
+  </button>
+
+  {/* Task title — center */}
+  <span className="flex-1 text-sm">{task.title}</span>
+
+  {/* Block size badge — right side */}
+  <Badge variant="outline" className="text-xs">{task.block_size}</Badge>
+</div>
+```
+
+The data attributes on the outer div are REQUIRED for Phase 3. Do not remove or
+rename them. The className `"task-pill"` on the outer div is also required —
+FullCalendar's Draggable uses it as the `itemSelector`.
+
+The complete button must be at least 44×44px. Use padding to achieve this if needed.
+
+Do not add any visual indicator that implies the task is urgent in a negative sense.
+The priority label is informational only.
+
+---
+
+#### 2. BUILD PriorityBucket.tsx
+
+File path: `src/components/tasks/PriorityBucket.tsx`
+
+This is the full three-section task panel. It reads from `useTasksByPriority()` and
+renders one section per priority level.
+
+Props: `{ userId: string }`
+
+Structure:
+- A ref on the outer container div: `const bucketRef = useRef<HTMLDivElement>(null)`
+  This ref is required for Phase 3's FullCalendar Draggable init. Add it now.
+  Add a comment: `// bucketRef used by Phase 3 — FullCalendar Draggable init`
+
+- For each priority in `PRIORITY_ORDER` (`['urgent', 'important', 'someday']`):
+
+```tsx
+<section key={priority}>
+  <div className="flex items-center justify-between px-2 py-1">
+    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {PRIORITY_LABELS[priority]}
+    </h2>
+    <button onClick={() => setCreating(priority)} aria-label="Add task">
+      <Plus className="h-4 w-4" />  {/* lucide-react */}
+    </button>
+  </div>
+
+  {/* Inline create input — appears when creating === priority */}
+  {creating === priority && (
+    <InlineTaskInput
+      onSave={(title) => handleCreate(title, priority)}
+      onCancel={() => setCreating(null)}
+    />
+  )}
+
+  {/* Task pills */}
+  {tasksForPriority.map(task => (
+    <TaskPill
+      key={task.id}
+      task={task}
+      onComplete={handleComplete}
+    />
+  ))}
+</section>
+```
+
+State: `const [creating, setCreating] = useState<string | null>(null)`
+
+Handlers:
+- `handleCreate(title, priority)`: calls `useCreateTask()` with `{ user_id, title, priority, block_size: 'M', position: tasksForPriority.length }`
+- `handleComplete(taskId)`: calls `useCompleteTask()`
+
+After `handleCreate` resolves: set `creating` back to `null`.
+
+---
+
+#### 3. BUILD InlineTaskInput.tsx
+
+File path: `src/components/tasks/InlineTaskInput.tsx`
+
+A minimal controlled input that appears inline in the bucket when "+" is clicked.
+
+Props:
+
+```ts
+interface InlineTaskInputProps {
+  onSave: (title: string) => void
+  onCancel: () => void
+}
+```
+
+Behavior:
+- Auto-focuses on mount (`useEffect` with `inputRef.current?.focus()`)
+- `Enter` key → calls `onSave(value)` if value is not empty, then clears input
+- `Escape` key → calls `onCancel()`
+- `onBlur` → calls `onCancel()` (dismiss if user clicks away without saving)
+- Do NOT use HTML `<form>` tags. Use a controlled `<Input>` with `onKeyDown` handler.
+
+---
+
+#### 4. WIRE PriorityBucket INTO THE APP LAYOUT
+
+The bucket lives in the left sidebar area. In the app shell from Ticket 1-B, the
+sidebar currently has static placeholder content below the nav items.
+
+Find the section in `AppSidebar.tsx` marked with the TODO comment from Ticket 1-B and
+replace the static placeholder with `<PriorityBucket userId={currentUser.id} />`.
+
+Get `currentUser` from the Supabase auth session — use whatever auth context pattern
+the starter repo established.
+
+---
+
+#### 5. ADD A ROUTE FOR THE BUCKET VIEW
+
+Create a placeholder route at `/tasks` if one does not already exist. This is the
+default landing route after login for now. It can render a simple centered message:
+`"Select a task to get started, or drag one to the calendar."`
+
+Add a comment: `// TODO: Phase 3 — calendar view replaces this as the main content`
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/components/tasks/TaskPill.tsx` — new file
+- `src/components/tasks/PriorityBucket.tsx` — new file
+- `src/components/tasks/InlineTaskInput.tsx` — new file
+- `src/components/layout/AppSidebar.tsx` — modify to render PriorityBucket
+- `src/routes/tasks/index.tsx` — new file (placeholder route)
+
+---
+
+### HARD RULES REMINDER
+
+- The outer div of `TaskPill` must have `className="task-pill"` and all four data
+  attributes. These are load-bearing for Phase 3 — do not skip or rename them.
+- All tap targets minimum 44×44px
+- No HTML `<form>` tags — use controlled `Input` with `onKeyDown`
+- No tone violations: do not use "overdue", "late", "missed", "behind", "failed",
+  "incomplete" anywhere in copy, class names, variable names, or comments
+- Block size S/M/L is visual only — never describe it as a time estimate in any
+  UI copy or aria label
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- Three priority sections render (Urgent, Important, Someday)
+- Clicking "+" in any section shows the inline input in that section only
+- Pressing Enter with a title saves the task and closes the input
+- Pressing Escape or clicking away closes the input without saving
+- New tasks appear immediately (optimistic update from 2-A)
+- Clicking the complete circle on a TaskPill calls `useCompleteTask()` and the task
+  disappears from the active list immediately (optimistic update)
+- `TaskPill` outer div has `className="task-pill"` and all four data attributes present
+  in the DOM (verify in browser devtools)
+- `bucketRef` is attached to the outer container of `PriorityBucket`
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Manually test: create a task in each bucket, complete one, verify it disappears
+4. Open browser devtools → inspect a TaskPill → confirm `data-task-id`, `data-title`,
+   `data-block-size`, `data-priority` are all present on the element
+5. Update `memory-bank/activeContext.md`: mark 2-B complete, set 2-C as current ticket
+6. Update `memory-bank/progress.md`: check off Ticket 2-B
+
+---
+---
+
+## Ticket 2-C: Completed Today Section
+
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before
+doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.
+
+---
+
+### TICKET 2-C: Completed Today Section
+Project folder: C:\dev\second_brain
+Current phase: Phase 2 — Priority Bucket (Tasks)
+
+---
+
+### VERIFICATION — READ BEFORE WRITING ANY CODE
+
+Do not run `npm install`. All packages are pre-installed.
+The `.npmrc` file already contains `legacy-peer-deps=true` — do not attempt to install or reinstall any dependency.
+
+You are already in the project root: `C:\dev\second_brain`. Do not run `cd` commands.
+
+To verify your work, run these two commands only:
+
+```
+npm run typecheck   ← must exit with 0 errors
+npm run lint        ← must exit with 0 errors
+```
+
+Do **NOT** run `npm run dev`. Claude Code will review and fix anything remaining.
+
+If either command reports a missing script, confirm you are in `C:\dev\second_brain` and re-read `package.json` before retrying. The `"typecheck"` script is defined as `"tsc --noEmit"` — if it appears missing, the issue is directory or shell context, not a missing package.
+
+---
+
+### CONTEXT
+
+This ticket adds the "Completed Today" collapsible section below each priority bucket
+and wires the midnight auto-archive logic. The bucket UI from Ticket 2-B is already
+in place. This ticket modifies `PriorityBucket.tsx` and adds the archive logic — no
+new major components.
+
+All dependencies have already been installed by Claude Code. Do not run any installs.
+
+Already installed and ready to import:
+- shadcn `Collapsible` → `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`
+- `lucide-react`
+- `@tanstack/react-query` (`useArchiveTask` from `src/queries/tasks.ts`)
+- `@supabase/supabase-js`
+
+---
+
+### SUB-TASKS
+
+#### 1. ADD COMPLETED TODAY SECTION TO PriorityBucket.tsx
+
+Modify `src/components/tasks/PriorityBucket.tsx`.
+
+The data is already fetched by `useTasksByPriority()` which returns all tasks with
+`status = 'active'`. For completed tasks, add a second query:
+
+**useCompletedTodayTasks(userId: string)**
+Add this hook to `src/queries/tasks.ts`.
+Query key: `['tasks-completed-today', userId]`
+Fetches tasks where `status = 'completed_today'`, ordered by `completed_at` desc.
+Returns tasks grouped — the component will filter by priority client-side.
+
+```ts
+export function useCompletedTodayTasks(userId: string) {
+  return useQuery({
+    queryKey: ['tasks-completed-today', userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'completed_today')
+        .order('completed_at', { ascending: false })
+        .throwOnError()
+      return data
+    },
+  })
+}
+```
+
+In `PriorityBucket.tsx`, below each priority section's task list, add:
+
+```tsx
+<Collapsible>
+  <CollapsibleTrigger className="flex items-center gap-1 px-2 py-1 text-xs
+    text-muted-foreground hover:text-foreground w-full">
+    <ChevronRight className="h-3 w-3 transition-transform
+      data-[state=open]:rotate-90" />
+    Completed today ({completedForPriority.length})
+  </CollapsibleTrigger>
+  <CollapsibleContent>
+    {completedForPriority.map(task => (
+      <div key={task.id} className="flex items-center gap-2 px-2 py-1 opacity-50">
+        <CheckCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm line-through text-muted-foreground">
+          {task.title}
+        </span>
+      </div>
+    ))}
+    {completedForPriority.length === 0 && (
+      <p className="text-xs text-muted-foreground px-2 py-1">
+        Nothing completed in this list yet today.
+      </p>
+    )}
+  </CollapsibleContent>
+</Collapsible>
+```
+
+The collapsible must be collapsed by default (`defaultOpen={false}`).
+
+Do not show any guilt-inducing copy. The strikethrough and muted styling is
+sufficient visual treatment — no additional messaging about completion counts,
+streaks, or productivity.
+
+---
+
+#### 2. ADD MIDNIGHT AUTO-ARCHIVE LOGIC
+
+File path: `src/lib/archiveTasks.ts`
+
+Create a utility function that archives tasks completed before today:
+
+```ts
+export async function archiveCompletedTasks(userId: string) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  await supabase
+    .from('tasks')
+    .update({ status: 'archived' })
+    .eq('user_id', userId)
+    .eq('status', 'completed_today')
+    .lt('completed_at', today.toISOString())
+    .throwOnError()
+}
+```
+
+Call this function on app load — not on a timer, not via `pg_cron` for MVP. Add it
+to the authenticated route's loader or to a `useEffect` in `AppLayout.tsx` that runs
+once on mount:
+
+In `AppLayout.tsx`, add:
+
+```ts
+archiveCompletedTasks(userId)
+  .then(() => {
+    queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
+    queryClient.invalidateQueries({ queryKey: ['tasks-completed-today', userId] })
+  })
+  .catch(console.error)
+```
+
+Wrap in `useEffect` with `[userId]` dependency so it runs once per authenticated session:
+
+```ts
+useEffect(() => {
+  if (userId) {
+    archiveCompletedTasks(userId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
+        queryClient.invalidateQueries({ queryKey: ['tasks-completed-today', userId] })
+      })
+      .catch(console.error)
+  }
+}, [userId])
+```
+
+---
+
+#### 3. VERIFY TONE COMPLIANCE IN ALL COMPLETED STATES
+
+Review every string in `PriorityBucket.tsx`, `InlineTaskInput.tsx`, and `TaskPill.tsx`.
+
+The following words must not appear anywhere — in JSX strings, aria-labels,
+comments, variable names, or class names:
+
+> `overdue`, `late`, `missed`, `behind`, `failed`, `incomplete`
+
+The completed section trigger label must read "Completed today" — not
+"Finished". "Done" is acceptable if preferred, but never anything implying
+the user did not do enough.
+
+---
+
+### FILES TO CREATE OR MODIFY
+
+- `src/queries/tasks.ts` — add `useCompletedTodayTasks` hook
+- `src/components/tasks/PriorityBucket.tsx` — add Completed Today collapsible section
+- `src/lib/archiveTasks.ts` — new file
+- `src/components/layout/AppLayout.tsx` — add archive-on-mount effect
+
+---
+
+### HARD RULES REMINDER
+
+- All Supabase calls end with `.throwOnError()`
+- No tone violations — see list above
+- Completed tasks get strikethrough + muted styling only. No guilt copy.
+- Archive logic runs once on mount via `useEffect`, not on a polling interval
+
+---
+
+### ACCEPTANCE CRITERIA
+
+- "Completed today" collapsible appears below each priority section
+- Collapsible is closed by default
+- Completing a task moves it from the active list to the completed section
+  immediately (optimistic update from 2-A still applies)
+- Completed tasks show strikethrough title and muted styling
+- On next-day app load, tasks completed yesterday are archived and no longer
+  appear in "Completed today"
+- The count in the collapsible trigger reflects the actual number of completed
+  tasks for that priority
+- `npm run typecheck` exits with 0 errors
+- `npm run lint` exits with 0 errors
+
+---
+
+### WHEN DONE
+
+1. Run `npm run typecheck` — must exit with 0 errors
+2. Run `npm run lint` — must exit with 0 errors
+3. Manually test: complete a task → verify it moves to Completed Today →
+   manually set `completed_at` to yesterday in Supabase dashboard → refresh app →
+   verify it is gone from Completed Today
+4. Update `memory-bank/activeContext.md`: mark 2-C complete, set Ticket 3-A as next
+5. Update `memory-bank/progress.md`: check off Ticket 2-C and mark Phase 2 complete
+6. Save the TanStack Query optimistic update pattern to
+   `C:\dev\coding_templates\tanstack\optimistic-update.ts` if not already saved
+   from Ticket 2-A
+
+---
+
+**Acceptance criteria (Phase 2):** Tasks create, reorder, and complete. Sections collapse. Completed today section renders per bucket. Data persists after refresh.
+
+**TEMPLATE SAVE (2-A):** Extract TanStack Query hook pattern with optimistic update to `C:\dev\coding_templates\tanstack\query-hook.ts`
 
 ________________
 

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { BookOpen, CalendarDays, LogOut, Settings, Table2 } from "lucide-react";
+import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -8,6 +9,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Sidebar,
 	SidebarContent,
@@ -67,6 +69,17 @@ export function AppSidebar() {
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
+
+				{/* Priority Bucket — task list */}
+				{user && (
+					<SidebarGroup className="flex-1 overflow-hidden">
+						<SidebarGroupContent className="h-full">
+							<ScrollArea className="h-full">
+								<PriorityBucket userId={user.id} />
+							</ScrollArea>
+						</SidebarGroupContent>
+					</SidebarGroup>
+				)}
 			</SidebarContent>
 
 			<SidebarFooter className="p-2">

@@ -23,6 +23,23 @@ export function useTasksByPriority(userId: string) {
 	});
 }
 
+export function useCompletedTodayTasks(userId: string) {
+	return useQuery({
+		queryKey: ["tasks-completed-today", userId],
+		enabled: !!userId,
+		queryFn: async () => {
+			const { data } = await supabase
+				.from("tasks")
+				.select("*")
+				.eq("user_id", userId)
+				.eq("status", "completed_today")
+				.order("completed_at", { ascending: false })
+				.throwOnError();
+			return data ?? [];
+		},
+	});
+}
+
 // ─── Create ──────────────────────────────────────────────────────────────────
 
 export function useCreateTask() {
