@@ -14,7 +14,7 @@
 ## Phase 1: Auth, Invite System & App Shell
 
 - [x] Ticket 1-A: Invite-only signup gate
-- [ ] Ticket 1-B: App shell layout (sidebar, dark mode, mobile)
+- [x] Ticket 1-B: App shell layout (sidebar, dark mode, mobile)
 - [ ] Ticket 1-C: User settings page
 
 ## Phase 2: Priority Bucket (Tasks)
@@ -72,7 +72,7 @@
 
 - [x] 0-B: Typed Supabase client, auth callback, gen-types.sh, RLS policy → `supabase/`
 - [x] 1-A: Invite-only pattern → `supabase/invite-pattern.ts`
-- [ ] 1-B: App shell layout → `components/app-shell.tsx`
+- [x] 1-B: App shell layout → `components/app-shell.tsx`
 - [ ] 2-A: TanStack Query hook with optimistic update → `tanstack/query-hook.ts`
 - [ ] 3-F: Google Calendar server function → `google-calendar/calendar-server-fn.ts`
 - [ ] 4-B: Autosave hook → `components/autosave-hook.ts`

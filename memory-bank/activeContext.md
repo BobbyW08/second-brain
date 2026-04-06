@@ -2,7 +2,7 @@
 
 ## Current Ticket
 
-**Ticket 1-B: App shell layout** — CURRENT
+**Ticket 1-B: App shell layout** — COMPLETED
 
 ## Last Completed Ticket
 
@@ -20,8 +20,7 @@
 
 ## Next 3 Tickets Queued
 
-1. **Ticket 1-B: App shell layout**
-2. **Ticket 1-C: User settings page**
+1. **Ticket 1-C: User settings page** — CURRENT
    - Add calendar scope in Supabase dashboard
    - Add offline access + prompt consent to signInWithOAuth
    - Extract provider_refresh_token in auth callback → save to profiles

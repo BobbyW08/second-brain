@@ -27,7 +27,7 @@ export const Route = createFileRoute("/login")({
 			{ title: "Sign In | Second Brain" },
 			{
 				name: "description",
-				content: "Sign in or create an account to access your dashboard.",
+				content: "Sign in to access your dashboard.",
 			},
 		],
 	}),
@@ -57,15 +57,9 @@ function LoginPage() {
 
 	const emailId = useId();
 	const passwordId = useId();
-	const confirmPasswordId = useId();
-	const displayNameId = useId();
-	const [mode, setMode] = useState<"login" | "signup">("login");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
-	const [displayName, setDisplayName] = useState("");
 	const [error, setError] = useState<string | null>(null);
-	const [signupSuccess, setSignupSuccess] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	async function handleGoogleSignIn() {
@@ -79,7 +73,6 @@ function LoginPage() {
 					prompt: "consent",
 				},
 				redirectTo: GOOGLE_CALLBACK_URL,
-				shouldCreateUser: false,
 			},
 		});
 		if (error) setError(error.message);
@@ -89,30 +82,6 @@ function LoginPage() {
 		e.preventDefault();
 		setError(null);
 		setIsSubmitting(true);
-
-		if (mode === "signup") {
-			if (password !== confirmPassword) {
-				setError("Passwords do not match.");
-				setIsSubmitting(false);
-				return;
-			}
-
-			const { error } = await supabase.auth.signUp({
-				email,
-				password,
-				options: { data: { display_name: displayName } },
-			});
-
-			setIsSubmitting(false);
-
-			if (error) {
-				setError(error.message);
-				return;
-			}
-
-			setSignupSuccess(true);
-			return;
-		}
 
 		const { error } = await supabase.auth.signInWithPassword({
 			email,
@@ -129,69 +98,12 @@ function LoginPage() {
 		navigate({ to: "/dashboard" });
 	}
 
-	function toggleMode() {
-		setMode((m) => (m === "login" ? "signup" : "login"));
-		setError(null);
-		setSignupSuccess(false);
-	}
-
-	if (signupSuccess) {
-		return (
-			<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
-				<Card className="w-full max-w-md">
-					<CardHeader>
-						<CardTitle className="text-2xl">Check your email</CardTitle>
-						<CardDescription>
-							We've sent a confirmation link to <strong>{email}</strong>.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Alert>
-							<AlertDescription>
-								Click the link in your email to activate your account.
-								{import.meta.env.DEV && (
-									<>
-										{" "}
-										Local dev: check Mailpit at{" "}
-										<a
-											href="http://127.0.0.1:54324"
-											target="_blank"
-											rel="noreferrer"
-											className="underline font-medium"
-										>
-											http://127.0.0.1:54324
-										</a>
-									</>
-								)}
-							</AlertDescription>
-						</Alert>
-					</CardContent>
-					<CardFooter>
-						<button
-							type="button"
-							onClick={toggleMode}
-							className="text-sm text-muted-foreground hover:underline"
-						>
-							Back to login
-						</button>
-					</CardFooter>
-				</Card>
-			</div>
-		);
-	}
-
 	return (
 		<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<CardHeader>
-					<CardTitle className="text-2xl">
-						{mode === "login" ? "Welcome back" : "Create account"}
-					</CardTitle>
-					<CardDescription>
-						{mode === "login"
-							? "Sign in to your Second Brain."
-							: "Create an account to get started."}
-					</CardDescription>
+					<CardTitle className="text-2xl">Welcome back</CardTitle>
+					<CardDescription>Sign in to your Second Brain.</CardDescription>
 				</CardHeader>
 				<CardContent className="pb-0">
 					<Button
@@ -214,7 +126,7 @@ function LoginPage() {
 								fill="#34A853"
 							/>
 							<path
-								d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+								d="M5.84 14.09c-.22-.66-.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
 								fill="#FBBC05"
 							/>
 							<path
@@ -240,19 +152,6 @@ function LoginPage() {
 								<AlertDescription>{error}</AlertDescription>
 							</Alert>
 						)}
-						{mode === "signup" && (
-							<div className="space-y-2">
-								<Label htmlFor={displayNameId}>Display name</Label>
-								<Input
-									id={displayNameId}
-									type="text"
-									placeholder="Your name"
-									value={displayName}
-									onChange={(e) => setDisplayName(e.target.value)}
-									required
-								/>
-							</div>
-						)}
 						<div className="space-y-2">
 							<Label htmlFor={emailId}>Email</Label>
 							<Input
@@ -274,48 +173,17 @@ function LoginPage() {
 								required
 							/>
 						</div>
-						{mode === "signup" && (
-							<div className="space-y-2">
-								<Label htmlFor={confirmPasswordId}>Confirm password</Label>
-								<Input
-									id={confirmPasswordId}
-									type="password"
-									value={confirmPassword}
-									onChange={(e) => setConfirmPassword(e.target.value)}
-									required
-								/>
-							</div>
-						)}
 					</CardContent>
 					<CardFooter className="flex flex-col gap-4">
 						<Button type="submit" className="w-full" disabled={isSubmitting}>
-							{isSubmitting
-								? mode === "login"
-									? "Logging in..."
-									: "Creating account..."
-								: mode === "login"
-									? "Log in"
-									: "Create account"}
+							{isSubmitting ? "Logging in..." : "Log in"}
 						</Button>
-						<div className="flex flex-col items-center gap-2">
-							<button
-								type="button"
-								onClick={toggleMode}
-								className="text-sm text-muted-foreground hover:underline"
-							>
-								{mode === "login"
-									? "Don't have an account? Sign up"
-									: "Already have an account? Log in"}
-							</button>
-							{mode === "login" && (
-								<Link
-									to="/forgot-password"
-									className="text-sm text-muted-foreground hover:underline"
-								>
-									Forgot your password?
-								</Link>
-							)}
-						</div>
+						<Link
+							to="/forgot-password"
+							className="text-sm text-muted-foreground hover:underline"
+						>
+							Forgot your password?
+						</Link>
 					</CardFooter>
 				</form>
 			</Card>

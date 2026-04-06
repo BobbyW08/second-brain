@@ -1,38 +1,28 @@
-import { createServerFn } from "@tanstack/start";
 import { createClient } from "@supabase/supabase-js";
-import { getSessionReady } from "@/utils/supabase";
+import { createServerFn } from "@tanstack/react-start";
+import type { Database } from "@/types/database.types";
 
-const adminClient = createClient(
-	import.meta.env.VITE_SUPABASE_URL!,
-	process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+export const inviteUser = createServerFn({ method: "POST" })
+	.inputValidator((data: { email: string }) => data)
+	.handler(async ({ data }) => {
+		const adminClient = createClient<Database>(
+			import.meta.env.VITE_SUPABASE_URL || "",
+			process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+		);
 
-export const inviteUser = createServerFn(
-	"POST",
-	async ({ email }: { email: string }) => {
-		const currentUser = await getSessionReady();
-
-		if (!currentUser) {
-			throw new Error("User not authenticated.");
-		}
-
-		const { data, error } = await adminClient.auth.admin
-			.generateLink({
+		const { data: linkData, error } = await adminClient.auth.admin.generateLink(
+			{
 				type: "invite",
-				email,
-			})
+				email: data.email,
+			},
+		);
+
+		if (error) throw new Error(error.message);
+
+		await adminClient
+			.from("invites")
+			.insert({ email: data.email, token: linkData.properties.hashed_token })
 			.throwOnError();
 
-		if (error) {
-			throw new Error(error.message);
-		}
-
-		await adminClient.from("invites").insert({
-			email: email,
-			token: data.properties.hashed_token,
-			invited_by: currentUser.user.id,
-		});
-
-		return data.properties.action_link;
-	},
-);
+		return { link: linkData.properties.action_link };
+	});
