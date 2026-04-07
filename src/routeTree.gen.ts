@@ -24,6 +24,8 @@ import { Route as AuthenticatedJournalLayoutRouteImport } from './routes/_authen
 import { Route as AuthenticatedJournalIndexRouteImport } from './routes/_authenticated/journal/index'
 import { Route as AuthenticatedJournalPageIdRouteImport } from './routes/_authenticated/journal/$pageId'
 import { Route as AuthenticatedPagesPageIdRouteImport } from './routes/_authenticated/pages/$pageId'
+import { Route as AuthenticatedTablesTableIdRouteImport } from './routes/_authenticated/tables/$tableId'
+import { Route as AuthenticatedTablesTableIdSettingsRouteImport } from './routes/_authenticated/tables/$tableId/settings'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -98,6 +100,16 @@ const AuthenticatedPagesPageIdRoute = AuthenticatedPagesPageIdRouteImport.update
   path: '/pages/$pageId',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTablesTableIdRoute = AuthenticatedTablesTableIdRouteImport.update({
+  id: '/tables/$tableId',
+  path: '/tables/$tableId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTablesTableIdSettingsRoute = AuthenticatedTablesTableIdSettingsRouteImport.update({
+  id: '/tables/$tableId/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedTablesTableIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -114,6 +126,8 @@ export interface FileRoutesByFullPath {
   '/journal/': typeof AuthenticatedJournalIndexRoute
   '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
   '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
+  '/tables/$tableId': typeof AuthenticatedTablesTableIdRoute
+  '/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,6 +144,8 @@ export interface FileRoutesByTo {
   '/journal/': typeof AuthenticatedJournalIndexRoute
   '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
   '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
+  '/tables/$tableId': typeof AuthenticatedTablesTableIdRoute
+  '/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -148,6 +164,8 @@ export interface FileRoutesById {
   '/_authenticated/journal/': typeof AuthenticatedJournalIndexRoute
   '/_authenticated/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
   '/_authenticated/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
+  '/_authenticated/tables/$tableId': typeof AuthenticatedTablesTableIdRoute
+  '/_authenticated/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -166,6 +184,8 @@ export interface FileRouteTypes {
     | '/journal/'
     | '/journal/$pageId'
     | '/pages/$pageId'
+    | '/tables/$tableId'
+    | '/tables/$tableId/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -182,6 +202,8 @@ export interface FileRouteTypes {
     | '/journal/'
     | '/journal/$pageId'
     | '/pages/$pageId'
+    | '/tables/$tableId'
+    | '/tables/$tableId/settings'
   id:
     | '__root__'
     | '/'
@@ -199,6 +221,8 @@ export interface FileRouteTypes {
     | '/_authenticated/journal/'
     | '/_authenticated/journal/$pageId'
     | '/_authenticated/pages/$pageId'
+    | '/_authenticated/tables/$tableId'
+    | '/_authenticated/tables/$tableId/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,6 +343,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPagesPageIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tables/$tableId': {
+      id: '/_authenticated/tables/$tableId'
+      path: '/tables/$tableId'
+      fullPath: '/tables/$tableId'
+      preLoaderRoute: typeof AuthenticatedTablesTableIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tables/$tableId/settings': {
+      id: '/_authenticated/tables/$tableId/settings'
+      path: '/settings'
+      fullPath: '/tables/$tableId/settings'
+      preLoaderRoute: typeof AuthenticatedTablesTableIdSettingsRouteImport
+      parentRoute: typeof AuthenticatedTablesTableIdRouteImport
+    }
   }
 }
 
@@ -336,12 +374,25 @@ const AuthenticatedJournalLayoutRouteWithChildren = AuthenticatedJournalLayoutRo
   AuthenticatedJournalLayoutRouteChildren,
 )
 
+interface AuthenticatedTablesTableIdRouteChildren {
+  AuthenticatedTablesTableIdSettingsRoute: typeof AuthenticatedTablesTableIdSettingsRoute
+}
+
+const AuthenticatedTablesTableIdRouteChildren: AuthenticatedTablesTableIdRouteChildren = {
+  AuthenticatedTablesTableIdSettingsRoute: AuthenticatedTablesTableIdSettingsRoute,
+}
+
+const AuthenticatedTablesTableIdRouteWithChildren = AuthenticatedTablesTableIdRoute._addFileChildren(
+  AuthenticatedTablesTableIdRouteChildren,
+)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedJournalLayoutRoute: typeof AuthenticatedJournalLayoutRouteWithChildren
   AuthenticatedPagesPageIdRoute: typeof AuthenticatedPagesPageIdRoute
+  AuthenticatedTablesTableIdRoute: typeof AuthenticatedTablesTableIdRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -350,6 +401,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedJournalLayoutRoute: AuthenticatedJournalLayoutRouteWithChildren,
   AuthenticatedPagesPageIdRoute: AuthenticatedPagesPageIdRoute,
+  AuthenticatedTablesTableIdRoute: AuthenticatedTablesTableIdRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
