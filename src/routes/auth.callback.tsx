@@ -27,6 +27,23 @@ function AuthCallbackPage() {
 
 			const { provider_token, provider_refresh_token, user } = data.session;
 
+			// Invite gate: verify user is in the invites table or is the admin.
+			// This blocks any Google OAuth user who wasn't explicitly invited.
+			const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+			if (user.email !== adminEmail) {
+				const { data: invite } = await supabase
+					.from("invites")
+					.select("id")
+					.eq("email", user.email ?? "")
+					.maybeSingle();
+
+				if (!invite) {
+					await supabase.auth.signOut();
+					navigate({ to: "/login" });
+					return;
+				}
+			}
+
 			if (provider_refresh_token) {
 				await supabase
 					.from("profiles")
