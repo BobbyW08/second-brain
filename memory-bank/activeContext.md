@@ -2,7 +2,7 @@
 
 ## Current Ticket
 
-**Ticket 1-B: App shell layout** — CURRENT
+**Ticket 3-E: Create Blocks Directly on Calendar** — CURRENT
 
 ## Last Completed Ticket
 
@@ -14,19 +14,17 @@
 
 ## Next 3 Tickets Queued
 
-1. **Ticket 2-A: Task data layer** — NEXT
-   - Task data layer with TanStack Query hooks
-   - Zustand store
-   - Block size constants
+1. **Ticket 3-F: Calendar Sync** — NEXT
+   - Google Calendar sync functionality
+   - Real-time updates
 
-2. **Ticket 2-B: Priority Bucket UI**
-   - Priority Bucket component with TaskPill components
-   - Completed today section added
-   - Auto-archive functionality already implemented
+2. **Ticket 3-G: Calendar Filtering**
+   - Filter blocks by type
+   - Customizable views
 
-3. **Ticket 2-C: Completed today section + auto-archive**
-   - Completed today section in Priority Bucket
-   - Auto-archive functionality
+3. **Ticket 3-H: Calendar Navigation**
+   - Improved navigation controls
+   - Keyboard shortcuts
 
 ## Session Instructions for Cline
 

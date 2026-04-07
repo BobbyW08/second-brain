@@ -27,9 +27,9 @@
 
 - [x] Ticket 3-A: FullCalendar base setup (3-day view, nowIndicator)
 - [x] Ticket 3-B: Morning/Afternoon/Evening zones
-- [ ] Ticket 3-C: Calendar data layer (CRUD + drag/resize handlers)
-- [ ] Ticket 3-D: Drag from bucket to calendar (FullCalendar Draggable)
-- [ ] Ticket 3-E: Create blocks directly on calendar (select + Dialog)
+- [x] Ticket 3-C: Calendar data layer (CRUD + drag/resize handlers)
+- [x] Ticket 3-D: Drag from bucket to calendar (FullCalendar Draggable)
+- [x] Ticket 3-E: Create blocks directly on calendar (select + Dialog)
 - [ ] Ticket 3-F: Google Calendar sync (read + write + token refresh)
 
 ## Phase 4: Pages, Folders & Journal

@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTasksByPriority } from "@/queries/tasks";
 import { useCreateTask, useCompleteTask, useCompletedTodayTasks } from "@/queries/tasks";
-import { PRIORITY_ORDER, PRIORITY_LABELS } from "@/lib/taskConstants";
+import { PRIORITY_ORDER, PRIORITY_LABELS, BLOCK_SIZE_DURATIONS } from "@/lib/taskConstants";
 import { Plus, CalendarCheck } from "lucide-react";
 import { InlineTaskInput } from "@/components/tasks/InlineTaskInput";
 import { TaskPill } from "@/components/tasks/TaskPill";
+import { Draggable } from '@fullcalendar/interaction'
 
 interface PriorityBucketProps {
   userId: string;
@@ -31,6 +32,22 @@ export function PriorityBucket({ userId }: PriorityBucketProps) {
   }
   const createTask = useCreateTask();
   const completeTask = useCompleteTask();
+  
+  // Initialize FullCalendar Draggable for task pills
+  useEffect(() => {
+    if (!bucketRef.current) return;
+
+    const draggable = new Draggable(bucketRef.current, {
+      itemSelector: '.task-pill',
+      eventData: (el) => ({
+        id: el.dataset.taskId,
+        title: el.dataset.title,
+        duration: BLOCK_SIZE_DURATIONS[el.dataset.blockSize as 'S' | 'M' | 'L'],
+      }),
+    });
+
+    return () => draggable.destroy();
+  }, []);
 
   const handleCreate = (title: string, priority: string) => {
     // Get the count of tasks for this priority from the grouped data

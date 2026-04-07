@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { archiveCompletedTasks } from "@/lib/archiveTasks";
+import { syncGoogleCalendar } from "@/server/googleCalendar";
+import { useProfile } from "@/queries/profile";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 
@@ -11,6 +13,9 @@ export function AppLayout() {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
 	const userId = user?.id;
+	
+	// Get user profile to access Google tokens
+	const { data: profile } = useProfile(userId ?? '');
 
 	// Archive tasks completed before today — runs once per authenticated session
 	useEffect(() => {
@@ -25,6 +30,21 @@ export function AppLayout() {
 				.catch(console.error);
 		}
 	}, [userId, queryClient]);
+
+	// Sync Google Calendar on app load
+	useEffect(() => {
+		if (userId && profile?.google_access_token && profile?.google_refresh_token) {
+			syncGoogleCalendar({ 
+				userId, 
+				accessToken: profile.google_access_token, 
+				refreshToken: profile.google_refresh_token 
+			})
+			.then(() => {
+				queryClient.invalidateQueries({ queryKey: ['calendar-blocks'] })
+			})
+			.catch(console.error)
+		}
+	}, [userId, profile?.google_access_token, profile?.google_refresh_token, queryClient]);
 
 	return (
 		<SidebarProvider>
