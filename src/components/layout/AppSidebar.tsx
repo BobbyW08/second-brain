@@ -26,9 +26,9 @@ import { supabase } from "@/utils/supabase";
 import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 
 const NAV_ITEMS = [
-	{ label: "Calendar", icon: CalendarDays, to: "/dashboard" },
-	{ label: "Pages", icon: BookOpen, to: "/dashboard" },
-	{ label: "Tables", icon: Table2, to: "/dashboard" },
+	{ label: "Calendar", icon: CalendarDays, to: "/calendar" },
+	{ label: "Pages", icon: BookOpen, to: "/pages" },
+	{ label: "Tables", icon: Table2, to: "/tables" },
 ] as const;
 
 export function AppSidebar() {

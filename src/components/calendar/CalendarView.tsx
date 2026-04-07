@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
@@ -10,6 +10,9 @@ import { useAuth } from '@/context/AuthContext'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { getSchedulingSuggestions } from '@/server/schedulingSuggestions'
+import { useLogAIUsage } from '@/queries/aiUsage'
+import { Sparkles, X } from 'lucide-react'
 
 export function CalendarView() {
   const { user } = useAuth()
@@ -39,6 +42,11 @@ export function CalendarView() {
   const [title, setTitle] = useState('')
   const [blockType, setBlockType] = useState<string>('focus')
   
+  // Scheduling suggestions state
+  const [suggestions, setSuggestions] = useState<Array<{taskId:string,suggestedStart:string,suggestedEnd:string,reason:string}>>([])
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set())
+  const { mutate: logUsage } = useLogAIUsage()
+  
   const handleConfirm = () => {
     if (!title.trim() || !pendingBlock || !userId) return
     
@@ -59,6 +67,50 @@ export function CalendarView() {
     setPendingBlock(null)
   }
   
+  // Fetch scheduling suggestions when user is logged in and calendar blocks are available
+  useEffect(() => {
+    if (!userId || !calendarBlocks) return
+    
+    // Only fetch if we have tasks (non-empty calendar blocks with task_id)
+    const tasks = calendarBlocks.filter(block => block.task_id !== null)
+    if (tasks.length === 0) return
+    
+    // Prepare the data for the API call
+    const tasksData = tasks.map(block => ({
+      id: block.task_id ?? '',
+      title: block.title,
+      priority: block.block_type, // Using block_type as priority for now
+      block_size: 'M' // Default to medium block size
+    }))
+    
+    const existingBlocks = calendarBlocks.map(block => ({
+      start_time: block.start_time,
+      end_time: block.end_time,
+      title: block.title
+    }))
+    
+    // Call the API to get scheduling suggestions
+    getSchedulingSuggestions({
+      tasks: tasksData,
+      existingBlocks,
+      date: new Date().toISOString().split('T')[0]
+    })
+    .then(result => {
+      if (result && Array.isArray(result)) {
+        setSuggestions(result)
+        // Log usage
+        logUsage({
+          userId,
+          feature: 'scheduling',
+          tokensUsed: 100,
+        })
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching scheduling suggestions:', error)
+    })
+  }, [userId, calendarBlocks, logUsage])
+  
   return (
     <>
       <FullCalendar
@@ -73,6 +125,7 @@ export function CalendarView() {
         }}
         nowIndicator={true}
         allDaySlot={true}
+        allDayText="Anytime"
         slotMinTime="06:00:00"
         slotMaxTime="22:00:00"
         slotLaneContent={(arg) => {
@@ -183,6 +236,23 @@ export function CalendarView() {
           </div>
         )}
       />
+      
+      {/* Scheduling suggestions bar */}
+      {suggestions.filter(s => !dismissedSuggestions.has(s.taskId)).length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+          {suggestions.filter(s => !dismissedSuggestions.has(s.taskId)).map(s => (
+            <div key={s.taskId} className="flex-shrink-0 bg-muted/50 border rounded-lg px-3 py-2 text-xs max-w-[200px]">
+              <div className="flex justify-between items-start gap-1 mb-1">
+                <Sparkles className="h-3 w-3 text-amber-500 mt-0.5" />
+                <button type="button" onClick={() => setDismissedSuggestions(p => new Set([...p, s.taskId]))}>
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-muted-foreground leading-tight">{s.reason}</p>
+            </div>
+          ))}
+        </div>
+      )}
       
       <Dialog open={!!pendingBlock} onOpenChange={(open) => {
         if (!open) {

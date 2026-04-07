@@ -8,6 +8,7 @@ import { syncGoogleCalendar } from "@/server/googleCalendar";
 import { useProfile } from "@/queries/profile";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 export function AppLayout() {
 	const { user } = useAuth();
@@ -54,6 +55,7 @@ export function AppLayout() {
 				<main className="flex-1 overflow-y-auto p-4">
 					<Outlet />
 				</main>
+				<AIChatPanel />
 			</SidebarInset>
 		</SidebarProvider>
 	);

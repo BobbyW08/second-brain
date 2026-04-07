@@ -1,11 +1,20 @@
 import { useNavigate, Outlet } from '@tanstack/react-router'
 import { useAuth } from '@/context/AuthContext'
 import { useJournalPages } from '@/queries/pages'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function JournalLayout() {
   const { user } = useAuth()
-  const { data: entries } = useJournalPages(user?.id ?? '')
+  const { data: entries, isLoading } = useJournalPages(user?.id ?? '')
   const navigate = useNavigate()
+
+  if (isLoading) {
+    return (
+      <div className="space-y-1 p-2 w-48">
+        {[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full rounded" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">

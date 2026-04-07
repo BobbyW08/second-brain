@@ -3,11 +3,18 @@ import { useParams } from '@tanstack/react-router'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Link, Link2, ChevronRight } from 'lucide-react'
 import { usePage } from '@/queries/pages'
 import { useUpdatePage } from '@/queries/pages'
 import { useAutosave } from '@/hooks/useAutosave'
-import { LinkChip } from '@/components/editor/LinkChip'
+import { editorSchema } from '@/components/editor/linkChipSpec'
+import { CommandDialogComponent } from '@/components/search/CommandDialog'
+import { useBacklinks } from '@/queries/links'
+import { useNavigate } from '@tanstack/react-router'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { createAIExtension } from '@blocknote/xl-ai'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { TONE_SYSTEM_PROMPT, AI_MODELS } from '@/lib/aiConstants'
 
 export function PageView() {
   const { pageId } = useParams({ strict: false })
@@ -16,32 +23,26 @@ export function PageView() {
   const { mutate: updatePage } = useUpdatePage()
 
   const [title, setTitle] = useState(page?.title ?? 'Untitled')
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
+  const navigate = useNavigate()
+  const { data: backlinks } = useBacklinks(pageId ?? '')
+  const [backlinksOpen, setBacklinksOpen] = useState(false)
 
   // Slash command stubs:
   // /link — Phase 6 (Ticket 6-B): opens CommandDialog in link mode
   // /ai   — Phase 7 (Ticket 7-C): replaced by @blocknote/xl-ai configuration
   // These are registered when those tickets are complete. No action needed here.
 
+  const anthropic = createAnthropic()
+  const aiExtension = createAIExtension({
+    model: anthropic(AI_MODELS.default),
+    systemPrompt: TONE_SYSTEM_PROMPT,
+  })
+
   const editor = useCreateBlockNote({
     initialContent: page?.content ?? undefined,
-    inlineContentTypes: [
-      {
-        type: 'linkChip',
-        render: (props) => <LinkChip data={props.content} />,
-      },
-    ],
-    slashCommands: [
-      {
-        name: 'link',
-        execute: (_editor) => {
-          // This will be handled by the CommandDialog in link mode
-          // For now, we'll just show a placeholder
-        },
-        aliases: [],
-        group: 'Insert',
-        description: 'Insert a link to a page, task, folder, or table row',
-      },
-    ],
+    schema: editorSchema,
+    extensions: [aiExtension]
   })
 
   // Autosave content
@@ -93,7 +94,61 @@ export function PageView() {
         onChange={() => saveContent(editor.document)}
         theme="dark"
         slashMenu={true}
+        slashMenuItems={[
+          {
+            title: 'Link',
+            subtext: 'Insert a link to a page, task, or table row',
+            icon: <Link className="h-4 w-4" />,
+            onItemClick: () => setLinkDialogOpen(true),
+            aliases: ['link', 'mention', 'reference'],
+            group: 'Insert',
+          },
+        ]}
       />
+      
+      <CommandDialogComponent
+        mode="link"
+        open={linkDialogOpen}
+        onOpenChange={setLinkDialogOpen}
+        onLinkSelect={(result) => {
+          editor.insertInlineContent([
+            {
+              type: 'linkChip',
+              props: {
+                itemType: result.type,
+                itemId: result.id,
+                itemTitle: result.title,
+              },
+            },
+          ])
+          setLinkDialogOpen(false)
+        }}
+      />
+      
+      {backlinks && backlinks.length > 0 && (
+        <Collapsible open={backlinksOpen} onOpenChange={setBacklinksOpen} className="mt-8 border-t pt-4">
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+            <Link2 className="h-4 w-4" />
+            Linked from ({backlinks.length})
+            <ChevronRight className={`h-3 w-3 transition-transform ${backlinksOpen ? 'rotate-90' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul className="mt-2 space-y-1">
+              {backlinks.map((link) => (
+                <li key={link.id}>
+                  <button
+                    type="button"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    onClick={() => navigate({ to: '/pages/$pageId', params: { pageId: link.sourceId } })}
+                  >
+                    {link.sourceTitle}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </div>
   )
 }

@@ -3,9 +3,10 @@ import { FolderNode } from './FolderNode';
 import { Plus } from 'lucide-react';
 import { useFoldersAndPages, useCreatePage, useRenameNode, useMoveNode, useDeleteNode } from '@/queries/folders';
 import { useNavigate } from '@tanstack/react-router';
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function FolderTree({ userId }: { userId: string }) {
-  const { data: tree } = useFoldersAndPages(userId);
+  const { data: tree, isLoading } = useFoldersAndPages(userId);
   
   const { mutate: createPage } = useCreatePage();
   const { mutate: renameNode } = useRenameNode();
@@ -13,6 +14,14 @@ export function FolderTree({ userId }: { userId: string }) {
   const { mutate: deleteNode } = useDeleteNode();
   
   const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-1 p-2">
+        {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-6 w-full rounded" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

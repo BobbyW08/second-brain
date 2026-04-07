@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm ls:*)",
+      "Bash(grep createServerFn:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsr:*)",
+      "Bash(rm 'src/routes/tables/$tableId.tsx' 'src/routes/tables/$tableId/settings.tsx')",
+      "Bash(rmdir 'src/routes/tables/$tableId')",
+      "Bash(rmdir src/routes/tables)",
+      "Bash(ls:*)"
+    ]
+  }
+}

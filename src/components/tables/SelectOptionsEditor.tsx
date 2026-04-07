@@ -35,7 +35,9 @@ export function SelectOptionsEditor({ columnId, options, onUpdate }: SelectOptio
   };
 
   const handleSaveEdit = (index: number) => {
-    if (editingValue.trim() && !options.includes(editingValue.trim())) {
+    const trimmed = editingValue.trim()
+    // Allow saving if value is non-empty and either unchanged OR not already in the list
+    if (trimmed && (trimmed === options[index] || !options.includes(trimmed))) {
       const newOptions = [...options];
       newOptions[index] = editingValue.trim();
       onUpdate(columnId, { options: newOptions });
@@ -68,6 +70,7 @@ export function SelectOptionsEditor({ columnId, options, onUpdate }: SelectOptio
 
       <div className="space-y-1">
         {options.map((option, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: options list uses positional editing — index is the stable identity
           <div key={index} className="flex items-center gap-2">
             {editingOptionIndex === index ? (
               <div className="flex items-center gap-2">

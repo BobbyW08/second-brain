@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useTasksByPriority } from "@/queries/tasks";
-import { useCreateTask, useCompleteTask, useCompletedTodayTasks } from "@/queries/tasks";
+import { useCreateTask, useCompleteTask } from "@/queries/tasks";
 import { PRIORITY_ORDER, PRIORITY_LABELS, BLOCK_SIZE_DURATIONS } from "@/lib/taskConstants";
-import { Plus, CalendarCheck } from "lucide-react";
+import { Plus } from "lucide-react";
 import { InlineTaskInput } from "@/components/tasks/InlineTaskInput";
 import { TaskPill } from "@/components/tasks/TaskPill";
 import { Draggable } from '@fullcalendar/interaction'
+import { useAuth } from "@/context/AuthContext"
+import { CompletedTodaySection } from "@/components/tasks/CompletedTodaySection"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PriorityBucketProps {
   userId: string;
@@ -15,10 +18,9 @@ export function PriorityBucket({ userId }: PriorityBucketProps) {
   const bucketRef = useRef<HTMLDivElement>(null);
   // bucketRef used by Phase 3 — FullCalendar Draggable init
   const [creating, setCreating] = useState<string | null>(null);
+  const { user } = useAuth();
   const tasksByPriorityQuery = useTasksByPriority(userId);
-  const completedTodayTasksQuery = useCompletedTodayTasks(userId);
   const tasksByPriority = tasksByPriorityQuery.data ?? [];
-  const completedTodayTasks = completedTodayTasksQuery.data ?? [];
   
   // Group tasks by priority
   const tasksByPriorityGrouped: Record<string, typeof tasksByPriority> = {};
@@ -31,7 +33,7 @@ export function PriorityBucket({ userId }: PriorityBucketProps) {
     });
   }
   const createTask = useCreateTask();
-  const completeTask = useCompleteTask();
+  const completeTask = useCompleteTask(user?.id ?? '');
   
   // Initialize FullCalendar Draggable for task pills
   useEffect(() => {
@@ -66,30 +68,17 @@ export function PriorityBucket({ userId }: PriorityBucketProps) {
     completeTask.mutate(taskId);
   };
 
+  if (tasksByPriorityQuery.isLoading) {
+    return (
+      <div className="space-y-2 p-2">
+        {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full rounded-md" />)}
+      </div>
+    );
+  }
+
   return (
     <div ref={bucketRef} className="flex flex-col gap-4">
-      {/* Completed Today Section */}
-      <section className="flex flex-col gap-1">
-        <div className="flex items-center justify-between px-2 py-1">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-            <CalendarCheck className="h-3 w-3" />
-            Completed Today
-          </h2>
-        </div>
-        {completedTodayTasks.length > 0 ? (
-          completedTodayTasks.map((task) => (
-            <TaskPill
-              key={task.id}
-              task={task}
-              onComplete={handleComplete}
-            />
-          ))
-        ) : (
-          <div className="px-2 py-1 text-xs text-muted-foreground">
-            No tasks completed today
-          </div>
-        )}
-      </section>
+      <CompletedTodaySection userId={userId} onComplete={handleComplete} />
 
       {PRIORITY_ORDER.map((priority) => {
         const tasksForPriority = tasksByPriorityGrouped[priority] || [];

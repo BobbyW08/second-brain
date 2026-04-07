@@ -9,8 +9,8 @@ import { UrlCell } from '@/components/tables/cells/UrlCell';
 
 interface TableCellRendererProps {
   column: TableColumn;
-  value: any;
-  onChange: (value: any) => void;
+  value: unknown;
+  onChange: (value: unknown) => void;
 }
 
 export const TableCellRenderer = ({ column, value, onChange }: TableCellRendererProps) => {
@@ -38,15 +38,13 @@ export const TableCellRenderer = ({ column, value, onChange }: TableCellRenderer
   // If we're not editing, show the display version
   if (!isEditing) {
     return (
-      <div
-        role="button"
-        tabIndex={0}
-        className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+      <button
+        type="button"
+        className="cursor-pointer hover:bg-gray-100 p-2 rounded w-full text-left"
         onClick={() => setIsEditing(true)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditing(true) }}
       >
         {renderDisplayValue(column.type, value)}
-      </div>
+      </button>
     );
   }
 
@@ -58,7 +56,7 @@ export const TableCellRenderer = ({ column, value, onChange }: TableCellRenderer
   );
 };
 
-const renderDisplayValue = (type: string, value: any) => {
+const renderDisplayValue = (type: string, value: unknown) => {
   switch (type) {
     case 'text':
     case 'url':
@@ -78,8 +76,8 @@ const renderDisplayValue = (type: string, value: any) => {
 
 const renderEditor = (
   column: TableColumn,
-  value: any,
-  onChange: (value: any) => void,
+  value: unknown,
+  onChange: (value: unknown) => void,
   onKeyDown: (e: React.KeyboardEvent) => void
 ) => {
   switch (column.type) {

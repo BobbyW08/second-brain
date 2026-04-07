@@ -1,0 +1,633 @@
+ Here is Claude's plan:                                                                                                                                         
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Second Brain — Codebase Audit & Adapted Plan           
+
+ Audit Date: 2026-04-07
+
+ ---
+ STATUS REPORT
+
+ SESSION 0 — Repo, Tooling & Environment
+
+ 0-A: Repo initialized          ✅ DONE
+ 0-B: .env.local                ✅ DONE  (all required vars + GOOGLE_CLIENT_ID/SECRET, VITE_ADMIN_EMAIL)
+ 0-C: CLAUDE.md                 ✅ DONE  (9 rules present)
+ 0-D: Memory bank               ✅ DONE  (all 5 .md files + phase notes .txt)
+
+ SESSION 1 — Database Schema, Types & RLS
+
+ 1-A: All 10 tables             ✅ DONE  (profiles, folders, pages, tasks, calendar_blocks,
+                                           tables_schema, table_rows, links, invites, ai_usage)
+ 1-B: RLS policies              ✅ DONE  (4 migration files in supabase/migrations/)
+ 1-C: Profiles trigger          ✅ DONE  (migrations present; handle_new_user presumed included)
+ 1-D: database.types.ts         ✅ DONE
+
+ SESSION 2 — Auth, Google OAuth & Invite Gate
+
+ 2-A: Google OAuth scopes       ✅ DONE  (calendar scope, offline, consent in login + settings)
+ 2-B: shouldCreateUser: false   ⚠️   PARTIAL  — invite system exists in admin/invite.tsx but
+                                               no shouldCreateUser: false found in generateLink
+ 2-C: provider_refresh_token    ✅ DONE  (captured in auth.callback.tsx, written to profiles)
+ 2-D: Protected routes          ✅ DONE  (_authenticated.tsx uses requireAuth())
+
+ SESSION 3 — Complete Data Layer
+
+ profiles.ts                    ⚠️   PARTIAL  — missing: useUpdateGoogleTokens, useDisconnectGoogle
+ tasks.ts                       ⚠️   PARTIAL  — missing: useTask(taskId), useReorderTasks,
+                                               useUndoCompleteTask, useArchiveCompletedBefore
+ calendarBlocks.ts              ⚠️   PARTIAL  — missing: useUndoDeleteCalendarBlock, useSyncGoogleEvents
+ folders.ts                     ✅ DONE  (useFoldersAndPages, buildTree, useCreateFolder,
+                                           useCreatePage, useRenameNode, useMoveNode, useDeleteNode)
+ pages.ts                       ⚠️   PARTIAL  — missing: usePages(folderId?), useDeletePage
+ tables.ts                      ✅ DONE  (useTables, useTableSchema, useCreateTable,
+                                           useUpdateTable, useDeleteTable)
+ tableRows.ts                   ⚠️   PARTIAL  — missing: useTableRow(rowId), useReorderTableRows
+ links.ts                       ❌ NOT DONE  — file does not exist
+ aiUsage.ts                     ❌ NOT DONE  — file does not exist
+ Optimistic updates             ✅ DONE  (onMutate/cancelQueries in tasks, calendarBlocks,
+                                           tables, tableRows; profiles/pages use onSuccess only)
+ .throwOnError() coverage       ✅ DONE  (verified across all existing query files)
+
+ SESSION 4 — Shared Infrastructure
+
+ 4-A: All libraries installed   ✅ DONE  (all required packages confirmed in package.json)
+ 4-B: aiConstants.ts            ❌ NOT DONE  — file does not exist (TONE_SYSTEM_PROMPT, AI_MODELS,
+                                               BLOCK_SIZE_DURATIONS all missing)
+ 4-C: useAutosave               ✅ DONE  (800ms delay, isSaving returned)
+ 4-C: useMediaQuery             ❌ NOT DONE
+ 4-C: useCurrentUser            ❌ NOT DONE
+ 4-C: useCommandDialog          ❌ NOT DONE  (⌘K handled inside CommandDialog itself, no separate hook)
+ 4-D: useTaskStore              ✅ DONE  (in taskStore.ts — selectedTaskId, dragState, setters)
+ 4-D: useUIStore                ❌ NOT DONE
+ 4-E: queryClient.ts            ❌ NOT DONE
+ 4-F: AppLayout                 ⚠️   PARTIAL  — SidebarProvider ✅; Toaster in __root.tsx (OK);
+                                               CommandDialog in TopBar (OK); no ErrorBoundary wrapping
+ 4-G: Route stubs               ⚠️   PARTIAL  — /dashboard STUB (needs CalendarView), /tasks STUB
+                                               (PriorityBucket is in sidebar), /calendar MISSING,
+                                               /pages index MISSING, /tables index MISSING
+ 4-H: EmptyState                ❌ NOT DONE
+ 4-H: ErrorBoundary             ❌ NOT DONE
+ 4-H: LoadingScreen             ❌ NOT DONE
+
+ SESSION 5 — Tasks Page
+
+ TaskPill                       ✅ DONE  (all 4 data attrs: task-id, title, block-size, priority;
+                                           className="task-pill")
+ PriorityBucket                 ⚠️   PARTIAL  — bucketRef + Draggable ✅, three priorities ✅;
+                                               CompletedToday NOT a separate Collapsible component;
+                                               useCompleteTask called without required userId arg (BUG)
+ InlineCreateInput              ✅ DONE  (InlineTaskInput.tsx)
+ CompletedTodaySection          ⚠️   PARTIAL  — static section inside PriorityBucket, not Collapsible
+ Tasks route                    ❌ STUB  — PriorityBucket lives in AppSidebar, /tasks route is placeholder
+ Toast feedback                 ❌ NOT DONE  — no toast.success/error for create, complete, delete
+
+ SESSION 6 — Calendar Page
+
+ CalendarView                   ⚠️   PARTIAL  — timeGridThreeDay ✅, nowIndicator ✅, slotMinTime ✅,
+                                               zone labels ✅, all handlers ✅;
+                                               MISSING: allDayText="Anytime"
+ Draggable                      ✅ DONE  (in PriorityBucket with itemSelector: '.task-pill')
+ handleEventReceive/Drop/Resize ✅ DONE
+ handleSelect                   ✅ DONE
+ googleCalendar.ts              ✅ DONE  (createServerFn, refreshAccessToken on every call)
+ Calendar route                 ❌ NOT DONE  — no dedicated /calendar route; CalendarView only
+                                               reachable inside /dashboard stub
+
+ SESSION 7 — Pages & Folder Tree
+
+ FolderNode                     ✅ DONE  (icon + title + context menu, react-arborist)
+ FolderTree                     ✅ DONE  (Tree component, in AppSidebar)
+ PageView/PageEditor            ✅ DONE  (BlockNote, useAutosave 800ms, saving indicator)
+ $pageId route                  ✅ DONE
+ Pages index route              ❌ NOT DONE  — no /pages index route
+
+ SESSION 8 — Journal Page
+
+ journalUtils (getJournalTitle) ✅ DONE  (in src/lib/getJournalTitle.ts)
+ journalUtils.test              ✅ DONE  (5 test cases)
+ Journal routes                 ✅ DONE  (JournalView auto-creates today entry, JournalLayout
+                                           two-panel, all three routes real)
+
+ SESSION 9 — AI Features
+
+ aiChat.ts                      ❌ NOT DONE
+ aiWriting.ts                   ❌ NOT DONE
+ schedulingSuggestions.ts       ❌ NOT DONE
+ journalPrompt.ts               ❌ NOT DONE
+ useAIContext.ts                ❌ NOT DONE
+ AIChatPanel.tsx                ❌ NOT DONE
+ BlockNote xl-ai                ❌ NOT DONE
+ Scheduling suggestion cards    ❌ NOT DONE
+ Journal AI prompt banner       ❌ NOT DONE
+ useLogAIUsage calls            ❌ NOT DONE
+
+ SESSION 10 — Tables
+
+ Cell components (all 6)        ✅ DONE  (Text, Checkbox, Select, Date, Number, Url)
+ $tableId route (TableView)     ✅ DONE  (plain HTML table, inline editing via TableCellRenderer)
+ $tableId/settings              ✅ DONE  (TableSchemaBuilder)
+ rows/$rowId                    ✅ DONE  (RowDetailView with BlockNote notes)
+ Tables index route             ❌ NOT DONE  — no /tables listing page, no "New table" button
+ Row detail navigation          ❌ NOT DONE  — TableView has no expand/link to rows/$rowId
+
+ SESSION 11 — Global Search & Linking
+
+ CommandDialog                  ✅ DONE  (four search groups, ⌘K, mode prop for link mode)
+ ⌘K trigger                    ✅ DONE  (handled inside CommandDialog)
+ LinkChip BlockNote type        ⚠️   PARTIAL  — LinkChip component exists; inlineContentTypes
+                                               registered in PageView/RowDetailView BUT uses wrong
+                                               BlockNote API (inlineContentTypes not valid in v0.47;
+                                               needs createReactInlineContentSpec + BlockNoteSchema)
+ /link slash command            ⚠️   PARTIAL  — registered in PageView with empty execute fn (no-op)
+ Navigation bugs                ❌  — folder nav → /folders/$id (no such route, will 404);
+                                      table_row nav → /tables/$id/rows/$id (uses result.id as tableId)
+ Backlinks panel                ❌ NOT DONE
+ links.ts                       ❌ NOT DONE
+
+ SESSION 12 — Settings & Admin
+
+ Settings page                  ✅ DONE  (Profile, Appearance, AI Preferences placeholder,
+                                           Google Calendar connect/disconnect)
+ Admin invite                   ✅ DONE  (admin email check, invite form, generateLink)
+
+ SESSION 13 — Polish, Mobile & Testing
+
+ Loading skeletons              ❌ NOT DONE  (no <Skeleton> component used in main views)
+ ErrorBoundary usage            ❌ NOT DONE
+ Mobile layout                  ❌ NOT DONE  (no useMediaQuery, no Drawer for mobile)
+ aiContext.test                 ❌ NOT DONE
+ blockSize.test                 ❌ NOT DONE
+ scheduling.test                ❌ NOT DONE
+ journalUtils.test              ✅ DONE  (5 tests)
+ Tone word check                ✅ PASS  (only match is console.error in RowDetailView — not UI copy)
+
+ VIOLATIONS
+
+ None active. aiConstants.ts doesn't exist yet but no AI code has been written, so Hard Rule 5
+ is not yet violated. Fix it before any AI code is written.
+
+ ---
+ ARCHITECTURAL NOTE
+
+ Current layout differs from V4 spec:
+ - PriorityBucket lives in AppSidebar (not in a dedicated /tasks route)
+ - CalendarView is intended for /dashboard (all nav items currently point to /dashboard stub)
+ - Adapted plan works with this sidebar-first layout — do NOT move PriorityBucket out of sidebar
+
+ Route strategy:
+ - /dashboard → replace stub with CalendarView (this is the default "home")
+ - /tasks → either leave as stub or make it a full-screen PriorityBucket (lower priority)
+ - /pages → EmptyState or redirect to first page
+ - /tables → list all tables + "New table" button
+ - /calendar → can simply redirect to /dashboard
+
+ ---
+ ADAPTED SESSION PLAN
+
+ (Only remaining work. Completed sessions removed.)
+
+ ---
+ FIX-0 — Critical Bug Fixes  (run before anything else)
+
+ Goal: Fix the useCompleteTask userId bug and the CommandDialog navigation bugs before they block testing.
+
+ Files to touch: src/components/tasks/PriorityBucket.tsx, src/components/search/CommandDialog.tsx, src/components/calendar/CalendarView.tsx
+
+ Tickets:
+
+ FIX-0-A: useCompleteTask requires userId
+ - In PriorityBucket.tsx: read const { user } = useAuth() (already imported via useAuth?)
+ - Change const completeTask = useCompleteTask() → const completeTask = useCompleteTask(user?.id ?? '')
+ - Verify build compiles
+
+ FIX-0-B: CommandDialog navigation bugs
+ - Add tableId?: string to SearchResult interface
+ - In searchTableRows useCallback: add tableId: row.table_id to each mapped result object
+ - In handleSelect table_row case: change to
+ router.navigate({ to: '/tables/$tableId/rows/$rowId', params: { tableId: result.tableId!, rowId: result.id } })
+ - Remove the folder case from handleSelect entirely (no folder route exists)
+ - Remove the <CommandGroup heading="Folders"> block from JSX
+ - Remove Folder from lucide-react imports if unused
+ - Fix task.priority null: path: task.priority ?? undefined
+
+ FIX-0-C: CalendarView allDayText
+ - In CalendarView.tsx FullCalendar props: add allDayText="Anytime"
+
+ ---
+ GAP-3 — Data Layer Missing Exports
+
+ Goal: Add missing query hooks to existing query files without touching existing working exports.
+
+ Files to touch: src/queries/profiles.ts, src/queries/tasks.ts, src/queries/calendarBlocks.ts, src/queries/pages.ts, src/queries/tableRows.ts
+ Files to create: src/queries/links.ts, src/queries/aiUsage.ts
+
+ Do NOT touch: folders.ts, tables.ts (complete)
+
+ Tickets:
+
+ GAP-3-A: profiles.ts additions
+ Add to end of file (don't modify existing exports):
+ - useUpdateGoogleTokens() — mutates google_access_token, google_refresh_token, google_token_expiry; invalidates ['profile', userId]
+ - useDisconnectGoogle() — sets all three google_* fields to null; invalidates ['profile', userId]
+ Both use .throwOnError(). No optimistic update needed.
+
+ GAP-3-B: tasks.ts additions
+ Add:
+ - useTask(taskId: string) — single task query, queryKey ['task', taskId], enabled: !!taskId
+ - useReorderTasks(userId: string) — mutates position field on multiple rows; optimistic update
+ - useUndoCompleteTask(userId: string) — reverses completed_at and archived fields; optimistic update
+ - useArchiveCompletedBefore(userId: string) — archives all tasks where completed_at < threshold; invalidates ['tasks', userId]
+
+ GAP-3-C: calendarBlocks.ts additions
+ Add:
+ - useUndoDeleteCalendarBlock() — re-inserts a deleted block by re-inserting its last-known data; optimistic update; invalidates ['calendar-blocks']
+ - useSyncGoogleEvents() — calls syncGoogleCalendar server function; invalidates ['calendar-blocks'] on success
+
+ GAP-3-D: pages.ts additions
+ Add:
+ - usePages(folderId?: string) — queries pages filtered by folder_id if provided; queryKey ['pages', folderId ?? 'all']
+ - useDeletePage() — deletes page by id; optimistic update; invalidates ['pages'] and ['folder-tree']
+
+ GAP-3-E: tableRows.ts additions
+ Add:
+ - useTableRow(rowId: string) — single row query, queryKey ['table-row', rowId], enabled: !!rowId
+ - useReorderTableRows(tableId: string) — mutates position on multiple rows; optimistic update
+
+ GAP-3-F: Create src/queries/links.ts
+ New file. Exports:
+ - useBacklinks(targetId: string) — queries links table where target_id = targetId; queryKey ['backlinks', targetId]; enabled: !!targetId; returns array of {
+ id, source_id, source_title, link_text }
+ - useCreateLink() — inserts into links table (source_id, target_id, link_text, user_id); invalidates ['backlinks', target_id]
+ - useDeleteLink() — deletes link by id; optimistic update; invalidates ['backlinks']
+ All calls use .throwOnError().
+
+ GAP-3-G: Create src/queries/aiUsage.ts
+ New file. Exports:
+ - useAIUsageThisMonth(userId: string) — queries ai_usage where user_id = userId and month = current month; returns total token count; queryKey ['ai-usage',
+ userId, currentMonth]
+ - useLogAIUsage() — inserts into ai_usage (user_id, feature, tokens, model); no cache invalidation needed (fire-and-forget)
+ All calls use .throwOnError().
+
+ ---
+ GAP-4 — Shared Infrastructure Gaps
+
+ Goal: Create all missing shared files. Do NOT modify existing working files (useAutosave, taskStore, AppLayout, __root.tsx).
+
+ Tickets:
+
+ GAP-4-A: Create src/lib/aiConstants.ts  (MUST be first — required by Session 9)
+ export const TONE_SYSTEM_PROMPT = `You are a supportive personal productivity assistant...
+ [prohibited words list and guidelines]
+ Never use: overdue, late, missed, behind, failed, incomplete, "you should", "you need to".`
+
+ export const AI_MODELS = {
+   default: 'claude-sonnet-4-6',
+   fast: 'claude-haiku-4-5-20251001',
+ } as const
+
+ export const BLOCK_SIZE_DURATIONS = {
+   S: 30,   // minutes, visual only
+   M: 60,
+   L: 120,
+ } as const
+
+ GAP-4-B: Create src/hooks/useMediaQuery.ts
+ - export function useMediaQuery(query: string): boolean
+ - Uses window.matchMedia + event listener for live updates
+ - Preset: export const MOBILE_QUERY = '(max-width: 768px)'
+
+ GAP-4-C: Create src/hooks/useCurrentUser.ts
+ - Wraps useAuth() context
+ - Returns { user, userId: user?.id ?? '' } typed
+ - Convenience over calling useAuth() everywhere
+
+ GAP-4-D: Create src/hooks/useCommandDialog.ts
+ - Exports useCommandDialog() → { open, setOpen }
+ - Reads from useUIStore (commandOpen, setCommandOpen)
+ - This decouples the key listener from the CommandDialog component itself
+ - NOTE: After this exists, refactor CommandDialog to use the store instead of local useState for open
+
+ GAP-4-E: Create src/stores/useUIStore.ts
+ - Zustand store with:
+   - commandOpen: boolean + setCommandOpen(open: boolean)
+   - chatPanelOpen: boolean + setChatPanelOpen(open: boolean)
+   - activePageId: string | null + setActivePageId(id: string | null)
+
+ GAP-4-F: Create src/lib/queryClient.ts
+ - Exports a singleton queryClient with:
+   - defaultOptions.mutations.onError: logs error (no swallowing)
+   - staleTime: 1000 * 60 * 5 (5 min)
+ - Note: verify if App.tsx or __root.tsx already creates a QueryClient — if so, extract it here and import it there
+
+ GAP-4-G: Create src/components/shared/EmptyState.tsx
+ - Props: icon?: LucideIcon, title: string, description?: string, action?: ReactNode
+ - Centered layout, muted text, renders icon above title
+
+ GAP-4-H: Create src/components/shared/ErrorBoundary.tsx
+ - Class component wrapping React's error boundary API
+ - Shows a fallback UI: "Something went wrong" + retry button
+
+ GAP-4-I: Replace /dashboard stub + create /tables index + /pages index routes
+ - src/routes/_authenticated/dashboard.tsx: replace stub with <CalendarView /> import
+ - Update nav items in AppSidebar.tsx:
+   - "Calendar" → to: "/dashboard"
+   - "Pages" → to: "/pages" (or navigate to first page if exists)
+   - "Tables" → to: "/tables"
+ - src/routes/_authenticated/pages/index.tsx (new file):
+ <EmptyState title="Select a page" description="Choose a page from the sidebar or create one." />
+ - src/routes/_authenticated/tables/index.tsx (new file):
+ Renders list of tables using useTables(userId) + "New table" button calling useCreateTable(userId)
+ On "New table": creates table with default name "Untitled Table", navigates to /tables/$newId/settings
+
+ ---
+ GAP-5 — Tasks Page Gaps
+
+ Goal: Add Sonner toasts and extract CompletedTodaySection. Do NOT rewrite PriorityBucket from scratch.
+
+ Files to touch: src/components/tasks/PriorityBucket.tsx
+ Files to create: src/components/tasks/CompletedTodaySection.tsx
+
+ Tickets:
+
+ GAP-5-A: Extract CompletedTodaySection
+ - Create src/components/tasks/CompletedTodaySection.tsx
+ - Uses shadcn <Collapsible> (defaultOpen=false)
+ - Reads useCompletedTodayTasks(userId) inside the component
+ - Displays completed task pills (read-only, or with undo button)
+ - Remove the inline "completed today" section from PriorityBucket.tsx
+ - Import and render <CompletedTodaySection /> at bottom of PriorityBucket
+
+ GAP-5-B: Sonner toasts in task mutations
+ - In src/queries/tasks.ts useCreateTask onSuccess: toast.success('Task added')
+ - In useCompleteTask onSuccess: toast.success('Marked complete', { action: { label: 'Undo', onClick: () => undoCompleteTask(...) } })
+ - In useArchiveTask onSuccess: toast.success('Task removed')
+ - Import toast from 'sonner' at top of tasks.ts
+ - NOTE: Sonner Toaster is already in __root.tsx, no changes needed there
+
+ ---
+ GAP-6 — Calendar Route
+
+ Goal: Create a proper /calendar route so CalendarView is accessible from a real URL.
+
+ Files to create: src/routes/_authenticated/calendar.tsx
+ Note: CalendarView component is complete — just needs a route wrapper.
+
+ Tickets:
+
+ GAP-6-A: Create /calendar route
+ import { createFileRoute } from '@tanstack/react-router'
+ import { CalendarView } from '@/components/calendar/CalendarView'
+
+ export const Route = createFileRoute('/_authenticated/calendar')({
+   component: CalendarView,
+ })
+ Register in routeTree.gen.ts (or restart dev server to auto-generate).
+ Update nav item "Calendar" in AppSidebar to to: "/calendar" instead of /dashboard.
+ The /dashboard route can stay as CalendarView too (backward compat).
+
+ ---
+ GAP-10 — Tables Gaps
+
+ Goal: Add row navigation + tables index. Do NOT touch cell components or TableSchemaBuilder.
+
+ Files to touch: src/components/tables/TableView.tsx
+ Files to create: src/routes/_authenticated/tables/index.tsx (covered in GAP-4-I)
+
+ Tickets:
+
+ GAP-10-A: Row detail navigation in TableView
+ - Add useNavigate import from '@tanstack/react-router'
+ - Add a first column header <th> with empty label (or actions header)
+ - In each row, add a first <td> with:
+ <button type="button" onClick={() => navigate({ to: '/tables/$tableId/rows/$rowId', params: { tableId, rowId: row.id } })}>
+   <ChevronRight className="h-4 w-4" />
+ </button>
+ - Button: variant ghost, size icon
+
+ ---
+ GAP-11 — Search & Linking
+
+ Goal: Fix LinkChip BlockNote registration, implement /link slash command, add backlinks panel.
+
+ Files to touch: src/components/pages/PageView.tsx, src/components/tables/RowDetailView.tsx
+ Files to create: src/components/editor/linkChipSpec.ts
+
+ Tickets:
+
+ GAP-11-A: Fix LinkChip BlockNote registration (createReactInlineContentSpec)
+ BlockNote v0.47 requires createReactInlineContentSpec + BlockNoteSchema:
+
+ 1. Create src/components/editor/linkChipSpec.ts:
+ import { createReactInlineContentSpec } from '@blocknote/react'
+ import { BlockNoteSchema, defaultInlineContentSpecs } from '@blocknote/core'
+
+ export const LinkChipSpec = createReactInlineContentSpec(
+   {
+     type: 'linkChip' as const,
+     propSchema: {
+       itemType: { default: 'page' as 'page' | 'task' | 'folder' | 'table_row' },
+       itemId: { default: '' },
+       itemTitle: { default: '' },
+     },
+     content: 'none',
+   },
+   {
+     render: (props) => (
+       <LinkChip
+         data={{
+           type: props.inlineContent.props.itemType,
+           id: props.inlineContent.props.itemId,
+           title: props.inlineContent.props.itemTitle,
+         }}
+       />
+     ),
+   }
+ )
+
+ export const editorSchema = BlockNoteSchema.create({
+   inlineContentSpecs: {
+     ...defaultInlineContentSpecs,
+     linkChip: LinkChipSpec,
+   },
+ })
+
+ 2. In PageView.tsx:
+ - Remove inlineContentTypes and slashCommands from useCreateBlockNote options
+ - Import editorSchema from linkChipSpec
+ - Pass schema: editorSchema to useCreateBlockNote
+ - Add [linkOpen, setLinkOpen] state
+ - Add slashMenuItems prop to <BlockNoteView> including a custom /link item that sets linkOpen(true)
+
+ 3. Repeat same schema change in RowDetailView.tsx
+
+ GAP-11-B: Implement /link slash command execute
+ - In PageView.tsx add const [linkDialogOpen, setLinkDialogOpen] = useState(false)
+ - Add a custom slash command item (using BlockNote's SlashMenuController) that:
+   - Sets linkDialogOpen(true)
+   - Stores current editor cursor position in a ref
+ - Render <CommandDialogComponent mode="link" open={linkDialogOpen} onOpenChange={setLinkDialogOpen} onLinkSelect={(result) => { editor.insertInlineContent([{
+ type: 'linkChip', props: { itemType: result.type, itemId: result.id, itemTitle: result.title } }]) }}  />
+ - CommandDialogComponent already accepts mode and onLinkSelect props (Cline added these)
+
+ GAP-11-C: Backlinks panel in $pageId route
+ - In src/routes/_authenticated/pages/$pageId.tsx (or PageView.tsx):
+   - Import useBacklinks from '@/queries/links'
+   - After the BlockNote editor, render a collapsible "Linked from" section
+   - Shows list of pages that link to this page
+   - Each backlink is a clickable link navigating to /pages/$sourceId
+
+ ---
+ SESSION 9 — AI Features (FULL — 0% complete)
+
+ Goal: Build entire AI layer. Must create aiConstants.ts (GAP-4-A) first.
+
+ Prerequisites: GAP-4-A (aiConstants.ts), GAP-3-G (aiUsage.ts)
+
+ Tickets:
+
+ 9-A: Create src/server/aiChat.ts
+ import { createServerFn } from '@tanstack/react-start'
+ import { anthropic } from '@ai-sdk/anthropic'
+ import { streamText } from 'ai'
+ import { TONE_SYSTEM_PROMPT, AI_MODELS } from '@/lib/aiConstants'
+ import { z } from 'zod'
+
+ export const chatStream = createServerFn({ method: 'POST' })
+   .inputValidator(z.object({ messages: z.array(...), context: z.string().optional() }))
+   .handler(async ({ data }) => {
+     return streamText({
+       model: anthropic(AI_MODELS.default),
+       system: TONE_SYSTEM_PROMPT + (data.context ? '\n\nContext:\n' + data.context : ''),
+       messages: data.messages,
+     })
+   })
+
+ 9-B: Create src/server/aiWriting.ts
+ - Same pattern as aiChat
+ - Input: { prompt: string, selection: string, action: 'improve' | 'summarize' | 'expand' }
+ - Returns single text response (not stream)
+
+ 9-C: Create src/server/schedulingSuggestions.ts
+ - Input: { tasks: Task[], calendarBlocks: CalendarBlock[], userId: string }
+ - Returns { taskId: string, suggestedStart: string, suggestedEnd: string, reason: string }[]
+ - Uses TONE_SYSTEM_PROMPT
+ - Uses generateObject with zod schema for structured output
+
+ 9-D: Create src/server/journalPrompt.ts
+ - Input: { journalDate: string, userId: string }
+ - Returns { prompt: string } — a single reflective question
+ - Uses TONE_SYSTEM_PROMPT
+
+ 9-E: Create src/hooks/useAIContext.ts
+ - Builds a context string from current route data
+ - On /dashboard or /calendar: includes today's calendar blocks + task list
+ - On /pages/$pageId: includes current page title
+ - On /journal: includes journal date
+ - Returns { context: string }
+
+ 9-F: Create src/components/ai/AIChatPanel.tsx
+ - Uses @assistant-ui/react Thread components (AssistantRuntimeProvider, Thread)
+ - Positioned as a slide-out panel (Sheet from shadcn or a fixed right panel)
+ - Panel visibility controlled by useUIStore.chatPanelOpen
+ - Uses chatStream server function
+ - Every response: calls useLogAIUsage() with feature='chat', tokens estimated
+ - Import TONE_SYSTEM_PROMPT for system message (do NOT inline)
+
+ 9-G: Wire AIChatPanel into AppLayout
+ - In AppLayout.tsx: import AIChatPanel, render conditionally on chatPanelOpen
+ - Add chat toggle button to TopBar.tsx
+ - TopBar already imported in AppLayout
+
+ 9-H: BlockNote xl-ai extension in PageView
+ - In PageView.tsx: import createAIExtension from '@blocknote/xl-ai'
+ - Add to editor: extensions: [createAIExtension({ model: anthropic(AI_MODELS.default), systemPrompt: TONE_SYSTEM_PROMPT })]
+ - This enables the AI writing toolbar in the BlockNote editor
+
+ 9-I: Scheduling suggestion cards in CalendarView
+ - Add a SchedulingHints section above or beside the calendar
+ - Calls schedulingSuggestions server function on mount
+ - Renders cards with task name, suggested time, reason
+ - Each card: "Schedule" button (creates a calendar block), "Dismiss" button
+ - Use useLogAIUsage on generation
+
+ 9-J: Journal AI prompt banner in JournalView
+ - In JournalView.tsx: after auto-creating today's entry, call journalPrompt server function
+ - If today's entry is new (just created) or empty: show a dismissable banner with the prompt
+ - Banner: yellow/amber accent, italic prompt text, X dismiss button
+ - Use useLogAIUsage on generation
+
+ ---
+ SESSION 13 — Polish, Mobile & Testing (FULL — 0% complete)
+
+ Goal: Loading states, error handling, mobile layout, and tests.
+
+ Tickets:
+
+ 13-A: Loading skeletons
+ - Verify Skeleton component exists in src/components/ui/skeleton.tsx (shadcn)
+ - PriorityBucket: skeleton TaskPills while tasks loading
+ - JournalLayout: skeleton entry list while pages loading
+ - TableView: skeleton rows while rows loading
+ - FolderTree: skeleton lines while folder tree loading
+ - Use isLoading flag from queries already available in each component
+
+ 13-B: ErrorBoundary wrapping
+ - Wrap major views in AppLayout with <ErrorBoundary>:
+   - The <SidebarInset> outlet
+   - The sidebar content
+
+ 13-C: Mobile layout
+ - Add useMediaQuery(MOBILE_QUERY) import in AppLayout
+ - On mobile: use <Sheet> (vaul or shadcn) for PriorityBucket instead of embedded sidebar
+ - On mobile: CalendarView switches to timeGridDay (single day) instead of 3-day view
+   - Pass isMobile prop or use breakpoint inside CalendarView
+ - FolderTree stays in sidebar on mobile (it's already scrollable)
+
+ 13-D: Vitest tests
+ - src/lib/__tests__/aiContext.test.ts — test that useAIContext returns correct context string for each route type
+ - src/lib/__tests__/blockSize.test.ts — test BLOCK_SIZE_DURATIONS values: S=30, M=60, L=120; test that block sizes are never timers (values match spec)
+ - src/lib/__tests__/scheduling.test.ts — test scheduling suggestion output shape: has taskId, suggestedStart (ISO), suggestedEnd (ISO), reason (string)
+
+ ---
+ VERIFICATION CHECKLIST (run after all sessions)
+
+ 1. npm run lint → 0 errors
+ 2. npm run test → all tests pass (journalUtils 5/5 + new tests)
+ 3. npm run typecheck → 0 TypeScript errors
+ 4. Open app → /dashboard shows CalendarView with 3-day view
+ 5. Tasks appear in sidebar PriorityBucket, drag to calendar works
+ 6. /journal → auto-creates today's entry, two-panel layout
+ 7. /pages/$pageId → BlockNote editor, autosave, ⌘K search, /link command
+ 8. /tables → list of tables with "New table" button
+ 9. /tables/$tableId → rows visible, click ChevronRight navigates to row detail
+ 10. ⌘K → search opens, selecting page navigates to /pages/$id, table row navigates to correct URL
+ 11. AI chat panel opens from TopBar, responds with tone-compliant messages
+ 12. Settings → Google Calendar connects, profile saves
+ 13. Mobile: sidebar becomes sheet drawer on narrow viewport
+
+ ---
+ FILES NOT TO TOUCH (already complete and working)
+
+ - src/queries/folders.ts
+ - src/queries/tables.ts
+ - src/components/tasks/TaskPill.tsx
+ - src/components/tasks/InlineTaskInput.tsx
+ - src/components/calendar/CalendarView.tsx (except allDayText fix)
+ - src/components/folders/FolderNode.tsx
+ - src/components/folders/FolderTree.tsx
+ - src/components/journal/* (all complete)
+ - src/components/tables/cells/* (all 6 + TableCellRenderer)
+ - src/components/tables/TableSchemaBuilder.tsx
+ - src/components/tables/SelectOptionsEditor.tsx
+ - src/routes/auth.callback.tsx
+ - src/routes/login.tsx
+ - src/routes/_authenticated/settings.tsx
+ - src/routes/admin/invite.tsx
+ - src/routes/_authenticated/journal/* (all complete)
+ - src/routes/_authenticated/pages/$pageId.tsx
+ - src/routes/_authenticated/tables/$tableId.tsx
+ - src/routes/_authenticated/tables/$tableId/settings.tsx
+ - src/routes/_authenticated/tables/$tableId/rows/$rowId.tsx
+ - src/server/googleCalendar.ts
+ - src/hooks/useAutosave.ts
+ - src/stores/taskStore.ts

@@ -191,7 +191,7 @@ function ColumnEditorRow({
 
       <div className="flex items-center gap-4">
         <div className="flex-1">
-          <label className="text-sm font-medium text-muted-foreground">Column Type</label>
+          <span className="text-sm font-medium text-muted-foreground">Column Type</span>
           <Select value={column.type} onValueChange={handleTypeChange}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -210,7 +210,7 @@ function ColumnEditorRow({
 
       {column.type === 'select' && (
         <div className="mt-2">
-          <label className="text-sm font-medium text-muted-foreground">Options</label>
+          <span className="text-sm font-medium text-muted-foreground">Options</span>
           <SelectOptionsEditor columnId={column.id} options={column.options || []} onUpdate={onUpdate} />
         </div>
       )}
