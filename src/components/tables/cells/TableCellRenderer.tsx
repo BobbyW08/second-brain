@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ColumnType } from '@/types/tables';
+import type { TableColumn } from '@/queries/tables';
 import { TextCell } from '@/components/tables/cells/TextCell';
 import { CheckboxCell } from '@/components/tables/cells/CheckboxCell';
 import { SelectCell } from '@/components/tables/cells/SelectCell';
@@ -8,7 +8,7 @@ import { NumberCell } from '@/components/tables/cells/NumberCell';
 import { UrlCell } from '@/components/tables/cells/UrlCell';
 
 interface TableCellRendererProps {
-  column: ColumnType;
+  column: TableColumn;
   value: any;
   onChange: (value: any) => void;
 }
@@ -39,8 +39,11 @@ export const TableCellRenderer = ({ column, value, onChange }: TableCellRenderer
   if (!isEditing) {
     return (
       <div
+        role="button"
+        tabIndex={0}
         className="cursor-pointer hover:bg-gray-100 p-2 rounded"
         onClick={() => setIsEditing(true)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditing(true) }}
       >
         {renderDisplayValue(column.type, value)}
       </div>
@@ -50,7 +53,7 @@ export const TableCellRenderer = ({ column, value, onChange }: TableCellRenderer
   // If we're editing, show the appropriate editor
   return (
     <div className="p-2">
-      {renderEditor(column.type, editValue, (newValue) => setEditValue(newValue), handleKeyDown)}
+      {renderEditor(column, editValue, (newValue) => setEditValue(newValue), handleKeyDown)}
     </div>
   );
 };
@@ -74,12 +77,12 @@ const renderDisplayValue = (type: string, value: any) => {
 };
 
 const renderEditor = (
-  type: string,
+  column: TableColumn,
   value: any,
   onChange: (value: any) => void,
   onKeyDown: (e: React.KeyboardEvent) => void
 ) => {
-  switch (type) {
+  switch (column.type) {
     case 'text':
       return (
         <TextCell
@@ -99,7 +102,7 @@ const renderEditor = (
       return (
         <SelectCell
           value={value}
-          options={[]}
+          options={column.options || []}
           onChange={onChange}
         />
       );
