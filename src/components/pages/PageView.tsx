@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { usePage } from '@/queries/pages'
 import { useUpdatePage } from '@/queries/pages'
 import { useAutosave } from '@/hooks/useAutosave'
+import { LinkChip } from '@/components/editor/LinkChip'
 
 export function PageView() {
   const { pageId } = useParams({ strict: false })
@@ -23,11 +24,29 @@ export function PageView() {
 
   const editor = useCreateBlockNote({
     initialContent: page?.content ?? undefined,
+    inlineContentTypes: [
+      {
+        type: 'linkChip',
+        render: (props) => <LinkChip data={props.content} />,
+      },
+    ],
+    slashCommands: [
+      {
+        name: 'link',
+        execute: (_editor) => {
+          // This will be handled by the CommandDialog in link mode
+          // For now, we'll just show a placeholder
+        },
+        aliases: [],
+        group: 'Insert',
+        description: 'Insert a link to a page, task, folder, or table row',
+      },
+    ],
   })
 
   // Autosave content
   const { save: saveContent, isSaving: isSavingContent } = useAutosave(
-    (content: any) => updatePage({ pageId, updates: { content } }),
+    (content: unknown) => updatePage({ pageId, updates: { content } }),
     800
   )
 

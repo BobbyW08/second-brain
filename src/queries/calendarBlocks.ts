@@ -181,3 +181,67 @@ export function useDeleteBlock() {
     },
   })
 }
+
+// ─── Undo Delete ───────────────────────────────────────────────────────────────
+
+export function useUndoDeleteCalendarBlock() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (blockData: CalendarBlock) => {
+      // Re-insert the deleted block with its original data
+      const { data, error } = await supabase
+        .from('calendar_blocks')
+        .insert(blockData)
+        .select()
+        .throwOnError()
+      
+      if (error) throw error
+      return data[0]
+    },
+    onMutate: async (blockData) => {
+      // Optimistically add the block back to the cache
+      queryClient.setQueryData<CalendarBlock[]>(['calendar-blocks'], (old) => [
+        ...(old ?? []),
+        blockData
+      ])
+    },
+    onError: (_err, _blockData, context) => {
+      // Revert optimistic update on error
+      queryClient.setQueryData(['calendar-blocks'], context?.previous)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-blocks'] })
+    },
+  })
+}
+
+// ─── Sync Google Events ────────────────────────────────────────────────────────
+
+export function useSyncGoogleEvents() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('google_access_token, google_refresh_token')
+        .eq('id', userId)
+        .single()
+        .throwOnError()
+
+      if (!profile?.google_access_token || !profile?.google_refresh_token) return
+
+      await syncGoogleCalendar({
+        data: {
+          userId,
+          accessToken: profile.google_access_token,
+          refreshToken: profile.google_refresh_token,
+        },
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-blocks'] })
+    },
+  })
+}

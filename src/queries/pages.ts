@@ -95,3 +95,41 @@ export function useTodayJournalPage(userId: string) {
     },
   })
 }
+
+// ─── Pages ─────────────────────────────────────────────────────────────────────
+
+export function usePages(folderId?: string) {
+  return useQuery({
+    queryKey: ['pages', folderId ?? 'all'],
+    queryFn: async () => {
+      let query = supabase
+        .from('pages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .throwOnError()
+      
+      if (folderId) {
+        query = query.eq('folder_id', folderId)
+      }
+      
+      const { data } = await query
+      return data
+    },
+  })
+}
+
+// ─── Delete Page ───────────────────────────────────────────────────────────────
+
+export function useDeletePage() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (pageId: string) => {
+      await supabase.from('pages').delete().eq('id', pageId).throwOnError()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pages'] })
+      queryClient.invalidateQueries({ queryKey: ['folder-tree'] })
+    },
+  })
+}

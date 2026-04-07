@@ -1,10 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
 // Types for table rows
 type TableRow = Database["public"]["Tables"]["table_rows"]["Row"];
-type TableRowInsert = Database["public"]["Tables"]["table_rows"]["Insert"];
 type TableRowUpdate = Database["public"]["Tables"]["table_rows"]["Update"];
 
 /**
@@ -15,9 +14,9 @@ export function useCreateRow(tableId: string) {
   return useMutation({
     mutationFn: async (input: {
       user_id: string;
-      data: Record<string, any>;
+      data: Record<string, unknown>;
       position?: number | null;
-      notes?: Record<string, any> | null;
+      notes?: Record<string, unknown> | null;
     }) => {
       await supabase
         .from("table_rows")
@@ -66,9 +65,9 @@ export function useUpdateRow(tableId: string) {
   return useMutation({
     mutationFn: async (input: {
       rowId: string;
-      data?: Record<string, any>;
+      data?: Record<string, unknown>;
       position?: number | null;
-      notes?: Record<string, any> | null;
+      notes?: Record<string, unknown> | null;
     }) => {
       const updates: Partial<TableRowUpdate> = {};
       if (input.data !== undefined) updates.data = input.data;
@@ -130,6 +129,74 @@ export function useDeleteRow(tableId: string) {
       return { previous };
     },
     onError: (_err, _rowId, context) => {
+      queryClient.setQueryData(["table-rows", tableId], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["table-rows", tableId] });
+    },
+  });
+}
+
+// ─── Table Row Details ─────────────────────────────────────────────────────────
+
+export function useTableRow(rowId: string) {
+  return useQuery({
+    queryKey: ["table-row", rowId],
+    enabled: !!rowId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("table_rows")
+        .select("*")
+        .eq("id", rowId)
+        .single()
+        .throwOnError();
+      return data;
+    },
+  });
+}
+
+// ─── Reorder Rows ──────────────────────────────────────────────────────────────
+
+export function useReorderTableRows(tableId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { rowIds: string[]; newPositions: number[] }) => {
+      const { rowIds, newPositions } = input;
+      // Update all rows in a single transaction
+      const updates = rowIds.map((rowId, index) => ({
+        id: rowId,
+        position: newPositions[index],
+      }));
+      
+      await supabase
+        .from("table_rows")
+        .upsert(updates, { onConflict: "id" })
+        .throwOnError();
+    },
+    onMutate: async (input) => {
+      const { rowIds, newPositions } = input;
+      await queryClient.cancelQueries({ queryKey: ["table-rows", tableId] });
+      const previous = queryClient.getQueryData<TableRow[]>(["table-rows", tableId]);
+      
+      // Optimistically update positions
+      queryClient.setQueryData<TableRow[]>(["table-rows", tableId], (old) => {
+        if (!old) return old;
+        const updatedRows = [...old];
+        rowIds.forEach((rowId, index) => {
+          const rowIndex = updatedRows.findIndex(r => r.id === rowId);
+          if (rowIndex !== -1) {
+            updatedRows[rowIndex] = {
+              ...updatedRows[rowIndex],
+              position: newPositions[index]
+            };
+          }
+        });
+        return updatedRows;
+      });
+      
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
       queryClient.setQueryData(["table-rows", tableId], context?.previous);
     },
     onSettled: () => {
