@@ -2,29 +2,27 @@
 
 ## Current Ticket
 
-**Ticket 3-E: Create Blocks Directly on Calendar** — CURRENT
+**Ticket 5-A: Table data layer** — CURRENT
 
 ## Last Completed Ticket
 
-**Ticket 1-C: User settings page**
-- Settings page component implemented
-- Profile management
-- Theme toggle
-- Google Calendar integration
+**Ticket 3-E: Create Blocks Directly on Calendar**
+- Calendar block creation
+- Dialog for creating blocks
 
 ## Next 3 Tickets Queued
 
-1. **Ticket 3-F: Calendar Sync** — NEXT
-   - Google Calendar sync functionality
-   - Real-time updates
+1. **Ticket 5-B: Table schema builder** — NEXT
+   - Column type selection
+   - Column configuration
 
-2. **Ticket 3-G: Calendar Filtering**
-   - Filter blocks by type
-   - Customizable views
+2. **Ticket 5-C: Table view with inline editing**
+   - All 6 column types
+   - Inline editing
 
-3. **Ticket 3-H: Calendar Navigation**
-   - Improved navigation controls
-   - Keyboard shortcuts
+3. **Ticket 5-D: Row detail page with BlockNote notes**
+   - Row detail view
+   - BlockNote notes editor
 
 ## Session Instructions for Cline
 

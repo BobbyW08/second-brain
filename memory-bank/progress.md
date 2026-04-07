@@ -30,17 +30,17 @@
 - [x] Ticket 3-C: Calendar data layer (CRUD + drag/resize handlers)
 - [x] Ticket 3-D: Drag from bucket to calendar (FullCalendar Draggable)
 - [x] Ticket 3-E: Create blocks directly on calendar (select + Dialog)
-- [ ] Ticket 3-F: Google Calendar sync (read + write + token refresh)
+- [x] Ticket 3-F: Google Calendar sync (read + write + token refresh)
 
 ## Phase 4: Pages, Folders & Journal
 
-- [ ] Ticket 4-A: Folder tree (react-arborist, CRUD, drag reorder)
-- [ ] Ticket 4-B: BlockNote page editor (autosave, custom slash commands)
-- [ ] Ticket 4-C: Journal section (auto-date, BlockNote, Vitest title tests)
+- [x] Ticket 4-A: Folder tree (react-arborist, CRUD, drag reorder)
+- [x] Ticket 4-B: BlockNote page editor (autosave, custom slash commands)
+- [x] Ticket 4-C: Journal section (auto-date, BlockNote, Vitest title tests)
 
 ## Phase 5: Tables
 
-- [ ] Ticket 5-A: Table data layer
+- [x] Ticket 5-A: Table data layer
 - [ ] Ticket 5-B: Table schema builder
 - [ ] Ticket 5-C: Table view with inline editing (all 6 column types)
 - [ ] Ticket 5-D: Row detail page with BlockNote notes

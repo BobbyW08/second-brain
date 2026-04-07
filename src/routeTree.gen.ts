@@ -20,6 +20,10 @@ import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
+import { Route as AuthenticatedJournalLayoutRouteImport } from './routes/_authenticated/journal/_layout'
+import { Route as AuthenticatedJournalIndexRouteImport } from './routes/_authenticated/journal/index'
+import { Route as AuthenticatedJournalPageIdRouteImport } from './routes/_authenticated/journal/$pageId'
+import { Route as AuthenticatedPagesPageIdRouteImport } from './routes/_authenticated/pages/$pageId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -75,6 +79,25 @@ const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
   path: '/tasks/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJournalLayoutRoute = AuthenticatedJournalLayoutRouteImport.update({
+  id: '/journal/_layout',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedJournalIndexRoute = AuthenticatedJournalIndexRouteImport.update({
+  id: '/journal/',
+  path: '/journal/',
+  getParentRoute: () => AuthenticatedJournalLayoutRouteWithChildren,
+} as any)
+const AuthenticatedJournalPageIdRoute = AuthenticatedJournalPageIdRouteImport.update({
+  id: '/journal/$pageId',
+  path: '/journal/$pageId',
+  getParentRoute: () => AuthenticatedJournalLayoutRouteWithChildren,
+} as any)
+const AuthenticatedPagesPageIdRoute = AuthenticatedPagesPageIdRouteImport.update({
+  id: '/pages/$pageId',
+  path: '/pages/$pageId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +110,10 @@ export interface FileRoutesByFullPath {
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
+  '/journal': typeof AuthenticatedJournalLayoutRoute
+  '/journal/': typeof AuthenticatedJournalIndexRoute
+  '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
+  '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +126,10 @@ export interface FileRoutesByTo {
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
+  '/journal': typeof AuthenticatedJournalLayoutRoute
+  '/journal/': typeof AuthenticatedJournalIndexRoute
+  '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
+  '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +144,10 @@ export interface FileRoutesById {
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
+  '/_authenticated/journal/_layout': typeof AuthenticatedJournalLayoutRouteWithChildren
+  '/_authenticated/journal/': typeof AuthenticatedJournalIndexRoute
+  '/_authenticated/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
+  '/_authenticated/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +162,10 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/auth/callback'
     | '/tasks/'
+    | '/journal'
+    | '/journal/'
+    | '/journal/$pageId'
+    | '/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +178,10 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/auth/callback'
     | '/tasks'
+    | '/journal'
+    | '/journal/'
+    | '/journal/$pageId'
+    | '/pages/$pageId'
   id:
     | '__root__'
     | '/'
@@ -152,6 +195,10 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/auth/callback'
     | '/_authenticated/tasks/'
+    | '/_authenticated/journal/_layout'
+    | '/_authenticated/journal/'
+    | '/_authenticated/journal/$pageId'
+    | '/_authenticated/pages/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,19 +291,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/journal/_layout': {
+      id: '/_authenticated/journal/_layout'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof AuthenticatedJournalLayoutRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/journal/': {
+      id: '/_authenticated/journal/'
+      path: '/'
+      fullPath: '/journal/'
+      preLoaderRoute: typeof AuthenticatedJournalIndexRouteImport
+      parentRoute: typeof AuthenticatedJournalLayoutRouteImport
+    }
+    '/_authenticated/journal/$pageId': {
+      id: '/_authenticated/journal/$pageId'
+      path: '/$pageId'
+      fullPath: '/journal/$pageId'
+      preLoaderRoute: typeof AuthenticatedJournalPageIdRouteImport
+      parentRoute: typeof AuthenticatedJournalLayoutRouteImport
+    }
+    '/_authenticated/pages/$pageId': {
+      id: '/_authenticated/pages/$pageId'
+      path: '/pages/$pageId'
+      fullPath: '/pages/$pageId'
+      preLoaderRoute: typeof AuthenticatedPagesPageIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
+
+interface AuthenticatedJournalLayoutRouteChildren {
+  AuthenticatedJournalIndexRoute: typeof AuthenticatedJournalIndexRoute
+  AuthenticatedJournalPageIdRoute: typeof AuthenticatedJournalPageIdRoute
+}
+
+const AuthenticatedJournalLayoutRouteChildren: AuthenticatedJournalLayoutRouteChildren = {
+  AuthenticatedJournalIndexRoute: AuthenticatedJournalIndexRoute,
+  AuthenticatedJournalPageIdRoute: AuthenticatedJournalPageIdRoute,
+}
+
+const AuthenticatedJournalLayoutRouteWithChildren = AuthenticatedJournalLayoutRoute._addFileChildren(
+  AuthenticatedJournalLayoutRouteChildren,
+)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
+  AuthenticatedJournalLayoutRoute: typeof AuthenticatedJournalLayoutRouteWithChildren
+  AuthenticatedPagesPageIdRoute: typeof AuthenticatedPagesPageIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
+  AuthenticatedJournalLayoutRoute: AuthenticatedJournalLayoutRouteWithChildren,
+  AuthenticatedPagesPageIdRoute: AuthenticatedPagesPageIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

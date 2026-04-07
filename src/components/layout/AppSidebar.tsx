@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { FolderTree } from "@/components/folders/FolderTree";
 
 import { BookOpen, CalendarDays, LogOut, Settings, Table2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -78,6 +79,19 @@ export function AppSidebar() {
 						) : (
 							<div className="p-4 text-center text-muted-foreground">
 								Please sign in to view tasks
+							</div>
+						)}
+					</SidebarGroupContent>
+				</SidebarGroup>
+
+				{/* Folder Tree */}
+				<SidebarGroup>
+					<SidebarGroupContent>
+						{user ? (
+							<FolderTree userId={user.id} />
+						) : (
+							<div className="p-4 text-center text-muted-foreground">
+								Please sign in to view pages
 							</div>
 						)}
 					</SidebarGroupContent>

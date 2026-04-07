@@ -111,7 +111,7 @@ export function useUpdateBlock() {
         
         if (!profileData.google_access_token || !profileData.google_refresh_token) return data[0]
         
-        const updateData: any = {}
+        const updateData: { title?: string; start_time?: string; end_time?: string } = {}
         if (updates.title !== undefined) updateData.title = updates.title
         if (updates.start_time !== undefined) updateData.start_time = updates.start_time
         if (updates.end_time !== undefined) updateData.end_time = updates.end_time

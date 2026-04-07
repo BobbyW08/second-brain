@@ -1,0 +1,1094 @@
+Below is a cleaned, Cline-safe Phase 5 block in the same style as the Phase 2 rewrite, with the verification guardrails added so it stops falling into npm/install/dev-server loops. The Phase 5 scope and ticket structure come directly from your build plan and audit notes, including the table routes, hook names, column types, TanStack Table base, and BlockNote row-notes pattern.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Phase 5 block
+Phase 5: Tables (3–4 sessions)
+Tables in this phase are backed by the tablesschema and tablerows tables, with schema stored in tablesschema.columns as JSONB and row values stored in tablerows.data as JSONB. The recommended base is TanStack Table plus the shadcn Data Table pattern, while the row detail page reuses the same BlockNote autosave approach already established for page editing.second-brain-build-plan-v3.md.md+1
+
+Ticket 5-A: Table data layer
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 5-A: Table data layer
+Project folder: C:\dev\second_brain
+Current phase: Phase 5 — Tables[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. All packages already required for this ticket are already available in the project, and install attempts can trigger the known peer-dependency loop caused by the Mantine/BlockNote dependency chain. The project .npmrc already contains legacy-peer-deps=true; do not try to “fix” dependencies for this ticket.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+Do not run npm run dev for this ticket. Verify only with:
+shell
+npm run typecheck
+npm run lint
+Both commands must exit with 0 errors. If either command reports a missing script, first confirm you are in C:\dev\second_brain and re-read package.json; treat it as a shell/path/script-name issue, not a reason to install packages.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+You are already working in the project root. Do not prepend cd second_brain to commands.
+
+CONTEXT
+This ticket creates the tables data layer only. Do not build routes or UI components here. The goal is to establish the TanStack Query hooks for table schemas and table rows so Tickets 5-B through 5-D can build on a stable base.second-brain-build-plan-v3.md.md
+Dynamic tables in this app are stored in:
+tablesschema — one record per custom table, with columns JSONB
+tablerows — one record per row, with data JSONB and optional notes JSONB[ file:9]
+Use the generated database types from src/types/database.types.ts. Do not define manual duplicate table or row types unless a narrow derived helper type is needed.second-brain-build-plan-v3.md.md
+Already installed and ready to import:
+@tanstack/react-query
+configured Supabase client already used elsewhere in the app
+existing generated database types in src/types/database.types.tssecond-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. BUILD TABLE QUERY HOOKS
+File path: src/queries/tables.ts
+Export these hooks:
+useTables(userId: string)
+Fetch all tables for the current user, ordered by created_at or another stable deterministic order already used in the app. Query key: ['tables', userId].second-brain-build-plan-v3.md.md
+useCreateTable(userId: string)
+Insert a new row into tablesschema. Minimum input should support:
+user_id
+name
+folder_id?
+columns defaulting to []
+On success, invalidate ['tables', userId]. Include an optimistic update that appends the new table to cache immediately.second-brain-build-plan-v3.md.md
+useTableSchema(tableId: string)
+Fetch a single tablesschema record by id. Query key: ['table-schema', tableId].second-brain-build-plan-v3.md.md
+useTableRows(tableId: string)
+Fetch all rows for the given table, ordered by position. Query key: ['table-rows', tableId].second-brain-build-plan-v3.md.md
+All Supabase calls must end with .throwOnError().second-brain-build-plan-v3.md.md
+2. BUILD TABLE ROW MUTATION HOOKS
+File path: src/queries/tableRows.ts
+Export these hooks:
+useCreateRow(tableId: string)
+useUpdateRow(tableId: string)
+useDeleteRow(tableId: string)second-brain-build-plan-v3.md.md
+Behavior requirements:
+useCreateRow() inserts a row into tablerows with:
+table_id
+user_id
+data
+position
+optional notessecond-brain-build-plan-v3.md.md
+useUpdateRow() updates data, notes, and/or position for a single row.second-brain-build-plan-v3.md.md
+useDeleteRow() deletes a row by id.second-brain-build-plan-v3.md.md
+For all three mutations:
+use TanStack Query optimistic updates
+rollback on error
+invalidate ['table-rows', tableId] on settle[ file:8]second-brain-build-plan-v3.md.md
+3. DEFINE TABLE COLUMN HELPER TYPES
+Use the database types as the source of truth, but add narrow helper types in a colocated file only if they improve safety for the schema JSON shape. The valid column types for this phase are exactly:
+text
+checkbox
+select
+date
+number
+urlsecond-brain-build-plan-v3.md.md
+If you create a helper type, keep it minimal, for example:
+TableColumnType
+TableColumn
+SelectOption if needed for inline option editing in Ticket 5-B
+Do not invent extra types beyond what Phase 5 needs.second-brain-build-plan-v3.md.md
+4. NORMALIZE QUERY KEY CONSTANTS
+If the repo already has a query-key pattern, follow it. Otherwise create a small internal constant pattern in the query files so all later tickets reuse the same keys:
+['tables', userId]
+['table-schema', tableId]
+['table-rows', tableId]second-brain-build-plan-v3.md.md
+Keep this local and simple; do not create a large abstraction layer.
+
+FILES TO CREATE
+src/queries/tables.ts — new file
+src/queries/tableRows.ts — new file
+
+HARD RULES REMINDER
+All Supabase calls end with .throwOnError().second-brain-build-plan-v3.md.md
+Use TanStack Query for all server state; do not move server data into Zustand.second-brain-build-plan-v3.md.md
+Do not create table UI in this ticket.
+Valid column types are only: text, checkbox, select, date, number, url.second-brain-build-plan-v3.md.md
+Use generated database types from src/types/database.types.ts where possible.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+useTables, useCreateTable, useTableSchema, and useTableRows are exported from src/queries/tables.ts.second-brain-build-plan-v3.md.md
+useCreateRow, useUpdateRow, and useDeleteRow are exported from src/queries/tableRows.ts.second-brain-build-plan-v3.md.md
+All mutations use optimistic updates with rollback on error.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+All query keys are stable and consistent.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Update memory-bank/activeContext.md: mark 5-A complete, set 5-B as current ticket.
+Update memory-bank/progress.md: check off Ticket 5-A.
+Save the generic TanStack Query CRUD pattern for row-based JSONB data to C:\dev\coding_templates\tanstack\table-row-hooks.ts with placeholders.
+
+Ticket 5-B: Table schema builder
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 5-B: Table schema builder
+Project folder: C:\dev\second_brain
+Current phase: Phase 5 — Tables[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If a script appears missing, confirm the shell is actually in C:\dev\second_brain and re-check package.json before doing anything else. Do not attempt dependency installs.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+Do not use cd second_brain.
+
+CONTEXT
+This ticket builds the schema builder UI for custom tables. The route is /tables/$tableId/settings. The user must be able to add, rename, reorder, and delete columns, and choose each column’s type. For select columns, the option list must be editable inline.second-brain-build-plan-v3.md.md
+Persist the final schema to tablesschema.columns JSONB. This ticket edits schema only, not row values.second-brain-build-plan-v3.md.md
+The schema builder should be practical and lightweight. This is configuration UI, not a spreadsheet editor.
+Already available:
+hooks from Ticket 5-A
+shadcn input/button/select/sheet/card style primitives already present in the project
+DnD or reorder pattern already used elsewhere if available; if not, use a simple up/down reorder approach rather than adding a new dependency[ file:9]
+
+SUB-TASKS
+1. CREATE THE SETTINGS ROUTE
+Route path: /tables/$tableId/settingssecond-brain-build-plan-v3.md.md
+Create the route file using the repo’s existing TanStack Router file convention. Load the table schema using useTableSchema(tableId).second-brain-build-plan-v3.md.md
+If the table is missing, render a clean not-found state for this route.
+2. BUILD THE SCHEMA EDITOR
+Create a schema editor component that renders the current columns array from tablesschema.columns. Each column row must support:
+rename column
+change column type
+reorder column
+delete column[ file:9]
+Each column object stored in JSONB should support at least:
+id
+name
+type
+options for select columns when applicable[ file:9]
+Do not store UI-only flags in the persisted schema.
+3. SUPPORT ALL PHASE 5 COLUMN TYPES
+Type selector must support exactly:
+text
+checkbox
+select
+date
+number
+urlsecond-brain-build-plan-v3.md.md
+When a column type changes away from select, remove or ignore options cleanly so the schema does not accumulate dead shape.
+4. INLINE OPTION MANAGEMENT FOR SELECT COLUMNS
+For select columns, render inline option editing directly beneath or within that column’s config row:
+add option
+rename option
+delete option
+reorder if simple to support without extra dependency; otherwise stable append/remove is acceptable for this ticket[ file:9]
+Keep the saved shape simple and deterministic.
+5. SAVE SCHEMA BACK TO SUPABASE
+Add a mutation path that updates tablesschema.columns on save.second-brain-build-plan-v3.md.md
+Use optimistic updates if practical, but correctness is more important than over-engineering this settings screen. If you choose explicit Save instead of autosave, keep it reliable and obvious.
+
+FILES TO CREATE OR MODIFY
+route file for /tables/$tableId/settings — new
+src/components/tables/TableSchemaBuilder.tsx — new
+supporting small local components if needed, such as:
+src/components/tables/ColumnEditorRow.tsx
+src/components/tables/SelectOptionsEditor.tsx
+Keep the file count reasonable.
+
+HARD RULES REMINDER
+Save schema to tablesschema.columns JSONB.second-brain-build-plan-v3.md.md
+Column types are only: text, checkbox, select, date, number, url.second-brain-build-plan-v3.md.md
+No extra dependency installs for schema editing.
+No tone-violating copy in labels, comments, variables, or empty states.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+Route /tables/$tableId/settings renders.
+User can add, rename, reorder, and delete columns.second-brain-build-plan-v3.md.md
+User can change a column type using a dropdown.second-brain-build-plan-v3.md.md
+select columns support inline option list management.second-brain-build-plan-v3.md.md
+Saving updates tablesschema.columns correctly.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually verify: create a select column, add options, save, refresh, confirm options persist.
+Update memory-bank/activeContext.md: mark 5-B complete, set 5-C as current ticket.
+Update memory-bank/progress.md: check off Ticket 5-B.
+
+Ticket 5-C: Table view with inline editing
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 5-C: Table view with inline editing
+Project folder: C:\dev\second_brain
+Current phase: Phase 5 — Tables[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket uses the recommended existing base: TanStack Table plus the shadcn Data Table pattern already identified in the project plan.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If commands fail, debug code and script/path issues first. Do not use package installation as a repair strategy.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+No cd second_brain.
+
+CONTEXT
+This ticket builds the actual table view at /tables/$tableId. It must render dynamic columns from tablesschema.columns, render rows from tablerows.data, and support inline editing for all supported cell types.second-brain-build-plan-v3.md.md
+Use TanStack Table + shadcn Data Table as the base. The audit explicitly recommends this stack as the lighter, design-consistent option over Material React Table.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Required cell types:
+text
+checkbox
+select
+date
+number
+url[ file:9]
+Rows must save on blur or direct interaction, and users must be able to add a new row with a + Add row action at the bottom.second-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. CREATE THE TABLE ROUTE
+Route path: /tables/$tableIdsecond-brain-build-plan-v3.md.md
+Load:
+schema via useTableSchema(tableId)
+rows via useTableRows(tableId)second-brain-build-plan-v3.md.md
+Render a loading state and a clean empty state if there are no rows.
+2. BUILD DYNAMIC TANSTACK TABLE COLUMNS
+Generate TanStack Table column definitions from the schema JSONB array in tablesschema.columns.second-brain-build-plan-v3.md.md
+Each generated column must use the correct renderer/editor by type.
+3. BUILD CELL RENDERERS PER TYPE
+Implement these exact behaviors:
+text: display text, switch to <Input> on click, save on blur.second-brain-build-plan-v3.md.md
+checkbox: render <Checkbox>, toggle saves immediately.second-brain-build-plan-v3.md.md
+select: render shadcn <Select> using the schema option list, save on selection.second-brain-build-plan-v3.md.md
+date: render shadcn calendar popover picker, save selected date value.second-brain-build-plan-v3.md.md
+number: render <Input type="number">, save on blur.second-brain-build-plan-v3.md.md
+url: display as clickable <a> when not editing; switch to <Input> on edit, save on blur.second-brain-build-plan-v3.md.md
+Keep each cell editor isolated and small. Avoid one giant conditional component if splitting improves clarity.
+4. ENABLE TABLE BUILT-INS
+Use TanStack Table built-ins for:
+sort
+filter
+column visibility[ file:9]
+Do not overbuild advanced spreadsheet behavior in this ticket.
+5. SUPPORT NEW ROW CREATION
+At the bottom of the table, add:
++ Add row button
+clicking it creates an inline empty row using the current schema shape[ file:9]
+Use useCreateRow() from Ticket 5-A.second-brain-build-plan-v3.md.md
+6. SAVE ON BLUR / DIRECT INTERACTION
+For editable cells, save on blur or equivalent completion event. The acceptance criteria for Phase 5 explicitly require rows to save on blur.second-brain-build-plan-v3.md.md
+Use useUpdateRow() with minimal row patching so you only update what changed.
+
+FILES TO CREATE OR MODIFY
+route file for /tables/$tableId — new or modify if placeholder exists
+src/components/tables/TableView.tsx — new
+src/components/tables/cells/TextCell.tsx — optional new
+src/components/tables/cells/CheckboxCell.tsx — optional new
+src/components/tables/cells/SelectCell.tsx — optional new
+src/components/tables/cells/DateCell.tsx — optional new
+src/components/tables/cells/NumberCell.tsx — optional new
+src/components/tables/cells/UrlCell.tsx — optional new
+You may consolidate some of these if the implementation stays readable.
+
+HARD RULES REMINDER
+Use TanStack Table + shadcn Data Table as base.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Supported cell types are exactly: text, checkbox, select, date, number, url.second-brain-build-plan-v3.md.md
+Rows save on blur or direct interaction.second-brain-build-plan-v3.md.md
+No extra table library installs.
+Keep UI copy neutral and tone-compliant.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+Route /tables/$tableId renders the table.second-brain-build-plan-v3.md.md
+Dynamic columns render from schema JSONB.
+All six cell types edit inline.second-brain-build-plan-v3.md.md
+Sort, filter, and column visibility work via TanStack Table built-ins.second-brain-build-plan-v3.md.md
++ Add row creates a new row inline.second-brain-build-plan-v3.md.md
+Edited row values save on blur.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test every column type with one sample value.
+Manually verify: edit a value, blur the field, refresh, confirm persistence.
+Update memory-bank/activeContext.md: mark 5-C complete, set 5-D as current ticket.
+Update memory-bank/progress.md: check off Ticket 5-C.
+
+Ticket 5-D: Row detail page
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 5-D: Row detail page
+Project folder: C:\dev\second_brain
+Current phase: Phase 5 — Tables[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. The BlockNote row-notes portion of this ticket should reuse the same editor/autosave pattern already established earlier in the app, not introduce new dependencies.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If a script error appears, confirm directory and script names first. Do not attempt installs.
+No cd second_brain.
+
+CONTEXT
+This ticket builds the row detail page at /tables/$tableId/rows/$rowId. The page shows all row fields in a vertical form layout and adds BlockNote editing for row notes using the same autosave pattern already used for page editing.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+This page is the “full detail” view for a row, not a second spreadsheet. Keep it clean and form-like.
+
+SUB-TASKS
+1. CREATE THE ROW DETAIL ROUTE
+Route path: /tables/$tableId/rows/$rowIdsecond-brain-build-plan-v3.md.md
+Load:
+table schema
+row data
+row notes if present in tablerows.notessecond-brain-build-plan-v3.md.md
+Render a clear not-found state if the row or table does not exist.
+2. BUILD THE VERTICAL FORM LAYOUT
+Render every field from the table schema in a vertical stacked layout:
+label from column name
+field control chosen by column type
+current value from tablerows.datasecond-brain-build-plan-v3.md.md
+Reuse the same field renderers where possible, adapted for form layout.
+3. SAVE FIELD EDITS RELIABLY
+Edits should save using the row update mutation. Saving can occur on blur or immediate interaction, matching the interaction model from the table view.second-brain-build-plan-v3.md.md
+4. ADD BLOCKNOTE ROW NOTES
+Add a notes editor bound to tablerows.notes.second-brain-build-plan-v3.md.md
+Use the same debounced autosave pattern established for page editing:
+initialize editor with existing JSON content
+debounce updates
+persist to Supabase
+show a lightweight saving indicator if the app already has that pattern[ file:8]
+Do not create a second autosave architecture if one already exists.
+5. ADD BREADCRUMB NAVIGATION
+Add a visible breadcrumb or simple link:
+← Back to tablesecond-brain-build-plan-v3.md.md
+This should navigate back to /tables/$tableId.
+
+FILES TO CREATE OR MODIFY
+route file for /tables/$tableId/rows/$rowId — new
+src/components/tables/RowDetailView.tsx — new
+small shared field renderer helpers if needed
+
+HARD RULES REMINDER
+Row detail route is /tables/$tableId/rows/$rowId.second-brain-build-plan-v3.md.md
+Show all fields in a vertical form layout.second-brain-build-plan-v3.md.md
+Use BlockNote for row notes with the same autosave pattern used elsewhere.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+No new dependency installs for this ticket.
+Keep copy neutral and tone-compliant.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+Route /tables/$tableId/rows/$rowId opens.second-brain-build-plan-v3.md.md
+All row fields render in a vertical form layout.second-brain-build-plan-v3.md.md
+Field edits save correctly.
+BlockNote row notes load and autosave correctly.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+← Back to table navigation works.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: open a row, edit multiple field types, refresh, confirm persistence.
+Manually test: edit row notes, wait for autosave, refresh, confirm persistence.
+Update memory-bank/activeContext.md: mark 5-D complete, set 6-A as current ticket.
+Update memory-bank/progress.md: check off Ticket 5-D and mark Phase 5 complete.
+Save the dynamic table cell renderer pattern to C:\dev\coding_templates\tables\dynamic-cell-renderers.tsx with placeholders.
+If you want, I can now do the same full rewrite for Phase 6 and keep the exact same hardened format.second-brain-build-plan-v3.md.md
+
+Below is the same hardened, Cline-safe rewrite for Phase 6 and Phase 7, using the Phase 5 style: explicit verification blocks, no install loops, no dev-server verification, no cd second_brain, and tighter instructions around what Cline should do when it hits script confusion. The ticket scope, routes, feature mapping, and library choices come from your build plan and audit, including CommandDialog/cmdk for global search, custom BlockNote LinkChip inline content for linking, and Vercel AI SDK plus assistant-ui plus blocknote/xl-ai for AI features.second-brain-build-plan-v3.md.md+1
+Phase 6 block
+Phase 6: Universal Linking + Global Search (2 sessions)
+This phase adds the global command search, inline linking inside BlockNote, and the backlinks panel. The audit explicitly maps this phase to shadcn Command/cmdk for the modal search UI and BlockNote custom inline content for link chips, with the links table handling bidirectional references.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+
+Ticket 6-A: K global search
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 6-A: K global search
+Project folder: C:\dev\second_brain
+Current phase: Phase 6 — Universal Linking + Global Search[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. The build plan for this feature references shadcn Command / cmdk, and the audit already identifies it as the intended command palette base for this phase. If the component is not yet present in the repo, Claude Code should add it in a controlled review step; Cline should not start by troubleshooting npm.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+Both commands must exit with 0 errors. If either command reports a missing script, confirm you are in C:\dev\second_brain and re-read package.json before retrying. Treat it as a script/path issue, not a dependency problem.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+You are already in the project directory. Do not use cd second_brain.
+
+CONTEXT
+This ticket builds the global search command palette opened by ⌘K / Ctrl+K. It searches across:
+Pages
+Tasks
+Folders
+Table rows[ file:9]
+The audit recommends shadcn Command / cmdk for this exact feature, with grouped results and keyboard navigation handled by the component pattern rather than custom modal logic. Search should query Supabase in parallel and present grouped results with icon, title, and path/context.second-brain-build-plan-v3.md.md+1
+This ticket builds the command UI and search behavior only. It does not insert links into BlockNote yet; that comes in Ticket 6-B.second-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. BUILD THE GLOBAL COMMAND DIALOG
+Create CommandDialog.tsx using the repo’s existing shadcn/cmdk pattern if already scaffolded. The dialog must:
+open on ⌘K / Ctrl+K
+close on Escape
+support arrow key navigation
+navigate on Enter[ file:8]second-brain-build-plan-v3.md.md
+Use a useEffect keydown listener at the app shell level or a reusable mounted component so the shortcut works globally after login.second-brain-build-plan-v3.md.md
+2. SEARCH ALL FOUR GROUPS
+Search groups must be:
+Pages
+Tasks
+Folders
+Table rows[ file:9]
+Use Supabase queries appropriate to each entity:
+pages: search title and, if practical, relevant content text
+tasks: search title
+folders: search name
+table rows: search row text representation or relevant fields from data JSONB[ file:9]
+Keep the implementation pragmatic. Do not overbuild full-text indexing in this ticket.
+3. GROUP AND DISPLAY RESULTS
+Render results inside grouped CommandGroup sections with:
+type icon
+result title
+lightweight path/context text beneath or beside it[ file:9]
+Examples of context text:
+page folder path
+task priority bucket label
+table name for a row result
+Use plain, readable copy. No noisy status indicators.
+4. NAVIGATE TO THE CORRECT DESTINATION
+On Enter or click:
+Page → navigate to /pages/$pageId
+Task → navigate to the task-related destination already established in the app
+Folder → navigate to the most appropriate folder destination or first child page if the app already has a folder-centered route pattern
+Table row → navigate to /tables/$tableId/rows/$rowId[ file:9]
+If a destination is not yet fully implemented, keep the route consistent with the current app architecture and do not invent dead links.
+5. HANDLE EMPTY AND LOADING STATES
+Add:
+loading state while queries resolve
+no-results state when nothing matches
+debounced input if needed to reduce query thrash
+Keep the dialog responsive and simple.
+
+FILES TO CREATE OR MODIFY
+src/components/search/CommandDialog.tsx — new
+app shell/top bar file where the global listener is mounted — modify
+optional search query helper file if needed, for example:
+src/queries/search.ts
+Keep the abstraction light.
+
+HARD RULES REMINDER
+Search groups are Pages, Tasks, Folders, Table rows.second-brain-build-plan-v3.md.md
+Use shadcn Command / cmdk pattern, not a custom modal from scratch.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Keyboard navigation must work.
+No dependency install loops.
+No tone-violating labels, comments, or variable names.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+⌘K / Ctrl+K opens the search dialog.second-brain-build-plan-v3.md.md
+Results are grouped into Pages, Tasks, Folders, and Table rows.second-brain-build-plan-v3.md.md
+Arrow keys navigate results and Enter activates the selected result.second-brain-build-plan-v3.md.md
+Each result shows icon, title, and path/context.
+Navigating from a result opens the correct route.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: shortcut opens dialog, search returns grouped results, Enter navigates.
+Update memory-bank/activeContext.md: mark 6-A complete, set 6-B as current ticket.
+Update memory-bank/progress.md: check off Ticket 6-A.
+Save the grouped command search pattern to C:\dev\coding_templates\search\command-dialog.tsx with placeholders.
+
+Ticket 6-B: Inline page linking in BlockNote
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 6-B: Inline page linking in BlockNote
+Project folder: C:\dev\second_brain
+Current phase: Phase 6 — Universal Linking + Global Search[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. The audit notes that BlockNote already supports custom inline content types, and this ticket should extend the existing editor setup rather than pull in new editor dependencies.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If a script appears missing, confirm the shell path and re-read package.json first. Do not attempt installs to solve editor code issues.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+No cd second_brain.
+
+CONTEXT
+This ticket adds inline linking inside BlockNote by registering a custom LinkChip inline content type. The chip should display a selected page or item inline in the editor, and the slash command link should open the command dialog in a “link mode” so the user can select a target and insert the chip.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+The saved editor content must preserve the inline chip data in BlockNote JSON. This ticket is about inline insertion and persistence; the backlinks display comes in Ticket 6-C.second-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. REGISTER A CUSTOM LINKCHIP INLINE CONTENT TYPE
+Extend the existing BlockNote editor configuration to register a custom inline content type named LinkChip.second-brain-build-plan-v3.md.md
+The chip should visually show:
+item type icon
+item title
+At minimum, the stored data should include:
+type of linked item
+id of linked item
+display label/title[ file:9]
+Keep the display compact and neutral.
+2. ADD A link SLASH COMMAND
+Register a custom slash command named link in BlockNote using the existing slash-menu extension pattern.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Behavior:
+selecting link opens the global command dialog in link-selection mode
+search results are filtered to valid linkable items
+selecting a result inserts a LinkChip inline at the cursor position[ file:9]
+Do not create a separate modal if the global command dialog can be reused cleanly.
+3. SUPPORT MULTIPLE LINKABLE ITEM TYPES
+The build plan refers to selected items by type and id, not only pages.second-brain-build-plan-v3.md.md
+Support at least the same linkable categories the app can meaningfully reference now, based on the app’s current entity set:
+pages
+tasks
+table rows[ file:9]
+If folders are linkable in your implementation, keep it consistent with the same shape.
+4. SAVE CHIP DATA INTO BLOCKNOTE JSON
+Ensure the inserted inline content is persisted in the page content JSON so a refresh restores the chip correctly.second-brain-build-plan-v3.md.md
+Do not degrade the content to plain text on save.
+5. KEEP THE COMMAND DIALOG REUSABLE
+Refactor the command dialog only as much as necessary so it can operate in:
+normal navigation mode
+link insertion mode[ file:9]
+Avoid forking two separate search UIs.
+
+FILES TO CREATE OR MODIFY
+BlockNote editor setup file(s) used by page editing — modify
+src/components/editor/LinkChip.tsx — new
+src/components/search/CommandDialog.tsx — modify for link mode
+slash-command registration file or editor helper — modify
+
+HARD RULES REMINDER
+Register a custom LinkChip inline content type in BlockNote.second-brain-build-plan-v3.md.md
+link slash command opens the command dialog in link mode.second-brain-build-plan-v3.md.md
+Insert selected item as inline chip with type and id data.second-brain-build-plan-v3.md.md
+Save chip data in BlockNote JSON.second-brain-build-plan-v3.md.md
+No new editor dependency installs.
+
+ACCEPTANCE CRITERIA
+Typing the link slash command exposes the custom link action.second-brain-build-plan-v3.md.md
+Selecting it opens the command dialog in link mode.
+Choosing a result inserts an inline LinkChip.second-brain-build-plan-v3.md.md
+Refreshing the page preserves and re-renders the chip from saved BlockNote JSON.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: insert at least one page link and one other entity type if supported.
+Refresh the page and verify the chip persists.
+Update memory-bank/activeContext.md: mark 6-B complete, set 6-C as current ticket.
+Update memory-bank/progress.md: check off Ticket 6-B.
+
+Ticket 6-C: Backlinks panel
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 6-C: Backlinks panel
+Project folder: C:\dev\second_brain
+Current phase: Phase 6 — Universal Linking + Global Search[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket uses the existing links table plus the link chip insertion flow from Ticket 6-B.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If a script/path issue appears, debug that directly. Do not use package installation as a fallback.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+No cd second_brain.
+
+CONTEXT
+This ticket completes the linking loop by writing records to the links table when a LinkChip is inserted, then showing a backlinks section in PageView.tsx for every record where the current page is the target.second-brain-build-plan-v3.md.md
+The build plan requires:
+query links where targetid = page.id
+display a clickable list of linked item titles
+on link insert, write sourceid / targetid and type metadata to the links table[ file:9]
+This should remain lightweight. No graph visualization or advanced relation explorer in this phase.
+
+SUB-TASKS
+1. WRITE TO links TABLE ON CHIP INSERT
+When a user inserts a LinkChip, create a row in the links table with:
+user_id
+source_type
+source_id
+target_type
+target_id[ file:9]
+Use the current editing context to determine the source item. For example, while editing a page, the source is that page.second-brain-build-plan-v3.md.md
+All Supabase writes must end with .throwOnError().
+2. PREVENT DUPLICATE LINK RECORDS
+If the same source-target pair is inserted multiple times in the same context, handle duplicates cleanly. At minimum:
+avoid creating uncontrolled duplicate rows
+use a simple existence check before insert if no DB uniqueness constraint exists
+Keep the implementation pragmatic.
+3. QUERY BACKLINKS FOR THE CURRENT PAGE
+In PageView.tsx, below the editor, add a section titled:
+Linked fromsecond-brain-build-plan-v3.md.md
+Query all links records where:
+target_id === currentPage.id
+target_type === 'page'second-brain-build-plan-v3.md.md
+Resolve titles for linked source items so the panel displays human-readable entries, not raw IDs.
+4. DISPLAY CLICKABLE BACKLINKS
+Render backlinks as a simple list of clickable items:
+source item title
+source item type indicator if helpful[ file:9]
+Clicking a backlink should navigate to the source item.
+5. KEEP THE PANEL QUIET WHEN EMPTY
+If there are no backlinks:
+either hide the panel entirely, or
+show a very small neutral empty state
+Do not add guilt-oriented or noisy copy.
+
+FILES TO CREATE OR MODIFY
+page editor or link insertion logic — modify
+PageView.tsx — modify
+optional query helper file for links, for example:
+src/queries/links.ts
+
+HARD RULES REMINDER
+On LinkChip insert, write to the links table.second-brain-build-plan-v3.md.md
+Backlinks panel appears in PageView.tsx below the editor.second-brain-build-plan-v3.md.md
+Panel title is Linked from.second-brain-build-plan-v3.md.md
+Use .throwOnError() on all Supabase calls.second-brain-build-plan-v3.md.md
+No new dependency installs.
+
+ACCEPTANCE CRITERIA
+Inserting a link chip writes a corresponding row to the links table.second-brain-build-plan-v3.md.md
+PageView.tsx shows a Linked from section for referenced pages.second-brain-build-plan-v3.md.md
+Backlinks render as clickable titles.
+Clicking a backlink navigates to the source item.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: create a link from one page to another, then verify the target page shows the backlink.
+Update memory-bank/activeContext.md: mark 6-C complete, set 7-A as current ticket.
+Update memory-bank/progress.md: check off Ticket 6-C and mark Phase 6 complete.
+Save the generic link-record pattern to C:\dev\coding_templates\links\backlinks-pattern.ts with placeholders.
+
+Phase 7 block
+Phase 7: AI Features (3–4 sessions)
+This phase adds the tone system prompt, AI chat sidebar, AI writing in BlockNote, scheduling suggestions, journal prompts, and AI usage tracking. The build plan and audit map these features to a shared aiConstants.ts, Vercel AI SDK streamText server functions, assistant-ui for chat, and blocknote/xl-ai for editor writing assistance.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+
+Ticket 7-A: Tone system prompt and AI constants
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-A: Tone system prompt and AI constants
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket is constants/config only. It should not trigger dependency work.second-brain-build-plan-v3.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+If a script appears missing, confirm the shell path and inspect package.json before doing anything else.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+No cd second_brain.
+
+CONTEXT
+This ticket centralizes AI model names and the required supportive tone rules into src/lib/aiConstants.ts. The build plan is explicit: every AI route must import the shared tone system prompt and must never inline prompt policy inside each route.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+The prompt must explicitly prohibit the following words and phrases:
+overdue
+late
+missed
+behind
+failed
+incomplete
+you should
+you need to[ file:9]
+This ticket lays the foundation for every later AI route.
+
+SUB-TASKS
+1. CREATE src/lib/aiConstants.ts
+Export:
+TONE_SYSTEM_PROMPT
+AI_MODELSsecond-brain-build-plan-v3.md.md
+2. DEFINE THE SHARED TONE PROMPT
+The prompt should instruct the model to use supportive, forward-focused language and explicitly prohibit the banned words/phrases listed above.second-brain-build-plan-v3.md.md
+Keep it concise, reusable, and route-agnostic.
+3. DEFINE THE MODEL CONSTANTS
+Set:
+chat model: claude-3-5-sonnet-20241022
+suggestions model: claude-3-haiku-20240307second-brain-build-plan-v3.md.md
+Keep the structure easy to import in server functions.
+4. ADD A CLEAR USAGE RULE COMMENT
+At the top of the file or near the exports, add a short comment making it unambiguous:
+all AI routes must import from this file
+do not inline system prompts in route files[ file:9]
+
+FILES TO CREATE
+src/lib/aiConstants.ts — new
+
+HARD RULES REMINDER
+Every AI route must import TONE_SYSTEM_PROMPT from src/lib/aiConstants.ts.second-brain-build-plan-v3.md.md
+Never inline the system prompt in an AI route.second-brain-build-plan-v3.md.md
+Explicitly prohibit the listed negative words and phrases.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+src/lib/aiConstants.ts exists and exports TONE_SYSTEM_PROMPT and AI_MODELS.second-brain-build-plan-v3.md.md
+Tone prompt is supportive and explicitly blocks the banned words/phrases.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Update memory-bank/activeContext.md: mark 7-A complete, set 7-B as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-A.
+Save the reusable AI constants pattern to C:\dev\coding_templates\ai\ai-constants.ts.
+
+Ticket 7-B: AI chat sidebar
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-B: AI chat sidebar
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install unless Claude Code has explicitly reviewed and approved the exact AI packages already specified in the build plan:
+assistant-ui
+ai
+@ai-sdk/anthropic or the repo’s equivalent Anthropic adapter naming
+any required assistant-ui AI SDK bridge package if the project pattern uses it[ file:8]second-brain-build-plan-v3.md.md
+Cline must not improvise package changes. If imports fail, stop and compare the exact installed package names to package.json before attempting anything else.
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+No cd second_brain.
+
+CONTEXT
+This ticket adds the AI chat sidebar using:
+a TanStack Start server function with streamText
+assistant-ui for the thread/composer UI
+a route-aware AI context builder
+mobile behavior that renders the panel as a bottom sheet[ file:8]second-brain-build-plan-v3.md.md
+The build plan requires:
+server function src/server/aiChat.ts
+UI component AIChatPanel.tsx
+useAIContext.ts to build context from the current page/task/date
+streaming via useChat[ file:9]
+Every AI route must import TONE_SYSTEM_PROMPT and model constants from src/lib/aiConstants.ts.second-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. CREATE THE CHAT SERVER FUNCTION
+Create src/server/aiChat.ts as a TanStack Start server function using the Vercel AI SDK streamText pattern.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Requirements:
+import TONE_SYSTEM_PROMPT
+use AI_MODELS.chat
+return a streaming response via the app’s supported AI SDK response helper[ file:9]
+Do not create a separate /api folder.
+2. BUILD useAIContext.ts
+Create a route-aware context builder that collects the most relevant current context, depending on where the user is:
+current page content/title
+current task context
+current calendar date/range
+current journal entry context if applicable[ file:9]
+Keep this focused and token-conscious. Build a helpful context string, not a full dump of app state.
+3. BUILD AIChatPanel.tsx
+Use assistant-ui components for:
+thread display
+messages
+composer[ file:8]second-brain-build-plan-v3.md.md
+The panel should:
+toggle from a top-bar icon
+render as a sidebar on desktop
+render as a full bottom sheet on mobile[ file:9]
+4. CONNECT STREAMING CHAT
+Wire the client to the server function with streaming so responses render progressively.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Use the shared context builder on every send.
+5. KEEP THE UI CALM AND SUPPORTIVE
+The chat UI copy must remain neutral and supportive. Do not add nagging productivity language.
+
+FILES TO CREATE OR MODIFY
+src/server/aiChat.ts — new
+src/hooks/useAIContext.ts — new
+src/components/ai/AIChatPanel.tsx — new
+top bar / app shell file — modify to mount toggle
+optional mobile sheet wrapper component if needed
+
+HARD RULES REMINDER
+All AI routes import TONE_SYSTEM_PROMPT from src/lib/aiConstants.ts.second-brain-build-plan-v3.md.md
+Use TanStack Start server functions, not a separate API folder.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Use assistant-ui for the chat UI base.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+Use streaming response pattern.
+Keep all copy tone-compliant.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+Chat panel opens from the app UI.second-brain-build-plan-v3.md.md
+Messages stream progressively from the backend.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Context is included from the current app location via useAIContext.ts.second-brain-build-plan-v3.md.md
+Mobile renders as a bottom sheet/full-screen sheet pattern.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: open chat, send a prompt, confirm streaming response.
+Manually test on mobile width: confirm sheet behavior.
+Update memory-bank/activeContext.md: mark 7-B complete, set 7-C as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-B.
+Save the streaming chat server-function pattern to C:\dev\coding_templates\ai\stream-chat-route.ts.
+
+Ticket 7-C: AI writing in BlockNote
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-C: AI writing in BlockNote
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install unless Claude Code has already verified the exact BlockNote AI package already planned for the project:
+@blocknote/xl-ai or the repo’s exact installed package name
+any already-approved peer packages[ file:8]second-brain-build-plan-v3.md.md
+This ticket is especially prone to dependency churn because of the known BlockNote/Mantine peer issues. Do not attempt repair installs from Cline.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+No cd second_brain.
+
+CONTEXT
+This ticket adds AI writing support inside BlockNote using the planned BlockNote AI package and a custom backend route powered by the same streaming pattern as chat.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+The build plan requires:
+server function src/server/aiWriting.ts
+configure BlockNote AI to use the custom backend route
+expose AI toolbar button and ai slash command through the editor integration[ file:9]
+Do not expose an Anthropic API key on the client.
+
+SUB-TASKS
+1. CREATE src/server/aiWriting.ts
+Build a TanStack Start server function for editor writing actions using the shared AI constants and streaming pattern.second-brain-build-plan-v3.md.md
+Use:
+TONE_SYSTEM_PROMPT
+appropriate model constant
+no inlined prompt policy[ file:9]
+2. CONNECT BLOCKNOTE AI TO THE CUSTOM BACKEND
+Configure the editor AI integration to call the custom backend route rather than hitting Anthropic directly from the browser.second-brain-build-plan-v3.md.md
+Client code must not contain raw provider keys.
+3. ENABLE BUILT-IN AI SURFACES
+Expose the AI toolbar button and ai slash command provided by the BlockNote AI integration.Second-Brain-Pre-Built-Resources-Efficiency-Audit.md.md+1
+Keep the default supported actions:
+continue writing
+summarize
+rewrite
+brainstorm[ file:9]
+4. REUSE EXISTING PAGE/JOURNAL EDITOR CONTEXT
+Ensure the AI writing route gets relevant editor context and document content without duplicating the app’s context logic unnecessarily.
+
+FILES TO CREATE OR MODIFY
+src/server/aiWriting.ts — new
+BlockNote editor setup files — modify
+page/journal editor integration files — modify
+
+HARD RULES REMINDER
+Do not expose provider API keys on the client.second-brain-build-plan-v3.md.md
+Every AI route imports TONE_SYSTEM_PROMPT from src/lib/aiConstants.ts.second-brain-build-plan-v3.md.md
+Use custom backend route for editor AI.second-brain-build-plan-v3.md.md
+No install loops or dependency improvisation.
+
+ACCEPTANCE CRITERIA
+BlockNote AI actions are available in the editor.second-brain-build-plan-v3.md.md
+Requests flow through the custom backend route, not directly from the client.second-brain-build-plan-v3.md.md
+AI responses respect the shared tone prompt.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test at least two editor AI actions.
+Update memory-bank/activeContext.md: mark 7-C complete, set 7-D as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-C.
+
+Ticket 7-D: Scheduling suggestions
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-D: Scheduling suggestions
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket is a server-function + UI integration task built on the already-planned AI stack.second-brain-build-plan-v3.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+No cd second_brain.
+
+CONTEXT
+This ticket generates lightweight scheduling suggestions based on:
+current urgent/important tasks
+current calendar blocks for the next 7 days[ file:9]
+The build plan requires:
+src/server/schedulingSuggestions.ts
+use of the lower-cost suggestions model
+UI cards shown above the calendar bucket
+user can accept or dismiss[ file:9]
+These are suggestions, not hard commitments. Keep the language light and non-judgmental.
+
+SUB-TASKS
+1. CREATE THE SERVER FUNCTION
+Create src/server/schedulingSuggestions.ts.second-brain-build-plan-v3.md.md
+Input:
+relevant current tasks
+next 7 days of calendar blocks[ file:9]
+Output:
+array of { taskId, suggestedStart, suggestedEnd, reason }second-brain-build-plan-v3.md.md
+Use:
+AI_MODELS.suggestions
+TONE_SYSTEM_PROMPTsecond-brain-build-plan-v3.md.md
+2. BUILD THE PAYLOAD CLEANLY
+Construct a compact scheduling payload so the model gets:
+task titles
+priority
+block size
+relevant scheduled commitments[ file:9]
+Do not send unnecessary large content blobs.
+3. DISPLAY SUGGESTION CARDS
+Render non-blocking suggestion cards above the calendar bucket or in the adjacent scheduling area:
+recommendation text
+accept action
+dismiss action[ file:9]
+Example pattern from the plan:
+“Consider scheduling [task] on [day] at [time]”second-brain-build-plan-v3.md.md
+Keep wording supportive.
+4. ACCEPT / DISMISS BEHAVIOR
+Accept → creates the calendar block
+Dismiss → hides the suggestion for 24 hours in client state or another lightweight persistence strategy[ file:9]
+Keep dismiss logic simple for MVP.
+
+FILES TO CREATE OR MODIFY
+src/server/schedulingSuggestions.ts — new
+calendar view or task bucket integration component — modify
+optional src/components/ai/SchedulingSuggestions.tsx — new
+
+HARD RULES REMINDER
+Use AI_MODELS.suggestions for this feature.second-brain-build-plan-v3.md.md
+Suggestions are non-blocking and supportive.second-brain-build-plan-v3.md.md
+Accept creates a block; dismiss hides for 24 hours.second-brain-build-plan-v3.md.md
+All AI routes import shared AI constants.
+
+ACCEPTANCE CRITERIA
+Suggestions render from real current tasks and calendar context.second-brain-build-plan-v3.md.md
+Accept creates the proposed block.second-brain-build-plan-v3.md.md
+Dismiss hides the suggestion for 24 hours.second-brain-build-plan-v3.md.md
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: generate suggestions, accept one, dismiss one.
+Update memory-bank/activeContext.md: mark 7-D complete, set 7-E as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-D.
+
+Ticket 7-E: Journal AI prompts
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-E: Journal AI prompts
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket reuses the existing AI route pattern.second-brain-build-plan-v3.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+No cd second_brain.
+
+CONTEXT
+This ticket generates a reflective journal prompt when a journal page is new or empty. The build plan requires:
+server function src/server/journalPrompt.ts
+inputs: day of week, recent task completions, tone preference from profiles
+output: a single reflective prompt in a subtle banner above the editor[ file:9]
+The banner must include:
+Start writing button
+Dismiss button[ file:9]
+This feature should feel invitational, not evaluative.
+
+SUB-TASKS
+1. CREATE THE SERVER FUNCTION
+Create src/server/journalPrompt.ts using the shared AI constants.second-brain-build-plan-v3.md.md
+Input:
+current weekday
+recent task completions
+tone preference from profilessecond-brain-build-plan-v3.md.md
+Output:
+one reflective prompt string[ file:9]
+2. TRIGGER ONLY FOR NEW / EMPTY JOURNAL ENTRIES
+When the journal page is empty or newly created, call the prompt function and show the result above the editor.second-brain-build-plan-v3.md.md
+Do not keep re-requesting prompts for already-started entries.
+3. BUILD THE PROMPT BANNER
+Render a subtle banner above the editor with:
+prompt text
+Start writing
+Dismiss[ file:9]
+Start writing should focus the editor.
+4. KEEP THE COPY SUPPORTIVE
+No productivity scoring, no guilt framing, no pushy wording.
+
+FILES TO CREATE OR MODIFY
+src/server/journalPrompt.ts — new
+journal route / journal view component — modify
+optional src/components/ai/JournalPromptBanner.tsx — new
+
+HARD RULES REMINDER
+Use shared AI constants.second-brain-build-plan-v3.md.md
+Output one reflective prompt only.second-brain-build-plan-v3.md.md
+Banner buttons are Start writing and Dismiss.second-brain-build-plan-v3.md.md
+Only show for new or empty journal entries.second-brain-build-plan-v3.md.md
+
+ACCEPTANCE CRITERIA
+New/empty journal entries show an AI-generated prompt banner.second-brain-build-plan-v3.md.md
+Start writing focuses the editor.second-brain-build-plan-v3.md.md
+Dismiss hides the banner.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test: open a new journal entry and verify prompt banner behavior.
+Update memory-bank/activeContext.md: mark 7-E complete, set 7-F as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-E.
+
+Ticket 7-F: AI usage tracking
+Read memory-bank/activeContext.md, memory-bank/techContext.md, and CLAUDE.md before doing anything else. Follow all Hard Rules in CLAUDE.md throughout this ticket.second-brain-build-plan-v3.md.md
+
+TICKET 7-F: AI usage tracking
+Project folder: C:\dev\second_brain
+Current phase: Phase 7 — AI Features[ file:9]
+VERIFICATION — READ BEFORE WRITING ANY CODE
+Do not run npm install. This ticket is data logging plus a light settings display.second-brain-build-plan-v3.md.md
+Do not run npm run dev. Verify only with:
+shell
+npm run typecheck
+npm run lint
+No cd second_brain.
+
+CONTEXT
+This ticket logs AI usage events to the aiusage table and surfaces a lightweight monthly informational count in Settings. The build plan requires tracking these features:
+chat
+writing
+scheduling
+journalprompt[ file:9]
+The settings display must be informational only, never framed as a warning or quota threat.second-brain-build-plan-v3.md.md
+
+SUB-TASKS
+1. CREATE A REUSABLE LOGGING PATH
+Create a reusable hook or helper such as useLogAIUsage(feature) or a lightweight shared mutation utility that inserts into aiusage on every AI call.second-brain-build-plan-v3.md.md
+Tracked values:
+user_id
+feature
+optional tokens_used if available from the response path[ file:9]
+2. WIRE LOGGING INTO ALL AI FEATURES
+Hook usage logging into:
+chat
+writing
+scheduling
+journal prompt[ file:9]
+Keep the implementation centralized as much as practical.
+3. ADD SETTINGS DISPLAY
+In Settings, show:
+AI calls this month: nsecond-brain-build-plan-v3.md.md
+This must be informational only. No warning styling, no scarcity language, no pressure copy.
+4. KEEP FAILURE NON-BLOCKING
+If usage logging fails, it should not break the underlying AI action. Handle logging errors quietly and safely.
+
+FILES TO CREATE OR MODIFY
+src/hooks/useLogAIUsage.ts or equivalent — new
+AI feature integration files — modify
+settings page — modify
+
+HARD RULES REMINDER
+Track features: chat, writing, scheduling, journalprompt.second-brain-build-plan-v3.md.md
+Settings display is informational only.second-brain-build-plan-v3.md.md
+Logging failure must not block the AI feature.
+Keep tone compliant.
+
+ACCEPTANCE CRITERIA
+AI usage events are logged for all four AI feature categories.second-brain-build-plan-v3.md.md
+Settings shows an informational monthly AI call count.second-brain-build-plan-v3.md.md
+Logging failures do not break AI actions.
+TypeScript compiles with no errors and lint passes cleanly.
+
+WHEN DONE
+Run npm run typecheck — must exit with 0 errors.
+Run npm run lint — must exit with 0 errors.
+Manually test one event from each AI feature path if available.
+Update memory-bank/activeContext.md: mark 7-F complete, set 8-A as current ticket.
+Update memory-bank/progress.md: check off Ticket 7-F and mark Phase 7 complete.
+Save the AI usage logging pattern to C:\dev\coding_templates\ai\usage-logger.ts.
+If you want, I can next turn this into one clean paste-ready Phase 6 + Phase 7 block with no commentary, just the final ticket text for dropping straight into your plan.second-brain-build-plan-v3.md.md
+
+
