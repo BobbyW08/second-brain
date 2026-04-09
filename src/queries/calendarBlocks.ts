@@ -60,13 +60,15 @@ export function useCreateBlock() {
 					return data[0];
 
 				const googleEvent = await createGoogleEvent({
-					block: {
-						title: data[0].title,
-						start_time: data[0].start_time,
-						end_time: data[0].end_time,
+					data: {
+						block: {
+							title: data[0].title,
+							start_time: data[0].start_time,
+							end_time: data[0].end_time,
+						},
+						accessToken: profileData.google_access_token,
+						refreshToken: profileData.google_refresh_token,
 					},
-					accessToken: profileData.google_access_token,
-					refreshToken: profileData.google_refresh_token,
 				});
 
 				// Update the block with the Google event ID
@@ -148,10 +150,12 @@ export function useUpdateBlock() {
 
 				if (Object.keys(updateData).length > 0) {
 					await updateGoogleEvent({
-						googleEventId: currentBlock.google_event_id,
-						updates: updateData,
-						accessToken: profileData.google_access_token,
-						refreshToken: profileData.google_refresh_token,
+						data: {
+							googleEventId: currentBlock.google_event_id,
+							updates: updateData,
+							accessToken: profileData.google_access_token,
+							refreshToken: profileData.google_refresh_token,
+						},
 					});
 				}
 			}
@@ -204,9 +208,11 @@ export function useDeleteBlock() {
 					return;
 
 				await deleteGoogleEvent({
-					googleEventId: currentBlock.google_event_id,
-					accessToken: profileData.google_access_token,
-					refreshToken: profileData.google_refresh_token,
+					data: {
+						googleEventId: currentBlock.google_event_id,
+						accessToken: profileData.google_access_token,
+						refreshToken: profileData.google_refresh_token,
+					},
 				});
 			}
 		},
@@ -234,11 +240,15 @@ export function useUndoDeleteCalendarBlock() {
 			return data[0];
 		},
 		onMutate: async (blockData) => {
+			const previous = queryClient.getQueryData<CalendarBlock[]>([
+				"calendar-blocks",
+			]);
 			// Optimistically add the block back to the cache
 			queryClient.setQueryData<CalendarBlock[]>(["calendar-blocks"], (old) => [
 				...(old ?? []),
 				blockData,
 			]);
+			return { previous };
 		},
 		onError: (_err, _blockData, context) => {
 			// Revert optimistic update on error

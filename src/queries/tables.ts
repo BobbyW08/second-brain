@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Database } from "@/types/database.types";
+import type { Database, Json } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
 // Define valid column types as a type
@@ -100,7 +100,7 @@ export function useCreateTable(userId: string) {
 					user_id: userId,
 					name: input.name,
 					folder_id: input.folder_id ?? null,
-					columns: input.columns ?? [],
+					columns: (input.columns ?? []) as unknown as Json,
 				})
 				.select()
 				.single()
@@ -118,7 +118,7 @@ export function useCreateTable(userId: string) {
 				user_id: userId,
 				name: input.name,
 				folder_id: input.folder_id ?? null,
-				columns: input.columns ?? [],
+				columns: (input.columns ?? []) as unknown as Json,
 				created_at: new Date().toISOString(),
 				updated_at: new Date().toISOString(),
 			};
@@ -149,9 +149,13 @@ export function useUpdateTable(userId: string) {
 			tableId: string;
 			updates: { name?: string; columns?: TableColumn[] };
 		}) => {
+			const dbUpdates: { name?: string; columns?: Json } = {};
+			if (input.updates.name !== undefined) dbUpdates.name = input.updates.name;
+			if (input.updates.columns !== undefined)
+				dbUpdates.columns = input.updates.columns as unknown as Json;
 			await supabase
 				.from("tables_schema")
-				.update(input.updates)
+				.update(dbUpdates)
 				.eq("id", input.tableId)
 				.throwOnError();
 		},
@@ -165,7 +169,15 @@ export function useUpdateTable(userId: string) {
 			queryClient.setQueryData<TableSchema[]>(["tables", userId], (old) =>
 				(old ?? []).map((t) =>
 					t.id === tableId
-						? { ...t, ...updates, updated_at: new Date().toISOString() }
+						? {
+								...t,
+								name: updates.name ?? t.name,
+								columns:
+									updates.columns !== undefined
+										? (updates.columns as unknown as Json)
+										: t.columns,
+								updated_at: new Date().toISOString(),
+							}
 						: t,
 				),
 			);

@@ -35,7 +35,8 @@ export const TableView = ({ tableId }: TableViewProps) => {
 	// Derive columns from schema — must be before any early returns (Rules of Hooks)
 	const columns = useMemo<TableColumn[]>(() => {
 		const columnsArray = schema?.columns ?? [];
-		if (Array.isArray(columnsArray)) return columnsArray as TableColumn[];
+		if (Array.isArray(columnsArray))
+			return columnsArray as unknown as TableColumn[];
 		if (typeof columnsArray === "string") {
 			try {
 				return JSON.parse(columnsArray) as TableColumn[];

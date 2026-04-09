@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Database } from "@/types/database.types";
+import type { Database, Json } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
 // Types for table rows
@@ -23,9 +23,9 @@ export function useCreateRow(tableId: string) {
 				.insert({
 					table_id: tableId,
 					user_id: input.user_id,
-					data: input.data,
+					data: input.data as unknown as Json,
 					position: input.position ?? null,
-					notes: input.notes ?? null,
+					notes: (input.notes ?? null) as unknown as Json,
 				})
 				.throwOnError();
 		},
@@ -39,9 +39,9 @@ export function useCreateRow(tableId: string) {
 				id: `temp-${Date.now()}`,
 				table_id: tableId,
 				user_id: input.user_id,
-				data: input.data,
+				data: input.data as unknown as Json,
 				position: input.position ?? null,
-				notes: input.notes ?? null,
+				notes: (input.notes ?? null) as unknown as Json,
 				created_at: new Date().toISOString(),
 				updated_at: new Date().toISOString(),
 			};
@@ -73,9 +73,11 @@ export function useUpdateRow(tableId: string) {
 			notes?: Record<string, unknown> | null;
 		}) => {
 			const updates: Partial<TableRowUpdate> = {};
-			if (input.data !== undefined) updates.data = input.data;
+			if (input.data !== undefined)
+				updates.data = input.data as unknown as Json;
 			if (input.position !== undefined) updates.position = input.position;
-			if (input.notes !== undefined) updates.notes = input.notes;
+			if (input.notes !== undefined)
+				updates.notes = input.notes as unknown as Json;
 
 			await supabase
 				.from("table_rows")
@@ -94,10 +96,16 @@ export function useUpdateRow(tableId: string) {
 					row.id === input.rowId
 						? {
 								...row,
-								data: input.data !== undefined ? input.data : row.data,
+								data:
+									input.data !== undefined
+										? (input.data as unknown as Json)
+										: row.data,
 								position:
 									input.position !== undefined ? input.position : row.position,
-								notes: input.notes !== undefined ? input.notes : row.notes,
+								notes:
+									input.notes !== undefined
+										? (input.notes as unknown as Json)
+										: row.notes,
 								updated_at: new Date().toISOString(),
 							}
 						: row,
@@ -168,16 +176,16 @@ export function useReorderTableRows(tableId: string) {
 	return useMutation({
 		mutationFn: async (input: { rowIds: string[]; newPositions: number[] }) => {
 			const { rowIds, newPositions } = input;
-			// Update all rows in a single transaction
-			const updates = rowIds.map((rowId, index) => ({
-				id: rowId,
-				position: newPositions[index],
-			}));
-
-			await supabase
-				.from("table_rows")
-				.upsert(updates, { onConflict: "id" })
-				.throwOnError();
+			// Update positions individually — upsert requires all required fields
+			await Promise.all(
+				rowIds.map((rowId, index) =>
+					supabase
+						.from("table_rows")
+						.update({ position: newPositions[index] })
+						.eq("id", rowId)
+						.throwOnError(),
+				),
+			);
 		},
 		onMutate: async (input) => {
 			const { rowIds, newPositions } = input;

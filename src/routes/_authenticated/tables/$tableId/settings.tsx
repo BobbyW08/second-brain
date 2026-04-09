@@ -37,7 +37,7 @@ function TableSchemaSettings() {
 				tableId={tableId}
 				userId={userId}
 				initialColumns={
-					(tableSchema.columns as import("@/queries/tables").TableColumn[]) ??
+					(tableSchema.columns as unknown as import("@/queries/tables").TableColumn[]) ??
 					[]
 				}
 			/>

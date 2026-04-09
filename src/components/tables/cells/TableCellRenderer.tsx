@@ -65,21 +65,23 @@ export const TableCellRenderer = ({
 	);
 };
 
-const renderDisplayValue = (type: string, value: unknown) => {
+const renderDisplayValue = (type: string, value: unknown): React.ReactNode => {
 	switch (type) {
 		case "text":
 		case "url":
-			return value || "";
+			return typeof value === "string" ? value : "";
 		case "checkbox":
 			return value ? "✓" : "✗";
 		case "select":
-			return value || "";
+			return typeof value === "string" ? value : "";
 		case "date":
-			return value ? new Date(value).toLocaleDateString() : "";
+			return value
+				? new Date(value as string | number | Date).toLocaleDateString()
+				: "";
 		case "number":
-			return value !== null && value !== undefined ? value.toString() : "";
+			return value !== null && value !== undefined ? String(value) : "";
 		default:
-			return value || "";
+			return typeof value === "string" ? value : "";
 	}
 };
 
@@ -92,33 +94,58 @@ const renderEditor = (
 	switch (column.type) {
 		case "text":
 			return (
-				<TextCell value={value} onChange={onChange} onKeyDown={onKeyDown} />
+				<TextCell
+					value={value as string}
+					onChange={onChange as (v: string) => void}
+					onKeyDown={onKeyDown}
+				/>
 			);
 		case "checkbox":
-			return <CheckboxCell value={value} onChange={onChange} />;
+			return (
+				<CheckboxCell
+					value={!!value}
+					onChange={onChange as (v: boolean) => void}
+				/>
+			);
 		case "select":
 			return (
 				<SelectCell
-					value={value}
+					value={value as string}
 					options={column.options || []}
-					onChange={onChange}
+					onChange={onChange as (v: string) => void}
 				/>
 			);
 		case "date":
 			return (
-				<DateCell value={value} onChange={onChange} onKeyDown={onKeyDown} />
+				<DateCell
+					value={value as string}
+					onChange={onChange as (v: string) => void}
+					onKeyDown={onKeyDown}
+				/>
 			);
 		case "number":
 			return (
-				<NumberCell value={value} onChange={onChange} onKeyDown={onKeyDown} />
+				<NumberCell
+					value={value as number}
+					onChange={onChange as (v: number) => void}
+					onKeyDown={onKeyDown}
+				/>
 			);
 		case "url":
 			return (
-				<UrlCell value={value} onChange={onChange} onKeyDown={onKeyDown} />
+				<UrlCell
+					value={value as string}
+					onChange={onChange as (v: string) => void}
+					onKeyDown={onKeyDown}
+				/>
 			);
 		default:
 			return (
-				<TextCell value={value} onChange={onChange} onKeyDown={onKeyDown} />
+				<TextCell
+					value={value as string}
+					onChange={onChange as (v: string) => void}
+					onKeyDown={onKeyDown}
+				/>
 			);
 	}
 };

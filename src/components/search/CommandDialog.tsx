@@ -88,6 +88,7 @@ export function CommandDialogComponent({
 			return data.map((page) => ({
 				id: page.id,
 				title: page.title,
+				type: "page" as const,
 				path: page.folder_id ? `Folder` : `Unfoldered`,
 				context: page.folder_id ? `Folder` : `Unfoldered`,
 			}));
@@ -110,6 +111,7 @@ export function CommandDialogComponent({
 			return data.map((task) => ({
 				id: task.id,
 				title: task.title,
+				type: "task" as const,
 				path: task.priority ?? undefined,
 				context: task.priority ?? undefined,
 			}));
@@ -132,6 +134,7 @@ export function CommandDialogComponent({
 			return data.map((folder) => ({
 				id: folder.id,
 				title: folder.name,
+				type: "folder" as const,
 				path: "Folder",
 				context: "Folder",
 			}));
@@ -163,6 +166,7 @@ export function CommandDialogComponent({
 			return filteredRows.map((row) => ({
 				id: row.id,
 				title: `Row in ${row.table_id}`,
+				type: "table_row" as const,
 				path: "Table",
 				context: "Table row",
 				tableId: row.table_id,

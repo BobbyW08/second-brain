@@ -66,8 +66,8 @@ export const syncGoogleCalendar = createServerFn({ method: "POST" })
 					{
 						user_id: userId,
 						title: event.summary,
-						start_time: event.start?.dateTime ?? event.start?.date,
-						end_time: event.end?.dateTime ?? event.end?.date,
+						start_time: event.start?.dateTime ?? event.start?.date ?? "",
+						end_time: event.end?.dateTime ?? event.end?.date ?? "",
 						block_type: "event",
 						google_event_id: event.id,
 						is_synced: true,

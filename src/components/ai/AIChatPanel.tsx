@@ -1,6 +1,7 @@
 import { useChat } from "@ai-sdk/react";
+import { TextStreamChatTransport } from "ai";
 import { Send } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,17 +20,34 @@ export function AIChatPanel() {
 	const context = useAIContext();
 	const isMobile = useIsMobile();
 	const bottomRef = useRef<HTMLDivElement>(null);
+	const [inputValue, setInputValue] = useState("");
 
-	const { messages, input, handleInputChange, handleSubmit, status } = useChat({
-		api: "/api/ai-chat",
-		body: { context },
+	const { messages, sendMessage, status } = useChat({
+		transport: new TextStreamChatTransport({
+			api: "/api/ai-chat",
+			body: { context },
+		}),
 	});
 
 	// Auto-scroll to latest message
-	// biome-ignore lint/correctness/useExhaustiveDependencies: messages triggers scroll, not used in body
+	// biome-ignore lint/correctness/useExhaustiveDependencies: messages triggers scroll
 	useEffect(() => {
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!inputValue.trim() || status === "streaming" || status === "submitted")
+			return;
+		sendMessage({ text: inputValue });
+		setInputValue("");
+	};
+
+	const getMessageText = (m: (typeof messages)[number]) =>
+		m.parts
+			.filter((p) => p.type === "text")
+			.map((p) => (p as { type: "text"; text: string }).text)
+			.join("");
 
 	return (
 		<Sheet open={chatPanelOpen} onOpenChange={setChatPanelOpen}>
@@ -60,7 +78,7 @@ export function AIChatPanel() {
 										: "bg-muted text-foreground"
 								}`}
 							>
-								{m.content}
+								{getMessageText(m)}
 							</div>
 						</div>
 					))}
@@ -80,8 +98,8 @@ export function AIChatPanel() {
 					className="flex gap-2 px-4 py-3 border-t flex-shrink-0"
 				>
 					<Input
-						value={input}
-						onChange={handleInputChange}
+						value={inputValue}
+						onChange={(e) => setInputValue(e.target.value)}
 						placeholder="Message AI Assistant…"
 						className="flex-1"
 						disabled={status === "streaming" || status === "submitted"}
@@ -90,7 +108,9 @@ export function AIChatPanel() {
 						type="submit"
 						size="icon"
 						disabled={
-							!input.trim() || status === "streaming" || status === "submitted"
+							!inputValue.trim() ||
+							status === "streaming" ||
+							status === "submitted"
 						}
 					>
 						<Send className="h-4 w-4" />

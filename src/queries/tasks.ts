@@ -269,16 +269,16 @@ export function useReorderTasks(userId: string) {
 			newPositions: number[];
 		}) => {
 			const { taskIds, newPositions } = input;
-			// Update all tasks in a single transaction
-			const updates = taskIds.map((taskId, index) => ({
-				id: taskId,
-				position: newPositions[index],
-			}));
-
-			await supabase
-				.from("tasks")
-				.upsert(updates, { onConflict: "id" })
-				.throwOnError();
+			// Update positions individually — upsert requires all required fields
+			await Promise.all(
+				taskIds.map((taskId, index) =>
+					supabase
+						.from("tasks")
+						.update({ position: newPositions[index] })
+						.eq("id", taskId)
+						.throwOnError(),
+				),
+			);
 		},
 		onMutate: async (input) => {
 			const { taskIds, newPositions } = input;

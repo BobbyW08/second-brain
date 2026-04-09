@@ -65,7 +65,7 @@ export function RowDetailView({ tableId, rowId }: RowDetailViewProps) {
 
 			let parsedColumns: TableColumn[] = [];
 			if (Array.isArray(columnsArray)) {
-				parsedColumns = columnsArray as TableColumn[];
+				parsedColumns = columnsArray as unknown as TableColumn[];
 			} else if (typeof columnsArray === "string") {
 				try {
 					parsedColumns = JSON.parse(columnsArray) as TableColumn[];

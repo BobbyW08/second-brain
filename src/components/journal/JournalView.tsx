@@ -47,14 +47,17 @@ export function JournalView() {
 		if (!todayPage || promptDismissed) return;
 
 		// Check if page is new/empty (no content or content is just the default block)
+		const firstBlock = Array.isArray(todayPage.content)
+			? (todayPage.content[0] as Record<string, unknown> | undefined)
+			: undefined;
 		const isEmptyPage =
 			!todayPage.content ||
 			(Array.isArray(todayPage.content) && todayPage.content.length === 0) ||
 			(Array.isArray(todayPage.content) &&
 				todayPage.content.length === 1 &&
-				todayPage.content[0].type === "paragraph" &&
-				(!todayPage.content[0].content ||
-					todayPage.content[0].content.length === 0));
+				firstBlock?.type === "paragraph" &&
+				(!firstBlock?.content ||
+					(firstBlock.content as unknown[]).length === 0));
 
 		if (isEmptyPage) {
 			const today = new Date().toISOString().split("T")[0];

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getJournalTitle } from "@/lib/getJournalTitle";
+import type { Json } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
 export function usePage(pageId: string) {
@@ -25,7 +26,7 @@ export function useUpdatePage() {
 			updates,
 		}: {
 			pageId: string;
-			updates: { title?: string; content?: unknown };
+			updates: { title?: string; content?: Json };
 		}) => {
 			const { data } = await supabase
 				.from("pages")

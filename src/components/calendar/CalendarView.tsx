@@ -100,7 +100,7 @@ export function CalendarView() {
 		const tasksData = tasks.map((block) => ({
 			id: block.task_id ?? "",
 			title: block.title,
-			priority: block.block_type, // Using block_type as priority for now
+			priority: block.block_type ?? "", // Using block_type as priority for now
 			block_size: "M", // Default to medium block size
 		}));
 

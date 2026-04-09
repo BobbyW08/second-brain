@@ -1,12 +1,11 @@
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import "@blocknote/mantine/style.css";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createAIExtension } from "@blocknote/xl-ai";
-import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Link, Link2, Loader2 } from "lucide-react";
+import type { PartialBlock } from "@blocknote/core";
+import { AIExtension } from "@blocknote/xl-ai";
+import { ChevronRight, Link2, Loader2 } from "lucide-react";
 import { editorSchema } from "@/components/editor/linkChipSpec";
 import { CommandDialogComponent } from "@/components/search/CommandDialog";
 import {
@@ -15,48 +14,43 @@ import {
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useAutosave } from "@/hooks/useAutosave";
-import { AI_MODELS, TONE_SYSTEM_PROMPT } from "@/lib/aiConstants";
 import { useBacklinks } from "@/queries/links";
 import { usePage, useUpdatePage } from "@/queries/pages";
+import type { Json } from "@/types/database.types";
 
 export function PageView() {
 	const { pageId } = useParams({ strict: false });
+	const resolvedPageId = pageId ?? "";
 
-	const { data: page } = usePage(pageId);
+	const { data: page } = usePage(resolvedPageId);
 	const { mutate: updatePage } = useUpdatePage();
 
 	const [title, setTitle] = useState(page?.title ?? "Untitled");
 	const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 	const navigate = useNavigate();
-	const { data: backlinks } = useBacklinks(pageId ?? "");
+	const { data: backlinks } = useBacklinks(resolvedPageId);
 	const [backlinksOpen, setBacklinksOpen] = useState(false);
 
-	// Slash command stubs:
-	// /link — Phase 6 (Ticket 6-B): opens CommandDialog in link mode
-	// /ai   — Phase 7 (Ticket 7-C): replaced by @blocknote/xl-ai configuration
-	// These are registered when those tickets are complete. No action needed here.
-
-	const anthropic = createAnthropic();
-	const aiExtension = createAIExtension({
-		model: anthropic(AI_MODELS.default),
-		systemPrompt: TONE_SYSTEM_PROMPT,
-	});
-
 	const editor = useCreateBlockNote({
-		initialContent: page?.content ?? undefined,
+		initialContent: (page?.content ?? undefined) as PartialBlock[] | undefined,
 		schema: editorSchema,
-		extensions: [aiExtension],
+		extensions: [AIExtension()],
 	});
 
 	// Autosave content
 	const { save: saveContent, isSaving: isSavingContent } = useAutosave(
-		(content: unknown) => updatePage({ pageId, updates: { content } }),
+		(content: unknown) =>
+			updatePage({
+				pageId: resolvedPageId,
+				updates: { content: content as unknown as Json },
+			}),
 		800,
 	);
 
 	// Autosave title
 	const { save: saveTitle } = useAutosave(
-		(t: string) => updatePage({ pageId, updates: { title: t } }),
+		(t: string) =>
+			updatePage({ pageId: resolvedPageId, updates: { title: t } }),
 		800,
 	);
 
@@ -97,16 +91,6 @@ export function PageView() {
 				onChange={() => saveContent(editor.document)}
 				theme="dark"
 				slashMenu={true}
-				slashMenuItems={[
-					{
-						title: "Link",
-						subtext: "Insert a link to a page, task, or table row",
-						icon: <Link className="h-4 w-4" />,
-						onItemClick: () => setLinkDialogOpen(true),
-						aliases: ["link", "mention", "reference"],
-						group: "Insert",
-					},
-				]}
 			/>
 
 			<CommandDialogComponent
@@ -116,7 +100,7 @@ export function PageView() {
 				onLinkSelect={(result) => {
 					editor.insertInlineContent([
 						{
-							type: "linkChip",
+							type: "linkChip" as "linkChip",
 							props: {
 								itemType: result.type,
 								itemId: result.id,

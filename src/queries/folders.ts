@@ -26,10 +26,9 @@ export function useFoldersAndPages(userId: string) {
 
 			const { data: pages } = await supabase
 				.from("pages")
-				.select("id, title, folder_id, position, page_type")
+				.select("id, title, folder_id, page_type")
 				.eq("user_id", userId)
 				.neq("page_type", "journal") // journal pages live in /journal, not the tree
-				.order("position")
 				.throwOnError();
 
 			return buildTree(folders ?? [], pages ?? []);
@@ -37,9 +36,14 @@ export function useFoldersAndPages(userId: string) {
 	});
 }
 
+type PageTreeRow = Pick<
+	Database["public"]["Tables"]["pages"]["Row"],
+	"id" | "title" | "folder_id" | "page_type"
+>;
+
 export function buildTree(
 	folders: Database["public"]["Tables"]["folders"]["Row"][],
-	pages: Database["public"]["Tables"]["pages"]["Row"][],
+	pages: PageTreeRow[],
 ) {
 	// Create a map of folders for quick lookup
 	const folderMap = new Map<string, TreeNode>();
@@ -60,8 +64,7 @@ export function buildTree(
 		name: page.title,
 		type: "page",
 		folder_id: page.folder_id,
-		position: page.position,
-		page_type: page.page_type,
+		page_type: page.page_type ?? undefined,
 	}));
 
 	// Group pages by their folder_id
@@ -203,7 +206,6 @@ export function useCreatePage() {
 }
 
 export function useRenameNode() {
-	const _queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
@@ -242,7 +244,6 @@ export function useRenameNode() {
 }
 
 export function useMoveNode() {
-	const _queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
@@ -283,7 +284,6 @@ export function useMoveNode() {
 }
 
 export function useDeleteNode() {
-	const _queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
