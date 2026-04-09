@@ -1,20 +1,63 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { FileText } from "lucide-react";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { FilePlus, FolderPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCreateFolder, useCreatePage } from "@/queries/folders";
 
 export const Route = createFileRoute("/_authenticated/pages/")({
 	head: () => ({
-		meta: [{ title: "Pages | Second Brain" }],
+		meta: [{ title: "Files | Second Brain" }],
 	}),
-	component: PagesIndex,
+	component: FilesIndex,
 });
 
-export default function PagesIndex() {
+export default function FilesIndex() {
+	const { userId } = useCurrentUser();
+	const navigate = useNavigate();
+	const { mutate: createFolder } = useCreateFolder();
+	const { mutate: createPage } = useCreatePage();
+
+	if (!userId) return null;
+
 	return (
-		<EmptyState
-			icon={FileText}
-			title="Select a page"
-			description="Choose a page from the sidebar or create one."
-		/>
+		<div className="flex flex-col items-center justify-center h-full gap-6 text-center p-8">
+			<div>
+				<h2 className="text-lg font-semibold mb-1">No file selected</h2>
+				<p className="text-sm text-muted-foreground">
+					Choose a file from the sidebar or create something new.
+				</p>
+			</div>
+			<div className="flex gap-3">
+				<Button
+					variant="outline"
+					onClick={() => createFolder({ user_id: userId, name: "New Folder" })}
+					className="flex items-center gap-2"
+				>
+					<FolderPlus className="h-4 w-4" />
+					New Folder
+				</Button>
+				<Button
+					onClick={() =>
+						createPage(
+							{ user_id: userId, title: "Untitled", page_type: "page" },
+							{
+								onSuccess: (page) => {
+									if (page?.id) {
+										navigate({
+											to: "/pages/$pageId",
+											params: { pageId: page.id },
+										});
+									}
+								},
+							},
+						)
+					}
+					className="flex items-center gap-2"
+				>
+					<FilePlus className="h-4 w-4" />
+					New File
+				</Button>
+			</div>
+		</div>
 	);
 }

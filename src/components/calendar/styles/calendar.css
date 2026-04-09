@@ -1,11 +1,11 @@
-/* Zone background tints — applied via slotLane rows */
+/* Zone background tints — light mode */
 .fc-timegrid-slot[data-time^="06"],
 .fc-timegrid-slot[data-time^="07"],
 .fc-timegrid-slot[data-time^="08"],
 .fc-timegrid-slot[data-time^="09"],
 .fc-timegrid-slot[data-time^="10"],
 .fc-timegrid-slot[data-time^="11"] {
-	background-color: rgba(250, 240, 200, 0.08);
+	background-color: rgba(250, 220, 100, 0.12);
 }
 
 .fc-timegrid-slot[data-time^="12"],
@@ -14,14 +14,82 @@
 .fc-timegrid-slot[data-time^="15"],
 .fc-timegrid-slot[data-time^="16"],
 .fc-timegrid-slot[data-time^="17"] {
-	background-color: rgba(200, 220, 255, 0.08);
+	background-color: rgba(100, 160, 255, 0.1);
 }
 
 .fc-timegrid-slot[data-time^="18"],
 .fc-timegrid-slot[data-time^="19"],
 .fc-timegrid-slot[data-time^="20"],
 .fc-timegrid-slot[data-time^="21"] {
-	background-color: rgba(180, 160, 220, 0.08);
+	background-color: rgba(140, 100, 200, 0.1);
+}
+
+/* Zone background tints — dark mode */
+.dark .fc-timegrid-slot[data-time^="06"],
+.dark .fc-timegrid-slot[data-time^="07"],
+.dark .fc-timegrid-slot[data-time^="08"],
+.dark .fc-timegrid-slot[data-time^="09"],
+.dark .fc-timegrid-slot[data-time^="10"],
+.dark .fc-timegrid-slot[data-time^="11"] {
+	background-color: rgba(250, 220, 100, 0.08);
+}
+
+.dark .fc-timegrid-slot[data-time^="12"],
+.dark .fc-timegrid-slot[data-time^="13"],
+.dark .fc-timegrid-slot[data-time^="14"],
+.dark .fc-timegrid-slot[data-time^="15"],
+.dark .fc-timegrid-slot[data-time^="16"],
+.dark .fc-timegrid-slot[data-time^="17"] {
+	background-color: rgba(100, 160, 255, 0.08);
+}
+
+.dark .fc-timegrid-slot[data-time^="18"],
+.dark .fc-timegrid-slot[data-time^="19"],
+.dark .fc-timegrid-slot[data-time^="20"],
+.dark .fc-timegrid-slot[data-time^="21"] {
+	background-color: rgba(140, 100, 200, 0.08);
+}
+
+/* FullCalendar dark mode overrides */
+.dark .fc {
+	color: oklch(0.985 0 0);
+}
+
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th,
+.dark .fc-theme-standard .fc-scrollgrid {
+	border-color: oklch(1 0 0 / 10%);
+}
+
+.dark .fc-col-header-cell-cushion,
+.dark .fc-daygrid-day-number,
+.dark .fc-timegrid-axis-cushion,
+.dark .fc-timegrid-slot-label-cushion {
+	color: oklch(0.708 0 0);
+}
+
+.dark .fc-timegrid-now-indicator-line {
+	border-color: oklch(0.488 0.243 264.376);
+}
+
+.dark .fc-button-primary {
+	background-color: oklch(0.269 0 0);
+	border-color: oklch(1 0 0 / 10%);
+	color: oklch(0.985 0 0);
+}
+
+.dark .fc-button-primary:hover {
+	background-color: oklch(0.32 0 0);
+}
+
+.dark .fc-button-primary:not(:disabled).fc-button-active {
+	background-color: oklch(0.488 0.243 264.376);
+	border-color: oklch(0.488 0.243 264.376);
+}
+
+.dark .fc-daygrid-day.fc-day-today,
+.dark .fc-timegrid-col.fc-day-today {
+	background-color: oklch(1 0 0 / 3%);
 }
 
 /* Zone label styling */
@@ -30,7 +98,7 @@
 	font-weight: 600;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	opacity: 0.35;
+	opacity: 0.55;
 	pointer-events: none;
 	user-select: none;
 	padding-left: 4px;

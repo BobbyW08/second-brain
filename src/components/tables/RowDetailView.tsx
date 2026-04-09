@@ -1,5 +1,6 @@
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUpdateRow } from "@/queries/tableRows";
@@ -24,6 +25,7 @@ interface RowDetailViewProps {
 }
 
 export function RowDetailView({ tableId, rowId }: RowDetailViewProps) {
+	const { theme } = useTheme();
 	const { user } = useAuth();
 	const {
 		data: schema,
@@ -197,7 +199,7 @@ export function RowDetailView({ tableId, rowId }: RowDetailViewProps) {
 					<BlockNoteView
 						editor={editor}
 						onChange={() => saveNotes(editor.document)}
-						theme="dark"
+						theme={theme === "dark" ? "dark" : "light"}
 						slashMenu={true}
 					/>
 				</div>

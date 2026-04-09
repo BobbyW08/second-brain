@@ -1,6 +1,7 @@
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import "@blocknote/mantine/style.css";
 import type { PartialBlock } from "@blocknote/core";
@@ -19,6 +20,7 @@ import { usePage, useUpdatePage } from "@/queries/pages";
 import type { Json } from "@/types/database.types";
 
 export function PageView() {
+	const { theme } = useTheme();
 	const { pageId } = useParams({ strict: false });
 	const resolvedPageId = pageId ?? "";
 
@@ -89,7 +91,7 @@ export function PageView() {
 			<BlockNoteView
 				editor={editor}
 				onChange={() => saveContent(editor.document)}
-				theme="dark"
+				theme={theme === "dark" ? "dark" : "light"}
 				slashMenu={true}
 			/>
 

@@ -1,20 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PriorityBucket } from "@/components/tasks/PriorityBucket";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export const Route = createFileRoute("/_authenticated/tasks/")({
 	head: () => ({
-		meta: [{ title: "Tasks | Second Brain" }],
+		meta: [{ title: "Priorities | Second Brain" }],
 	}),
 	component: TasksPage,
 });
 
 function TasksPage() {
+	const { userId } = useCurrentUser();
+	if (!userId) return null;
+
 	return (
-		<div className="flex flex-1 items-center justify-center text-muted-foreground">
-			<p>Select a task to get started, or drag one to the calendar.</p>
-			{/* TODO: Phase 3 — calendar view replaces this as the main content */}
+		<div className="p-4 max-w-2xl mx-auto">
+			<h1 className="text-2xl font-bold mb-6">Priorities</h1>
+			<PriorityBucket userId={userId} />
 		</div>
 	);
 }
-
-// Rename the file to -index.tsx to exclude it from routes
-// This is a stub route that should not be included in the route tree
