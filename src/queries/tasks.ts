@@ -53,7 +53,10 @@ export function useCreateTask() {
 			block_size?: string;
 			position?: number;
 		}) => {
-			await supabase.from("tasks").insert(input).throwOnError();
+			await supabase
+				.from("tasks")
+				.insert({ ...input, status: "active" })
+				.throwOnError();
 		},
 		onMutate: async (input) => {
 			await queryClient.cancelQueries({
