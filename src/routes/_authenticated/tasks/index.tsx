@@ -15,3 +15,6 @@ function TasksPage() {
 		</div>
 	);
 }
+
+// Rename the file to -index.tsx to exclude it from routes
+// This is a stub route that should not be included in the route tree

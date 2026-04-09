@@ -1,5 +1,5 @@
 # Second Brain — Codebase Audit & Adapted Plan
-## Last Updated: 2026-04-07 (post Gap-3 through Gap-11 audit)
+## Last Updated: 2026-04-09 (post full-codebase audit + Session 13 partial polish)
 
 ---
 
@@ -25,47 +25,43 @@
 ### SESSION 2 — Auth, Google OAuth & Invite Gate
 ```
 2-A: Google OAuth scopes       ✅ DONE  (calendar scope, offline, consent in login + settings)
-2-B: shouldCreateUser: false   ⚠️  PARTIAL  — invite system exists in admin/invite.tsx but
-                                              no shouldCreateUser: false found in generateLink
+2-B: invite gate               ✅ DONE  — auth.callback.tsx now checks invites table after
+                                              OAuth exchange; non-invited Google users are signed
+                                              out and redirected to /login; admin email bypasses
 2-C: provider_refresh_token    ✅ DONE  (captured in auth.callback.tsx, written to profiles)
 2-D: Protected routes          ✅ DONE  (_authenticated.tsx uses requireAuth())
 ```
 
 ### SESSION 3 — Complete Data Layer
 ```
-profiles.ts                    ✅ DONE  (useUpdateGoogleTokens, useDisconnectGoogle added;
-                                          parse error fixed)
+profiles.ts                    ✅ DONE  (useUpdateGoogleTokens, useDisconnectGoogle added)
 tasks.ts                       ✅ DONE  (useTask, useReorderTasks, useUndoCompleteTask,
                                           useArchiveCompletedBefore all present; toasts added)
 calendarBlocks.ts              ✅ DONE  (useUndoDeleteCalendarBlock, useSyncGoogleEvents added;
-                                          fetch('/api/...') → syncGoogleCalendar server fn fixed)
+                                          syncGoogleCalendar missing import FIXED)
 folders.ts                     ✅ DONE
 pages.ts                       ✅ DONE  (usePages, useDeletePage added)
 tables.ts                      ✅ DONE
-tableRows.ts                   ✅ DONE  (useTableRow, useReorderTableRows added;
-                                          missing useQuery import fixed)
-links.ts                       ✅ DONE  (created; schema corrected — no link_text/source_title;
-                                          useDeleteLink cache key fixed)
-aiUsage.ts                     ✅ DONE  (created; schema corrected — tokens_used column,
-                                          date-range query, no .single())
+tableRows.ts                   ✅ DONE  (useTableRow, useReorderTableRows added)
+links.ts                       ✅ DONE  (schema corrected — no link_text/source_title)
+aiUsage.ts                     ✅ DONE  (tokens_used column, date-range query)
 Optimistic updates             ✅ DONE
 .throwOnError() coverage       ✅ DONE
 ```
 
 ### SESSION 4 — Shared Infrastructure
 ```
-aiConstants.ts                 ✅ DONE  (TONE_SYSTEM_PROMPT, AI_MODELS, BLOCK_SIZE_DURATIONS)
+aiConstants.ts                 ✅ DONE  (src/lib/aiConstants.ts — TONE_SYSTEM_PROMPT, AI_MODELS,
+                                          BLOCK_SIZE_DURATIONS; root lib/aiConstants.ts deleted)
 useMediaQuery.ts               ✅ DONE  (MOBILE_QUERY preset included)
 useCurrentUser.ts              ✅ DONE  (returns { user, userId })
-useCommandDialog.ts            ✅ DONE  (reads from useUIStore)
+useCommandDialog.ts            ✅ DELETED  (was not imported anywhere; had Zustand anti-pattern)
 useUIStore.ts                  ✅ DONE  (commandOpen, chatPanelOpen, activePageId + setters)
-queryClient.ts                 ⚠️  PARTIAL  — staleTime set at wrong level (root key instead
-                                              of defaultOptions.queries.staleTime)
+queryClient.ts                 ✅ DONE  (staleTime in defaultOptions.queries)
 EmptyState.tsx                 ✅ DONE
-ErrorBoundary.tsx              ⚠️  PARTIAL  — default export only; should also be named export
-                                              (import sites may need `import ErrorBoundary from ...`)
-LoadingScreen.tsx              ❌ NOT DONE  — file does not exist
-/dashboard route               ✅ DONE  (uses CalendarView, not a stub)
+ErrorBoundary.tsx              ✅ DONE  (named export alongside default export)
+LoadingScreen.tsx              ✅ DONE  (Loader2 spinner)
+/dashboard route               ✅ DONE  (uses CalendarView)
 /pages/index route             ✅ DONE  (shows EmptyState)
 /tables/index route            ✅ DONE  (lists tables + New Table button)
 AppSidebar nav items           ✅ DONE  (Calendar → /calendar, Pages → /pages, Tables → /tables)
@@ -74,7 +70,8 @@ AppSidebar nav items           ✅ DONE  (Calendar → /calendar, Pages → /pag
 ### SESSION 5 — Tasks Page
 ```
 TaskPill                       ✅ DONE
-PriorityBucket                 ✅ DONE  (userId bug fixed; CompletedTodaySection extracted)
+PriorityBucket                 ✅ DONE  (userId bug fixed; CompletedTodaySection extracted;
+                                          Skeleton loading state)
 InlineCreateInput              ✅ DONE
 CompletedTodaySection          ✅ DONE  (separate Collapsible component, useCompletedTodayTasks)
 Toast feedback                 ✅ DONE  (toast.success in useCreateTask, useCompleteTask,
@@ -83,7 +80,8 @@ Toast feedback                 ✅ DONE  (toast.success in useCreateTask, useCom
 
 ### SESSION 6 — Calendar Page
 ```
-CalendarView                   ✅ DONE  (allDayText="Anytime" added)
+CalendarView                   ✅ DONE  (allDayText="Anytime"; Skeleton loading state added;
+                                          useMediaQuery imported)
 Draggable                      ✅ DONE
 handleEventReceive/Drop/Resize ✅ DONE
 handleSelect                   ✅ DONE
@@ -94,8 +92,9 @@ googleCalendar.ts              ✅ DONE
 ### SESSION 7 — Pages & Folder Tree
 ```
 FolderNode                     ✅ DONE
-FolderTree                     ✅ DONE
-PageView/PageEditor            ✅ DONE  (BlockNote, useAutosave 800ms, saving indicator)
+FolderTree                     ✅ DONE  (Skeleton loading state)
+PageView/PageEditor            ✅ DONE  (BlockNote, useAutosave 800ms, saving indicator;
+                                          link.source_id bug FIXED, link.source_type displayed)
 $pageId route                  ✅ DONE
 /pages/index route             ✅ DONE
 ```
@@ -104,31 +103,30 @@ $pageId route                  ✅ DONE
 ```
 journalUtils (getJournalTitle) ✅ DONE
 journalUtils.test              ✅ DONE  (5 test cases)
-Journal routes                 ✅ DONE  (JournalView, JournalLayout, all three routes)
+Journal routes                 ✅ DONE  (JournalView, JournalLayout, all three routes;
+                                          Skeleton loading state added)
 ```
 
 ### SESSION 9 — AI Features
 ```
-src/server/aiChat.ts           ⚠️  PARTIAL  — exists with chatStream + TONE_SYSTEM_PROMPT;
-                                              BUG: imports from 'lib/aiConstants' not '@/lib/aiConstants'
-src/server/aiWriting.ts        ⚠️  PARTIAL  — exists with improveWriting;
-                                              BUG: same wrong import path 'lib/aiConstants'
-src/server/schedulingSuggestions.ts ⚠️  PARTIAL  — exists with getSchedulingSuggestions;
-                                              BUG: same wrong import path 'lib/aiConstants'
-src/server/journalPrompt.ts    ⚠️  PARTIAL  — exists with getJournalPrompt;
-                                              BUG: same wrong import path 'lib/aiConstants'
+server/routes/api/ai-chat.ts   ✅ DONE  (Nitro h3 route; handles /api/ai-chat streaming;
+                                          serverDir: 'server' in vite.config.ts)
+src/server/aiChat.ts           ✅ DELETED  (unused TanStack Start server fn — Nitro route
+                                              handles /api/ai-chat; duplicate removed)
+src/server/aiWriting.ts        ✅ DONE  (improveWriting, AI_MODELS.fast)
+src/server/schedulingSuggestions.ts ✅ DONE  (getSchedulingSuggestions, generateObject;
+                                              { data: {...} } calling convention FIXED)
+src/server/journalPrompt.ts    ✅ DONE  (getJournalPrompt, AI_MODELS.fast;
+                                              { data: {...} } calling convention FIXED)
 useAIContext.ts                ✅ DONE  (route-based context string)
-AIChatPanel.tsx                ⚠️  PARTIAL  — exists, uses @assistant-ui/react;
-                                              BUG: imports from 'stores/useUIStore' and
-                                              'hooks/useAIContext' (missing @/ alias)
-BlockNote xl-ai (PageView)     ✅ DONE  (createAIExtension wired in PageView)
-Scheduling suggestion cards    ✅ DONE  (in CalendarView)
+AIChatPanel.tsx                ✅ DONE  (uses /api/ai-chat Nitro endpoint via useChat)
+BlockNote xl-ai (PageView)     ✅ DONE  (createAIExtension wired; linkChipSpec.ts uses
+                                              createElement to stay .ts)
+Scheduling suggestion cards    ✅ DONE  (in CalendarView; { data: {...} } call FIXED)
 Journal AI prompt banner       ✅ DONE  (in JournalView)
-TopBar chat toggle             ⚠️  PARTIAL  — button present;
-                                              BUG: imports from 'stores/useUIStore' (missing @/)
-AppLayout AIChatPanel          ✅ DONE  (renders AIChatPanel; not yet wrapped in ErrorBoundary)
-useLogAIUsage calls            ⚠️  PARTIAL  — called in CalendarView and JournalView;
-                                              aiUsage.ts schema was wrong (now fixed — tokens_used)
+TopBar chat toggle             ✅ DONE
+AppLayout AIChatPanel          ✅ DONE
+AppLayout syncGoogleCalendar   ✅ FIXED  ({ data: {...} } calling convention corrected)
 ```
 
 ### SESSION 10 — Tables
@@ -137,19 +135,20 @@ Cell components (all 6)        ✅ DONE
 $tableId route (TableView)     ✅ DONE
 $tableId/settings              ✅ DONE
 rows/$rowId                    ✅ DONE
-Tables index route             ✅ DONE
+Tables index route             ✅ DONE  (useCreateTable(userId) param FIXED;
+                                          mutate payload shape FIXED)
 Row detail navigation          ✅ DONE  (ChevronRight button in each TableView row)
 ```
 
 ### SESSION 11 — Global Search & Linking
 ```
-CommandDialog                  ✅ DONE  (navigation bugs fixed — tableId, removed folder group)
+CommandDialog                  ✅ DONE  (navigation bugs fixed; open/onOpenChange
+                                          controlled props added for link mode)
 ⌘K trigger                    ✅ DONE
 linkChipSpec.ts                ✅ DONE  (createReactInlineContentSpec + editorSchema)
-PageView LinkChip registration ⚠️  PARTIAL  — editorSchema used ✅, /link slash command ✅,
-                                              backlinks panel ✅;
-                                              BUG: imports from 'lib/aiConstants' (missing @/)
-RowDetailView schema update    ❌ NOT DONE  — still uses old inlineContentTypes API
+PageView LinkChip registration ✅ DONE  (editorSchema used; /link slash command; backlinks panel;
+                                          link.source_id FIXED)
+RowDetailView editorSchema     ✅ DONE  (uses editorSchema from linkChipSpec)
 /link slash command            ✅ DONE  (opens CommandDialog in link mode, inserts linkChip)
 Backlinks panel                ✅ DONE  (Collapsible "Linked from" section at bottom of PageView)
 ```
@@ -162,9 +161,11 @@ Admin invite                   ✅ DONE
 
 ### SESSION 13 — Polish, Mobile & Testing
 ```
-Loading skeletons              ❌ NOT DONE
-ErrorBoundary wrapping         ❌ NOT DONE  (ErrorBoundary component exists but not applied in AppLayout)
-Mobile layout                  ❌ NOT DONE  (useMediaQuery exists but not wired into AppLayout/CalendarView)
+Loading skeletons              ✅ DONE  (PriorityBucket, TableView, FolderTree, JournalLayout,
+                                          CalendarView, JournalView)
+ErrorBoundary wrapping         ✅ DONE  (AppLayout wraps <Outlet /> in <ErrorBoundary>)
+Mobile layout                  ❌ NOT DONE  (useMediaQuery imported in CalendarView but not
+                                              wired into view switching or AppLayout drawer)
 aiContext.test                 ❌ NOT DONE
 blockSize.test                 ❌ NOT DONE
 scheduling.test                ❌ NOT DONE
@@ -174,61 +175,72 @@ Tone word check                ✅ PASS
 
 ---
 
-## VIOLATIONS
-```
-Hard Rule 1 (no api/ folder)    — FIXED. calendarBlocks.ts was using fetch('/api/sync-google-calendar').
-                                   Now calls syncGoogleCalendar server fn directly.
+## POST-AUDIT FIXES (2026-04-09) — All Resolved
 
-Hard Rule 5 (TONE_SYSTEM_PROMPT) — ACTIVE VIOLATION in 4 server files + AIChatPanel + TopBar.
-                                   Import path is 'lib/aiConstants' instead of '@/lib/aiConstants'.
-                                   This will cause a module-not-found error at build time.
-                                   Fix before running build or typecheck.
+Full codebase import/route/logic audit corrected the following:
+
+### Runtime Bugs Fixed
+1. `calendarBlocks.ts` — `syncGoogleCalendar` called but never imported → added import
+2. `tables/index.tsx` — `useCreateTable()` missing required `userId` arg → `useCreateTable(userId)`;
+   mutate payload had wrong shape (`user_id` field not part of mutationFn input) → removed
+3. `AppLayout.tsx` — `syncGoogleCalendar({ userId, ... })` wrong calling convention →
+   `syncGoogleCalendar({ data: { userId, ... } })` (TanStack Start server fn convention)
+4. `CalendarView.tsx` — `getSchedulingSuggestions({...})` same issue → wrapped with `{ data: ... }`
+5. `JournalView.tsx` — `getJournalPrompt({ journalDate })` same issue → wrapped with `{ data: ... }`
+6. `PageView.tsx` — `link.sourceId` (doesn't exist; Supabase returns snake_case) → `link.source_id`;
+   `link.sourceTitle` (never fetched) → `link.source_type`
+7. `CommandDialog.tsx` — no `open`/`onOpenChange` props (PageView passed them, but they were
+   unrecognized); added controlled/uncontrolled pattern
+
+### Dead Code Removed
+- `lib/aiConstants.ts` (root) — stale duplicate; wrong model names; non-compliant tone prompt;
+  nothing imported it. Real file: `src/lib/aiConstants.ts`
+- `src/server/aiChat.ts` — unused TanStack Start server fn; Nitro route handles `/api/ai-chat`
+- `src/hooks/useCommandDialog.ts` — not imported anywhere; had Zustand array-selector anti-pattern
+- `src/components/routes/dashboard/index.tsx` + `tasks/index.tsx` — orphan components at wrong path
+- Empty directories: `src/routes/journal/`, `src/routes/pages/`, `src/components/routes/`,
+  `src/components/components/`
+
+---
+
+## VIOLATIONS — All Resolved
+
+```
+Hard Rule 1 (no api/ folder)    — FIXED. calendarBlocks.ts was using fetch('/api/...'). Nitro
+                                   route at server/routes/api/ai-chat.ts is correct TanStack
+                                   Start/Nitro pattern (serverDir: 'server').
+
+Hard Rule 5 (TONE_SYSTEM_PROMPT) — FIXED. All 5 server files + Nitro route import from
+                                   '@/lib/aiConstants' → resolves to src/lib/aiConstants.ts.
+                                   Root-level lib/aiConstants.ts (stale duplicate) deleted.
 ```
 
 ---
 
-## REMAINING WORK (priority order)
+## REMAINING WORK
 
-### IMMEDIATE — Fix import paths (5 files, ~5 lines each)
-All five files use `'lib/aiConstants'` or `'stores/useUIStore'` etc. without the `@/` alias.
-This is a Hard Rule 5 violation and will break the build.
-
-Files to fix:
-- `src/server/aiChat.ts` — `'lib/aiConstants'` → `'@/lib/aiConstants'`
-- `src/server/aiWriting.ts` — same
-- `src/server/schedulingSuggestions.ts` — same
-- `src/server/journalPrompt.ts` — same
-- `src/components/pages/PageView.tsx` — same
-- `src/components/ai/AIChatPanel.tsx` — `'stores/useUIStore'` → `'@/stores/useUIStore'`; `'hooks/useAIContext'` → `'@/hooks/useAIContext'`
-- `src/components/layout/TopBar.tsx` — `'stores/useUIStore'` → `'@/stores/useUIStore'`
-
-### SHORT-TERM — Minor gaps
-- Create `src/components/shared/LoadingScreen.tsx` (spinner, centered)
-- Fix `src/lib/queryClient.ts` — move staleTime into `defaultOptions.queries.staleTime`
-- Fix `src/components/shared/ErrorBoundary.tsx` — add named export alongside default export
-- Update `src/components/tables/RowDetailView.tsx` — swap `inlineContentTypes` for `editorSchema` (same fix applied to PageView)
-
-### SESSION 13 — Remaining polish
-- Loading skeletons in PriorityBucket, TableView, FolderTree, JournalLayout
-- Wrap `<SidebarInset>` outlet in AppLayout with `<ErrorBoundary>`
-- Mobile layout: useMediaQuery in AppLayout (Sheet drawer), CalendarView `initialView` switch
-- Tests: aiContext.test.ts, blockSize.test.ts, scheduling.test.ts
+### SESSION 13 — Outstanding
+- Mobile layout: wire `useMediaQuery` into AppLayout (Sheet drawer on mobile), switch
+  CalendarView `initialView` to `timeGridDay` on mobile
+- Tests: `aiContext.test.ts`, `blockSize.test.ts`, `scheduling.test.ts`
 
 ---
 
-## ARCHITECTURAL NOTE
+## ARCHITECTURAL NOTES
 
 - PriorityBucket lives in AppSidebar (sidebar-first layout — do NOT move it)
 - CalendarView is the home screen (`/dashboard` and `/calendar` both render it)
 - `/tasks` route is a stub — not needed given sidebar layout
+- AIChatPanel uses Nitro route at `server/routes/api/ai-chat.ts` via `useChat({ api: '/api/ai-chat' })`
+  This is the correct pattern for streaming in TanStack Start + Nitro
 
 ---
 
-## VERIFICATION CHECKLIST (run after remaining work)
+## VERIFICATION CHECKLIST
 
 1. `npm run lint` → 0 errors
 2. `npm run typecheck` → 0 TypeScript errors
-3. `npm run test` → all tests pass
+3. `npm run test` → all tests pass (journalUtils: 5 cases)
 4. `/dashboard` → CalendarView, 3-day view, scheduling hints
 5. Tasks in sidebar PriorityBucket, drag to calendar works
 6. `/journal` → auto-creates today entry, AI prompt banner shows
@@ -238,3 +250,4 @@ Files to fix:
 10. ⌘K → page navigates correctly; table_row uses correct tableId
 11. AI chat panel opens from TopBar, tone-compliant responses
 12. Settings → Google Calendar connect/disconnect works
+13. Error boundary wraps outlet — route errors show error UI not blank screen

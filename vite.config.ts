@@ -12,7 +12,7 @@ const config = defineConfig({
 		nitro({
 			preset: process.env.VERCEL ? "vercel" : "node-server",
 			rollupConfig: { external: [/^@sentry\//] },
-			serverDir: 'server',
+			serverDir: "server",
 		}),
 		tsconfigPaths({ projects: ["./tsconfig.json"] }),
 		tailwindcss(),

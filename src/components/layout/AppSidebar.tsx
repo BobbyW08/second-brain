@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FolderTree } from "@/components/folders/FolderTree";
-
 import { BookOpen, CalendarDays, LogOut, Settings, Table2 } from "lucide-react";
+import { FolderTree } from "@/components/folders/FolderTree";
+import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
-import { PriorityBucket } from "@/components/tasks/PriorityBucket";
 
 const NAV_ITEMS = [
 	{ label: "Calendar", icon: CalendarDays, to: "/calendar" },
@@ -70,7 +69,7 @@ export function AppSidebar() {
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
-				
+
 				{/* Priority Bucket - Task List */}
 				<SidebarGroup>
 					<SidebarGroupContent>

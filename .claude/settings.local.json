@@ -10,7 +10,12 @@
       "Bash(rm 'src/routes/tables/$tableId.tsx' 'src/routes/tables/$tableId/settings.tsx')",
       "Bash(rmdir 'src/routes/tables/$tableId')",
       "Bash(rmdir src/routes/tables)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(node -e \"require\\('C:/dev/second_brain/node_modules/@tanstack/react-start/package.json'\\).exports && console.log\\(Object.keys\\(require\\('C:/dev/second_brain/node_modules/@tanstack/react-start/package.json'\\).exports\\)\\)\")",
+      "Bash(node:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('version','?'\\)\\)\")",
+      "Bash(npx biome:*)",
+      "Bash(python3 -c ':*)"
     ]
   }
 }

@@ -1,13 +1,13 @@
-import { Moon, Sun, Search, MessageSquare } from "lucide-react";
+import { MessageSquare, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { CommandDialogComponent } from "@/components/search/CommandDialog";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { CommandDialogComponent } from "@/components/search/CommandDialog";
-import { useUIStore } from "stores/useUIStore";
+import { useUIStore } from "@/stores/useUIStore";
 
 export function TopBar() {
 	const { theme, setTheme } = useTheme();
-	const setChatPanelOpen = useUIStore(s => s.setChatPanelOpen);
+	const setChatPanelOpen = useUIStore((s) => s.setChatPanelOpen);
 
 	function toggleTheme() {
 		setTheme(theme === "dark" ? "light" : "dark");
