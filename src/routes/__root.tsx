@@ -1,9 +1,11 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "../components/ui/theme-provider";
 import { AuthProvider } from "../context/AuthContext";
+import { queryClient } from "../lib/queryClient";
 
 import appCss from "../styles.css?url";
 
@@ -37,22 +39,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<ThemeProvider defaultTheme="system" storageKey="second-brain-theme">
-					<AuthProvider>
-						{children}
-						<Toaster />
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "Tanstack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-							]}
-						/>
-						<Scripts />
-					</AuthProvider>
+					<QueryClientProvider client={queryClient}>
+						<AuthProvider>
+							{children}
+							<Toaster />
+							<TanStackDevtools
+								config={{
+									position: "bottom-right",
+								}}
+								plugins={[
+									{
+										name: "Tanstack Router",
+										render: <TanStackRouterDevtoolsPanel />,
+									},
+								]}
+							/>
+							<Scripts />
+						</AuthProvider>
+					</QueryClientProvider>
 				</ThemeProvider>
 			</body>
 		</html>
