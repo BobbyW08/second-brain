@@ -5,8 +5,8 @@ import {
 	useNavigate,
 } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Button } from "../components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -14,10 +14,10 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { getSessionReady, supabase } from "@/utils/supabase";
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { getSessionReady, supabase } from "../utils/supabase";
 
 const GOOGLE_CALLBACK_URL = `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`;
 

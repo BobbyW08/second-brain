@@ -20,16 +20,8 @@ import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
-import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
-import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
-import { Route as AuthenticatedJournalIndexRouteImport } from './routes/_authenticated/journal/index'
-import { Route as AuthenticatedTablesTableIdRouteImport } from './routes/_authenticated/tables/$tableId'
 import { Route as AuthenticatedPagesPageIdRouteImport } from './routes/_authenticated/pages/$pageId'
-import { Route as AuthenticatedJournalLayoutRouteImport } from './routes/_authenticated/journal/_layout'
-import { Route as AuthenticatedJournalPageIdRouteImport } from './routes/_authenticated/journal/$pageId'
-import { Route as AuthenticatedTablesTableIdSettingsRouteImport } from './routes/_authenticated/tables/$tableId/settings'
-import { Route as AuthenticatedTablesTableIdRowsRowIdRouteImport } from './routes/_authenticated/tables/$tableId/rows/$rowId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -85,63 +77,16 @@ const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
-  id: '/tasks/',
-  path: '/tasks/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedTablesIndexRoute =
-  AuthenticatedTablesIndexRouteImport.update({
-    id: '/tables/',
-    path: '/tables/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedPagesIndexRoute = AuthenticatedPagesIndexRouteImport.update({
   id: '/pages/',
   path: '/pages/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedJournalIndexRoute =
-  AuthenticatedJournalIndexRouteImport.update({
-    id: '/journal/',
-    path: '/journal/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTablesTableIdRoute =
-  AuthenticatedTablesTableIdRouteImport.update({
-    id: '/tables/$tableId',
-    path: '/tables/$tableId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedPagesPageIdRoute =
   AuthenticatedPagesPageIdRouteImport.update({
     id: '/pages/$pageId',
     path: '/pages/$pageId',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedJournalLayoutRoute =
-  AuthenticatedJournalLayoutRouteImport.update({
-    id: '/journal/_layout',
-    path: '/journal',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedJournalPageIdRoute =
-  AuthenticatedJournalPageIdRouteImport.update({
-    id: '/journal/$pageId',
-    path: '/journal/$pageId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTablesTableIdSettingsRoute =
-  AuthenticatedTablesTableIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedTablesTableIdRoute,
-  } as any)
-const AuthenticatedTablesTableIdRowsRowIdRoute =
-  AuthenticatedTablesTableIdRowsRowIdRouteImport.update({
-    id: '/rows/$rowId',
-    path: '/rows/$rowId',
-    getParentRoute: () => AuthenticatedTablesTableIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -155,16 +100,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
-  '/journal': typeof AuthenticatedJournalLayoutRoute
   '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/tables/$tableId': typeof AuthenticatedTablesTableIdRouteWithChildren
-  '/journal/': typeof AuthenticatedJournalIndexRoute
   '/pages/': typeof AuthenticatedPagesIndexRoute
-  '/tables/': typeof AuthenticatedTablesIndexRoute
-  '/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
-  '/tables/$tableId/rows/$rowId': typeof AuthenticatedTablesTableIdRowsRowIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -177,15 +114,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
-  '/journal': typeof AuthenticatedJournalIndexRoute
   '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/tables/$tableId': typeof AuthenticatedTablesTableIdRouteWithChildren
   '/pages': typeof AuthenticatedPagesIndexRoute
-  '/tables': typeof AuthenticatedTablesIndexRoute
-  '/tasks': typeof AuthenticatedTasksIndexRoute
-  '/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
-  '/tables/$tableId/rows/$rowId': typeof AuthenticatedTablesTableIdRowsRowIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -200,16 +130,8 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/_authenticated/journal/$pageId': typeof AuthenticatedJournalPageIdRoute
-  '/_authenticated/journal/_layout': typeof AuthenticatedJournalLayoutRoute
   '/_authenticated/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/_authenticated/tables/$tableId': typeof AuthenticatedTablesTableIdRouteWithChildren
-  '/_authenticated/journal/': typeof AuthenticatedJournalIndexRoute
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
-  '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
-  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/_authenticated/tables/$tableId/settings': typeof AuthenticatedTablesTableIdSettingsRoute
-  '/_authenticated/tables/$tableId/rows/$rowId': typeof AuthenticatedTablesTableIdRowsRowIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,16 +146,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/journal/$pageId'
-    | '/journal'
     | '/pages/$pageId'
-    | '/tables/$tableId'
-    | '/journal/'
     | '/pages/'
-    | '/tables/'
-    | '/tasks/'
-    | '/tables/$tableId/settings'
-    | '/tables/$tableId/rows/$rowId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -246,15 +160,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/journal/$pageId'
-    | '/journal'
     | '/pages/$pageId'
-    | '/tables/$tableId'
     | '/pages'
-    | '/tables'
-    | '/tasks'
-    | '/tables/$tableId/settings'
-    | '/tables/$tableId/rows/$rowId'
   id:
     | '__root__'
     | '/'
@@ -268,16 +175,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/_authenticated/journal/$pageId'
-    | '/_authenticated/journal/_layout'
     | '/_authenticated/pages/$pageId'
-    | '/_authenticated/tables/$tableId'
-    | '/_authenticated/journal/'
     | '/_authenticated/pages/'
-    | '/_authenticated/tables/'
-    | '/_authenticated/tasks/'
-    | '/_authenticated/tables/$tableId/settings'
-    | '/_authenticated/tables/$tableId/rows/$rowId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -370,39 +269,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/tasks/': {
-      id: '/_authenticated/tasks/'
-      path: '/tasks'
-      fullPath: '/tasks/'
-      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/tables/': {
-      id: '/_authenticated/tables/'
-      path: '/tables'
-      fullPath: '/tables/'
-      preLoaderRoute: typeof AuthenticatedTablesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/pages/': {
       id: '/_authenticated/pages/'
       path: '/pages'
       fullPath: '/pages/'
       preLoaderRoute: typeof AuthenticatedPagesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/journal/': {
-      id: '/_authenticated/journal/'
-      path: '/journal'
-      fullPath: '/journal/'
-      preLoaderRoute: typeof AuthenticatedJournalIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/tables/$tableId': {
-      id: '/_authenticated/tables/$tableId'
-      path: '/tables/$tableId'
-      fullPath: '/tables/$tableId'
-      preLoaderRoute: typeof AuthenticatedTablesTableIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pages/$pageId': {
@@ -412,81 +283,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPagesPageIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/journal/_layout': {
-      id: '/_authenticated/journal/_layout'
-      path: '/journal'
-      fullPath: '/journal'
-      preLoaderRoute: typeof AuthenticatedJournalLayoutRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/journal/$pageId': {
-      id: '/_authenticated/journal/$pageId'
-      path: '/journal/$pageId'
-      fullPath: '/journal/$pageId'
-      preLoaderRoute: typeof AuthenticatedJournalPageIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/tables/$tableId/settings': {
-      id: '/_authenticated/tables/$tableId/settings'
-      path: '/settings'
-      fullPath: '/tables/$tableId/settings'
-      preLoaderRoute: typeof AuthenticatedTablesTableIdSettingsRouteImport
-      parentRoute: typeof AuthenticatedTablesTableIdRoute
-    }
-    '/_authenticated/tables/$tableId/rows/$rowId': {
-      id: '/_authenticated/tables/$tableId/rows/$rowId'
-      path: '/rows/$rowId'
-      fullPath: '/tables/$tableId/rows/$rowId'
-      preLoaderRoute: typeof AuthenticatedTablesTableIdRowsRowIdRouteImport
-      parentRoute: typeof AuthenticatedTablesTableIdRoute
-    }
   }
 }
-
-interface AuthenticatedTablesTableIdRouteChildren {
-  AuthenticatedTablesTableIdSettingsRoute: typeof AuthenticatedTablesTableIdSettingsRoute
-  AuthenticatedTablesTableIdRowsRowIdRoute: typeof AuthenticatedTablesTableIdRowsRowIdRoute
-}
-
-const AuthenticatedTablesTableIdRouteChildren: AuthenticatedTablesTableIdRouteChildren =
-  {
-    AuthenticatedTablesTableIdSettingsRoute:
-      AuthenticatedTablesTableIdSettingsRoute,
-    AuthenticatedTablesTableIdRowsRowIdRoute:
-      AuthenticatedTablesTableIdRowsRowIdRoute,
-  }
-
-const AuthenticatedTablesTableIdRouteWithChildren =
-  AuthenticatedTablesTableIdRoute._addFileChildren(
-    AuthenticatedTablesTableIdRouteChildren,
-  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedJournalPageIdRoute: typeof AuthenticatedJournalPageIdRoute
-  AuthenticatedJournalLayoutRoute: typeof AuthenticatedJournalLayoutRoute
   AuthenticatedPagesPageIdRoute: typeof AuthenticatedPagesPageIdRoute
-  AuthenticatedTablesTableIdRoute: typeof AuthenticatedTablesTableIdRouteWithChildren
-  AuthenticatedJournalIndexRoute: typeof AuthenticatedJournalIndexRoute
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
-  AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
-  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedJournalPageIdRoute: AuthenticatedJournalPageIdRoute,
-  AuthenticatedJournalLayoutRoute: AuthenticatedJournalLayoutRoute,
   AuthenticatedPagesPageIdRoute: AuthenticatedPagesPageIdRoute,
-  AuthenticatedTablesTableIdRoute: AuthenticatedTablesTableIdRouteWithChildren,
-  AuthenticatedJournalIndexRoute: AuthenticatedJournalIndexRoute,
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
-  AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
-  AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

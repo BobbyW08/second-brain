@@ -15,7 +15,17 @@
       "Bash(node:*)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('version','?'\\)\\)\")",
       "Bash(npx biome:*)",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(netstat -ano)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 42069,3000 -ErrorAction SilentlyContinue | Select-Object LocalPort,OwningProcess\")",
+      "Bash(powershell:*)",
+      "Bash(xargs wc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s https://ddualhmysfhojzghoidy.supabase.co/auth/v1/admin/users -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkdWFsaG15c2Zob2p6Z2hvaWR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTIzMzk4NSwiZXhwIjoyMDkwODA5OTg1fQ.k6xv2goUiZoEcBd1le6TdvXQo4U0K1n-UIZ_PmqKjKg' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkdWFsaG15c2Zob2p6Z2hvaWR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTIzMzk4NSwiZXhwIjoyMDkwODA5OTg1fQ.k6xv2goUiZoEcBd1le6TdvXQo4U0K1n-UIZ_PmqKjKg')",
+      "Bash(python -m json.tool)",
+      "Bash(curl:*)"
     ]
   }
 }

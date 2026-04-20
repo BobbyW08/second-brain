@@ -1,81 +1,89 @@
-# Progress — Second Brain Build Plan
+# Progress — Second Brain v0.1 Build Plan
 
-## Phase 0: Project Setup
+## Phase 0 — Project Cleanup
 
-- [x] Step 0-A: Audit existing folder
-- [x] Step 0-B: Identify and extract template-worthy code
-- [x] Step 0-C: Move old code to archive
-- [x] Step 0-D: Verify folder is clean
-- [x] Step 0-E: Initialize new project (clone starter, rename, git init, npm install)
-- [x] Step 0-F: Create CLAUDE.md and Cline memory bank
-- [x] Ticket 0-B: Configure Supabase project
-- [x] Ticket 0-C: Configure Google OAuth scopes
+- [x] 0-A: Fix Nitro version (^3.0.0)
+- [x] 0-B: Remove AI/googleapis packages, add chrono-node
+- [x] 0-C: Delete files that don't belong in v0.1
+- [x] 0-D: Gut references to deleted packages in existing files
+- [x] 0-F: Verify clean build (npm run build + npm run check pass)
+- [x] 0-G: Commit and push cleanup
 
-## Phase 1: Auth, Invite System & App Shell
+## Phase 1 — Database Migrations
 
-- [x] Ticket 1-A: Invite-only signup gate
-- [x] Ticket 1-B: App shell layout (sidebar, dark mode, mobile)
-- [x] Ticket 1-C: User settings page
+- [ ] Migration 1: Create buckets table + update handle_new_user trigger
+- [ ] Migration 2: Add new columns to tasks table
+- [ ] Migration 3: Add position column to pages
+- [ ] Migration 4: Add linked_page_id column to calendar_blocks
+- [ ] Migration 5: Add unique constraint on calendar_blocks.google_event_id
+- [ ] Migration 6: Drop tables_schema and table_rows
+- [ ] Regenerate src/types/database.types.ts
 
-## Phase 2: Priority Bucket (Tasks)
+## Phase 2 — Route and Layout Restructure
 
-- [x] Ticket 2-A: Task data layer (queries, Zustand store)
-- [x] Ticket 2-B: Priority Bucket UI (TaskPill with data attributes)
-- [x] Ticket 2-C: Completed today section + auto-archive
+- [ ] 2-A: Fix root redirect (check session before redirecting)
+- [ ] 2-B: Remove journal routes and components
+- [ ] 2-C: Remove tables routes and components
+- [ ] 2-D: Remove standalone tasks route
+- [ ] 2-E: Confirm dashboard is the full app surface
+- [ ] 2-F: Confirm routeTree.gen.ts regenerates cleanly
+- [x] 0-E: Fix priority naming in src/lib/taskConstants.ts (urgent/important/someday/unsorted)
 
-## Phase 3: Calendar & Scheduling
+## Phase 3 — Custom Buckets
 
-- [x] Ticket 3-A: FullCalendar base setup (3-day view, nowIndicator)
-- [x] Ticket 3-B: Morning/Afternoon/Evening zones
-- [x] Ticket 3-C: Calendar data layer (CRUD + drag/resize handlers)
-- [x] Ticket 3-D: Drag from bucket to calendar (FullCalendar Draggable)
-- [x] Ticket 3-E: Create blocks directly on calendar (select + Dialog)
-- [x] Ticket 3-F: Google Calendar sync (read + write + token refresh)
+- [ ] 3-A: src/queries/buckets.ts — CRUD hooks with optimistic updates
+- [ ] 3-B: src/components/tasks/BucketPanel.tsx — full left panel in Priorities mode
+- [ ] 3-C: Sidebar collapse with ⌘B shortcut
+- [ ] 3-D: Bucket settings section in SettingsPage
 
-## Phase 4: Pages, Folders & Journal
+## Phase 4 — Task Card Redesign
 
-- [x] Ticket 4-A: Folder tree (react-arborist, CRUD, drag reorder)
-- [x] Ticket 4-B: BlockNote page editor (autosave, custom slash commands)
-- [x] Ticket 4-C: Journal section (auto-date, BlockNote, Vitest title tests)
+- [ ] 4-A: src/components/tasks/TaskCard.tsx — closed state with data attributes
+- [ ] 4-B: TaskCard open state — all fields, chrono-node date parsing
+- [ ] 4-C: Completed Today section + fix undo button onClick
 
-## Phase 5: Tables
+## Phase 5 — Calendar and Google Sync
 
-- [x] Ticket 5-A: Table data layer
-- [ ] Ticket 5-B: Table schema builder
-- [ ] Ticket 5-C: Table view with inline editing (all 6 column types)
-- [ ] Ticket 5-D: Row detail page with BlockNote notes
+- [ ] 5-A: Fix FullCalendar missing droppable and editable props
+- [ ] 5-B: Clean up Morning/Afternoon/Evening zones with design tokens
+- [ ] 5-C: Calendar block appearance (source colors, wrapping titles)
+- [ ] 5-D: Journal link on day column headers
+- [ ] 5-E: src/components/calendar/EventSidePanel.tsx
+- [ ] 5-F: Create blocks by clicking and dragging on calendar
+- [ ] 5-G: Delete calendar block from EventSidePanel
+- [ ] 5-H: src/components/layout/MiniCalendarDrawer.tsx (Files mode)
+- [ ] 5-I: Rewrite src/server/googleCalendar.ts using direct fetch (no googleapis)
+- [ ] 5-J: Restore Google Calendar section in SettingsPage
 
-## Phase 6: Universal Linking & Global Search
+## Phase 6 — Files and Editor
 
-- [ ] Ticket 6-A: ⌘K global search (CommandDialog)
-- [ ] Ticket 6-B: Inline page linking in BlockNote (/link command)
-- [ ] Ticket 6-C: Backlinks panel
+- [ ] 6-A: Left panel toggle behavior (Priorities ↔ Files)
+- [ ] 6-B: Fix FolderTree mutation onSuccess callbacks (pass userId, invalidate queries)
+- [ ] 6-C: src/components/files/FilesLandingPage.tsx
+- [ ] 6-D: Confirm PageView works correctly after Phase 0 cleanup
+- [ ] 6-E: Confirm Journal folder auto-creation on signup (handle_new_user trigger)
 
-## Phase 7: AI Features
+## Phase 7 — Global Search
 
-- [ ] Ticket 7-A: Tone system prompt and AI constants (src/lib/aiConstants.ts)
-- [ ] Ticket 7-B: AI chat sidebar (assistant-ui + streamText)
-- [ ] Ticket 7-C: AI writing in BlockNote (@blocknote/xl-ai)
-- [ ] Ticket 7-D: Scheduling suggestions
-- [ ] Ticket 7-E: Journal AI prompts
-- [ ] Ticket 7-F: AI usage tracking
+- [ ] 7-A: Remove table rows from search, add tasks to search results
+- [ ] 7-B: Confirm ⌘K shortcut still works after cleanup
+- [ ] 7-C: Confirm link-picker mode works end to end
 
-## Phase 8: Polish, Mobile & Testing
+## Phase 8 — Polish and Launch
 
-- [ ] Ticket 8-A: Toast notifications (Sonner + undo buttons)
-- [ ] Ticket 8-B: Empty states
-- [ ] Ticket 8-C: Mobile layout (bottom sheets, coarse pointer detection)
-- [ ] Ticket 8-D: Loading and error states (Skeleton + ErrorBoundary)
-- [ ] Ticket 8-E: Unit tests (Vitest — journal title, AI context, block durations)
+- [ ] 8-A: Loading skeletons on all data-fetching views
+- [ ] 8-B: Empty states on all views that can be empty
+- [ ] 8-C: Error boundaries on all major views
+- [ ] 8-D: Tone audit — search for banned words across all JSX files
+- [ ] 8-E: Deploy to Vercel
 
-## Template Saves Checklist
+---
 
-- [x] 0-B: Typed Supabase client, auth callback, gen-types.sh, RLS policy → `supabase/`
-- [x] 1-A: Invite-only pattern → `supabase/invite-pattern.ts`
-- [x] 1-B: App shell layout → `components/app-shell.tsx`
-- [ ] 2-A: TanStack Query hook with optimistic update → `tanstack/query-hook.ts`
-- [ ] 3-F: Google Calendar server function → `google-calendar/calendar-server-fn.ts`
-- [ ] 4-B: Autosave hook → `components/autosave-hook.ts`
-- [ ] 7-A: TONE_SYSTEM_PROMPT + aiConstants.ts → `ai/tone-prompt.ts`
-- [ ] 7-B: streamText server function → `ai/stream-route.ts`
-- [ ] 8-B: Empty state component → `components/empty-state.tsx`
+## What Is Already Built and Working
+
+Documented in full in CLAUDE.md under "What is already built and working."
+Key items: Auth (Google OAuth + invite gate), database schema with RLS, app shell
+(AppLayout + AppSidebar + TopBar + dark mode), global search (⌘K CommandDialog),
+BlockNote PageView with autosave, FolderTree with react-arborist, all TanStack Query
+hooks in src/queries/, FullCalendar base (3-day view, zone structure, now indicator),
+Settings (profile + theme), Vitest tests (8 passing), utility hooks.

@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import { redirect } from "@tanstack/react-router";
-import { getSessionReady } from "@/utils/supabase";
+import { getSessionReady } from "./supabase";
 
 /**
  * Checks for an active Supabase session.

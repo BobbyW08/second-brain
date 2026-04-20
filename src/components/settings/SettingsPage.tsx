@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -20,9 +19,6 @@ import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/ui/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile, useUpdateProfile } from "@/queries/profile";
-import { supabase } from "@/utils/supabase";
-
-const GOOGLE_CALLBACK_URL = `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`;
 
 const profileSchema = z.object({
 	display_name: z.string().min(1, "Name is required").max(100),
@@ -44,7 +40,6 @@ export function SettingsPage() {
 		defaultValues: { display_name: "", avatar_url: "" },
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: form.reset is stable
 	useEffect(() => {
 		if (profile) {
 			form.reset({
@@ -52,7 +47,7 @@ export function SettingsPage() {
 				avatar_url: profile.avatar_url ?? "",
 			});
 		}
-	}, [profile]);
+	}, [profile, form.reset]);
 
 	const avatarUrlValue = form.watch("avatar_url");
 	const displayNameValue = form.watch("display_name");
@@ -63,10 +58,6 @@ export function SettingsPage() {
 		.join("")
 		.substring(0, 2)
 		.toUpperCase();
-
-	const isConnected = !!(
-		profile?.google_calendar_id && profile?.google_refresh_token
-	);
 
 	async function handleProfileSubmit(values: ProfileFormValues) {
 		if (!userId) return;
@@ -81,36 +72,6 @@ export function SettingsPage() {
 			toast.success("Profile updated");
 		} catch {
 			toast.error("Could not save profile. Try again.");
-		}
-	}
-
-	async function handleGoogleConnect() {
-		const { error } = await supabase.auth.signInWithOAuth({
-			provider: "google",
-			options: {
-				scopes: "https://www.googleapis.com/auth/calendar",
-				queryParams: { access_type: "offline", prompt: "consent" },
-				redirectTo: GOOGLE_CALLBACK_URL,
-			},
-		});
-		if (error) toast.error("Could not connect Google Calendar. Try again.");
-	}
-
-	async function handleGoogleDisconnect() {
-		if (!userId) return;
-		try {
-			await updateProfile({
-				userId,
-				updates: {
-					google_access_token: null,
-					google_refresh_token: null,
-					google_token_expiry: null,
-					google_calendar_id: null,
-				},
-			});
-			toast.success("Google Calendar disconnected");
-		} catch {
-			toast.error("Could not disconnect. Try again.");
 		}
 	}
 
@@ -214,45 +175,6 @@ export function SettingsPage() {
 					</Badge>
 				</div>
 				{/* TODO: Phase 7 — AI preferences */}
-			</div>
-
-			<Separator className="my-8" />
-
-			{/* SECTION 4 — CONNECTED SERVICES */}
-			<div className="space-y-4">
-				<div>
-					<h2 className="text-lg font-semibold">Connected Services</h2>
-					<p className="text-sm text-muted-foreground">
-						Manage your connected accounts and integrations
-					</p>
-				</div>
-
-				<div className="flex items-center justify-between">
-					<div className="space-y-1">
-						<p className="text-sm font-medium">Google Calendar</p>
-						{isConnected ? (
-							<>
-								<Badge className="bg-green-600 text-white hover:bg-green-700">
-									Connected
-								</Badge>
-								<p className="text-xs text-muted-foreground">
-									{profile?.google_calendar_id}
-								</p>
-							</>
-						) : (
-							<p className="text-sm text-muted-foreground">Not connected</p>
-						)}
-					</div>
-					{isConnected ? (
-						<Button variant="outline" onClick={handleGoogleDisconnect}>
-							Disconnect
-						</Button>
-					) : (
-						<Button onClick={handleGoogleConnect}>
-							Connect Google Calendar
-						</Button>
-					)}
-				</div>
 			</div>
 		</div>
 	);

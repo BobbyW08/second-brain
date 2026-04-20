@@ -1,14 +1,12 @@
-import { MessageSquare, Moon, Search, Sun } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { CommandDialogComponent } from "@/components/search/CommandDialog";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useUIStore } from "@/stores/useUIStore";
 
 export function TopBar() {
 	const { theme, setTheme } = useTheme();
-	const setChatPanelOpen = useUIStore((s) => s.setChatPanelOpen);
 	const [searchOpen, setSearchOpen] = useState(false);
 
 	function toggleTheme() {
@@ -26,15 +24,6 @@ export function TopBar() {
 				aria-label="Search"
 			>
 				<Search className="h-4 w-4" />
-			</Button>
-			<Button
-				variant="ghost"
-				size="icon"
-				onClick={() => setChatPanelOpen(true)}
-				className="p-2 rounded hover:bg-accent"
-				aria-label="Open AI assistant"
-			>
-				<MessageSquare className="h-4 w-4" />
 			</Button>
 			<Button
 				variant="ghost"

@@ -1,6 +1,6 @@
 import { Moon, Sun } from "lucide-react";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
+import { Button } from "./button";
 
 export function ThemeProvider({
 	children,

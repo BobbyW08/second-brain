@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Database } from "@/types/database.types";
-import { supabase } from "@/utils/supabase";
+import type { Database } from "../types/database.types";
+import { supabase } from "../utils/supabase";
 
 // Define the types for our tree nodes
 export type TreeNode = {

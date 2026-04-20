@@ -5,9 +5,15 @@ export const BLOCK_SIZE_DURATIONS: Record<"S" | "M" | "L", string> = {
 };
 
 export const PRIORITY_LABELS: Record<string, string> = {
-	high: "High",
-	medium: "Medium",
-	low: "Low",
+	urgent: "Urgent",
+	important: "Important",
+	someday: "Someday",
+	unsorted: "Unsorted",
 };
 
-export const PRIORITY_ORDER = ["high", "medium", "low"] as const;
+export const PRIORITY_ORDER = [
+	"urgent",
+	"important",
+	"someday",
+	"unsorted",
+] as const;
