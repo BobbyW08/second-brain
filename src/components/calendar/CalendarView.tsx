@@ -81,6 +81,7 @@ export function CalendarView() {
 			color: null,
 			google_event_id: null,
 			is_synced: null,
+			linked_page_id: null,
 		});
 
 		setTitle("");
@@ -250,6 +251,7 @@ export function CalendarView() {
 						color: null,
 						google_event_id: null,
 						is_synced: null,
+						linked_page_id: null,
 					});
 
 					completeTask.mutate(taskId);

@@ -97,7 +97,7 @@ export function PriorityBucket({ userId }: PriorityBucketProps) {
 
 	return (
 		<div ref={bucketRef} className="flex flex-col gap-4">
-			<CompletedTodaySection userId={userId} onComplete={handleComplete} />
+			<CompletedTodaySection userId={userId} />
 
 			{PRIORITY_ORDER.map((priority) => {
 				const tasksForPriority = tasksByPriorityGrouped[priority] || [];

@@ -11,30 +11,32 @@
 
 ## Phase 1 — Database Migrations
 
-- [ ] Migration 1: Create buckets table + update handle_new_user trigger
-- [ ] Migration 2: Add new columns to tasks table
-- [ ] Migration 3: Add position column to pages
-- [ ] Migration 4: Add linked_page_id column to calendar_blocks
-- [ ] Migration 5: Add unique constraint on calendar_blocks.google_event_id
-- [ ] Migration 6: Drop tables_schema and table_rows
-- [ ] Regenerate src/types/database.types.ts
+- [x] Migration 1: Create buckets table + update handle_new_user trigger
+- [x] Migration 2: Add new columns to tasks table
+- [x] Migration 3: Add position column to pages
+- [x] Migration 4: Add linked_page_id column to calendar_blocks
+- [x] Migration 5: Add unique constraint on calendar_blocks.google_event_id
+- [x] Migration 6: Drop tables_schema and table_rows
+- [x] Regenerate src/types/database.types.ts
 
 ## Phase 2 — Route and Layout Restructure
 
-- [ ] 2-A: Fix root redirect (check session before redirecting)
-- [ ] 2-B: Remove journal routes and components
-- [ ] 2-C: Remove tables routes and components
-- [ ] 2-D: Remove standalone tasks route
-- [ ] 2-E: Confirm dashboard is the full app surface
-- [ ] 2-F: Confirm routeTree.gen.ts regenerates cleanly
+- [x] 2-A: Fix root redirect (check session before redirecting)
+- [x] 2-B: Remove journal routes and components
+- [x] 2-C: Remove tables routes and components
+- [x] 2-D: Remove standalone tasks route
+- [x] 2-E: Confirm dashboard is the full app surface
+- [x] 2-F: Confirm routeTree.gen.ts regenerates cleanly
 - [x] 0-E: Fix priority naming in src/lib/taskConstants.ts (urgent/important/someday/unsorted)
+>>>>>>> +++++++ REPLACE
+
 
 ## Phase 3 — Custom Buckets
 
-- [ ] 3-A: src/queries/buckets.ts — CRUD hooks with optimistic updates
-- [ ] 3-B: src/components/tasks/BucketPanel.tsx — full left panel in Priorities mode
-- [ ] 3-C: Sidebar collapse with ⌘B shortcut
-- [ ] 3-D: Bucket settings section in SettingsPage
+- [x] 3-A: src/queries/buckets.ts — CRUD hooks with optimistic updates
+- [x] 3-B: src/components/tasks/BucketPanel.tsx — full left panel in Priorities mode
+- [x] 3-C: Sidebar collapse with ⌘B shortcut
+- [x] 3-D: Bucket settings section in SettingsPage
 
 ## Phase 4 — Task Card Redesign
 

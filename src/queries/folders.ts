@@ -28,7 +28,6 @@ export function useFoldersAndPages(userId: string) {
 				.from("pages")
 				.select("id, title, folder_id, page_type")
 				.eq("user_id", userId)
-				.neq("page_type", "journal") // journal pages live in /journal, not the tree
 				.throwOnError();
 
 			return buildTree(folders ?? [], pages ?? []);

@@ -1,0 +1,190 @@
+import { Draggable } from "@fullcalendar/interaction";
+import { useEffect, useRef, useState } from "react";
+import { AddTaskInline } from "@/components/tasks/AddTaskInline";
+import { BucketHeader } from "@/components/tasks/BucketHeader";
+import { CompletedTodaySection } from "@/components/tasks/CompletedTodaySection";
+import { TaskStub } from "@/components/tasks/TaskStub";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import {
+	useBuckets,
+	useCreateBucket,
+	useDeleteBucket,
+	useUpdateBucket,
+} from "@/queries/buckets";
+import { useCreateTask, useTasksByPriority } from "@/queries/tasks";
+import { useUIStore } from "@/stores/useUIStore";
+
+export function BucketPanel() {
+	const { userId } = useCurrentUser();
+	const { leftPanelMode, setLeftPanelMode } = useUIStore();
+	const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(
+		new Set(),
+	);
+	const [newBucketId, setNewBucketId] = useState<string | null>(null);
+	const bucketListRef = useRef<HTMLDivElement>(null);
+
+	const { data: buckets = [], isLoading: loadingBuckets } = useBuckets(userId);
+	const { data: tasks = [] } = useTasksByPriority(userId);
+
+	const createBucket = useCreateBucket(userId);
+	const updateBucket = useUpdateBucket(userId);
+	const deleteBucket = useDeleteBucket(userId);
+	const createTask = useCreateTask();
+
+	// Group tasks by bucket_id
+	const tasksByBucket: Record<string, typeof tasks> = {};
+	for (const task of tasks) {
+		const bid = task.bucket_id || "unsorted";
+		if (!tasksByBucket[bid]) tasksByBucket[bid] = [];
+		tasksByBucket[bid].push(task);
+	}
+
+	// Default all buckets to expanded on initial load
+	useEffect(() => {
+		if (buckets.length > 0 && expandedBuckets.size === 0) {
+			setExpandedBuckets(new Set(buckets.map((b) => b.id)));
+		}
+	}, [buckets, expandedBuckets.size]);
+
+	// Initialize FullCalendar Draggable
+	useEffect(() => {
+		if (!bucketListRef.current) return;
+		const draggable = new Draggable(bucketListRef.current, {
+			itemSelector: ".task-stub",
+			eventData: (el) => ({
+				id: el.dataset.taskId,
+				title: el.dataset.title,
+				duration: el.dataset.duration,
+			}),
+		});
+		return () => draggable.destroy();
+	}, []);
+
+	const toggleExpand = (id: string) => {
+		const next = new Set(expandedBuckets);
+		if (next.has(id)) {
+			next.delete(id);
+		} else {
+			next.add(id);
+		}
+		setExpandedBuckets(next);
+	};
+
+	const handleAddBucket = () => {
+		createBucket.mutate(
+			{
+				name: "New bucket",
+				color: "#666672",
+				position: buckets.length,
+			},
+			{
+				onSuccess: (data) => {
+					if (data) {
+						setNewBucketId(data.id);
+						// Ensure it's expanded
+						const next = new Set(expandedBuckets);
+						next.add(data.id);
+						setExpandedBuckets(next);
+					}
+				},
+			},
+		);
+	};
+
+	if (loadingBuckets) {
+		return (
+			<div className="p-4 text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+				Loading buckets...
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex h-full flex-col bg-[#141418]">
+			{/* Mode Toggle */}
+			<div className="px-2 pt-2">
+				<div className="flex border-b border-[#2a2a30]">
+					<button
+						type="button"
+						onClick={() => setLeftPanelMode("priorities")}
+						className={`relative flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
+							leftPanelMode === "priorities"
+								? "text-[#e8e8f0]"
+								: "text-[#666672]"
+						}`}
+					>
+						Priorities
+						{leftPanelMode === "priorities" && (
+							<div className="absolute bottom-0 left-0 h-[1px] w-full bg-[#3A8FD4]" />
+						)}
+					</button>
+					<button
+						type="button"
+						onClick={() => setLeftPanelMode("files")}
+						className={`flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
+							leftPanelMode === "files" ? "text-[#e8e8f0]" : "text-[#666672]"
+						}`}
+					>
+						Files
+					</button>
+				</div>
+			</div>
+
+			<div className="flex-1 overflow-y-auto" ref={bucketListRef}>
+				{buckets.map((bucket) => {
+					const bucketTasks = tasksByBucket[bucket.id] || [];
+					const isExpanded = expandedBuckets.has(bucket.id);
+
+					return (
+						<div key={bucket.id} className="border-b border-[#2a2a30]/50">
+							<BucketHeader
+								bucket={bucket}
+								taskCount={bucketTasks.length}
+								isExpanded={isExpanded}
+								onToggleExpand={() => toggleExpand(bucket.id)}
+								onRename={(name) =>
+									updateBucket.mutate({ id: bucket.id, name })
+								}
+								onDelete={() => deleteBucket.mutate(bucket.id)}
+								initialRenameMode={bucket.id === newBucketId}
+							/>
+							{isExpanded && (
+								<div className="flex flex-col gap-1 px-2 pb-2">
+									{bucketTasks.map((task) => (
+										<TaskStub
+											key={task.id}
+											task={task}
+											bucketColor={bucket.color || "#666672"}
+										/>
+									))}
+									<AddTaskInline
+										bucketId={bucket.id}
+										onAdd={(title) =>
+											createTask.mutate({
+												user_id: userId,
+												title,
+												priority: bucket.name.toLowerCase(), // Legacy compatibility
+												position: bucketTasks.length,
+												bucket_id: bucket.id,
+											})
+										}
+									/>
+								</div>
+							)}
+						</div>
+					);
+				})}
+
+				<button
+					type="button"
+					onClick={handleAddBucket}
+					className="w-full px-3 py-2 text-left text-[11px] text-[#666672] transition-colors hover:text-[#aaaaB8]"
+				>
+					+ Add bucket
+				</button>
+
+				<CompletedTodaySection userId={userId} />
+			</div>
+		</div>
+	);
+}

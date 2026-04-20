@@ -125,21 +125,27 @@ Regenerate src/types/database.types.ts after all migrations. Run: supabase gen t
 
 PHASE 2 — ROUTE AND LAYOUT RESTRUCTURE
 Fix broken routing before building features.
+
 2-A: Fix root redirect
 src/routes/index.tsx currently throws unconditionally to /login. Rewrite it to check the session first. If a session exists, redirect to /dashboard. If no session, redirect to /login.
+
 2-B: Remove journal routes entirely
 Delete: src/routes/_authenticated/journal/index.tsx, src/routes/_authenticated/journal/_layout.tsx, src/routes/_authenticated/journal/$pageId.tsx.
 Delete: src/components/journal/JournalLayout.tsx, src/components/journal/JournalView.tsx.
 Journal is now a folder in the file tree, not a route. Journal entries are plain pages. A Journal folder is auto-created on signup (Migration 1). The calendar day header has a + Journal button that creates or opens a page in that folder for the selected date.
+
 2-C: Remove tables routes entirely
 Delete: src/routes/_authenticated/tables/ (entire directory and all files).
 Delete: src/components/tables/ (entire directory and all files including TableView, TableSchemaBuilder, RowDetailView, SelectOptionsEditor, and all cell components).
 Tables are now BlockNote table blocks inside any page. No separate section, no separate database tables (dropped in Migration 6).
+
 2-D: Remove standalone tasks route
 Delete: src/routes/_authenticated/tasks/index.tsx.
 Tasks live in the left panel of the dashboard. There is no standalone tasks page.
+
 2-E: Dashboard is the entire application surface
 src/routes/_authenticated/dashboard.tsx renders the full split-panel layout directly. The AppLayout wraps it. The right panel of the dashboard is the CalendarView. The left panel is the BucketPanel. There is no separate /calendar route needed. Keep /calendar as a redirect to /dashboard for convenience if it helps, but remove it if it causes confusion.
+
 2-F: Remove orphaned routes from routeTree.gen.ts
 After deleting route files, TanStack Router regenerates routeTree.gen.ts automatically on next dev server start. Do not edit routeTree.gen.ts manually. Run npm run dev once to confirm the route tree regenerates without errors.
 

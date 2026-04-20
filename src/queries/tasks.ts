@@ -52,6 +52,7 @@ export function useCreateTask() {
 			priority: string;
 			block_size?: string;
 			position?: number;
+			bucket_id?: string | null;
 		}) => {
 			await supabase
 				.from("tasks")
@@ -78,6 +79,13 @@ export function useCreateTask() {
 				completed_at: null,
 				created_at: new Date().toISOString(),
 				updated_at: new Date().toISOString(),
+				attendees: null,
+				bucket_id: input.bucket_id ?? null,
+				color: null,
+				description: null,
+				labels: null,
+				location: null,
+				recurring: null,
 			};
 			queryClient.setQueryData<Task[]>(["tasks", input.user_id], (old) => [
 				...(old ?? []),

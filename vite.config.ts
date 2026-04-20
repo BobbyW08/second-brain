@@ -13,15 +13,16 @@ const config = defineConfig({
 			"@": path.resolve(__dirname, "./src"),
 		},
 	},
+	build: {
+		rollupOptions: {
+			external: [/^@sentry\//],
+		},
+	},
 	plugins: [
 		devtools(),
 		tanstackStart(),
 		react(),
-		nitro({
-			preset: process.env.VERCEL ? "vercel" : "node-server",
-			rollupConfig: { external: [/^@sentry\//] },
-			serverDir: "server",
-		}),
+		nitro({}),
 		tsconfigPaths({ projects: ["./tsconfig.json"] }),
 		tailwindcss(),
 	],

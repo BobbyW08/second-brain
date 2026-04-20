@@ -1,21 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-	CalendarDays,
-	ChevronDown,
-	LayoutDashboard,
-	ListTodo,
-	LogOut,
-	Settings,
-} from "lucide-react";
-import { useState } from "react";
-import { FolderTree } from "@/components/folders/FolderTree";
-import { PriorityBucket } from "@/components/tasks/PriorityBucket";
+import { LogOut, Settings } from "lucide-react";
+import { BucketPanel } from "@/components/tasks/BucketPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -27,35 +13,18 @@ import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
-	SidebarGroup,
-	SidebarGroupContent,
-	SidebarGroupLabel,
-	SidebarHeader,
-	SidebarMenu,
-	SidebarMenuButton,
-	SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
 
-const MENU_ITEMS = [
-	{ label: "Calendar", icon: CalendarDays, to: "/calendar" },
-	{ label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
-	{ label: "Priorities", icon: ListTodo, to: "/tasks" },
-] as const;
-
 export function AppSidebar() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
-	const [menuOpen, setMenuOpen] = useState(true);
-	const [filesOpen, setFilesOpen] = useState(true);
-	const [prioritiesOpen, setPrioritiesOpen] = useState(true);
 
 	const displayName =
 		user?.user_metadata?.display_name ?? user?.email?.split("@")[0] ?? "User";
 	const avatarUrl = user?.user_metadata?.avatar_url ?? "";
 	const initials = displayName.charAt(0).toUpperCase();
-	const firstName = displayName.split(" ")[0];
 
 	async function handleSignOut() {
 		await supabase.auth.signOut();
@@ -63,100 +32,9 @@ export function AppSidebar() {
 	}
 
 	return (
-		<Sidebar>
-			<SidebarHeader className="px-4 py-3">
-				<span className="text-base font-semibold tracking-tight">
-					Second Brain
-				</span>
-			</SidebarHeader>
-
-			<SidebarContent className="overflow-y-auto">
-				{/* ── Section 1: Menu ── */}
-				<Collapsible open={menuOpen} onOpenChange={setMenuOpen}>
-					<SidebarGroup>
-						<CollapsibleTrigger asChild>
-							<SidebarGroupLabel className="flex items-center justify-between cursor-pointer select-none hover:text-foreground">
-								Menu
-								<ChevronDown
-									className={`h-3 w-3 transition-transform ${menuOpen ? "" : "-rotate-90"}`}
-								/>
-							</SidebarGroupLabel>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									{MENU_ITEMS.map(({ label, icon: Icon, to }) => (
-										<SidebarMenuItem key={label}>
-											<SidebarMenuButton asChild>
-												<Link
-													to={to}
-													className="flex items-center gap-2"
-													activeProps={{
-														className:
-															"bg-sidebar-accent text-sidebar-accent-foreground",
-													}}
-												>
-													<Icon className="h-4 w-4" />
-													<span>{label}</span>
-												</Link>
-											</SidebarMenuButton>
-										</SidebarMenuItem>
-									))}
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</CollapsibleContent>
-					</SidebarGroup>
-				</Collapsible>
-
-				{/* ── Section 2: Files ── */}
-				<Collapsible open={filesOpen} onOpenChange={setFilesOpen}>
-					<SidebarGroup>
-						<CollapsibleTrigger asChild>
-							<SidebarGroupLabel className="flex items-center justify-between cursor-pointer select-none hover:text-foreground">
-								{firstName ? `${firstName}'s Files` : "Files"}
-								<ChevronDown
-									className={`h-3 w-3 transition-transform ${filesOpen ? "" : "-rotate-90"}`}
-								/>
-							</SidebarGroupLabel>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<SidebarGroupContent>
-								{user ? (
-									<FolderTree userId={user.id} />
-								) : (
-									<div className="p-4 text-center text-xs text-muted-foreground">
-										Sign in to see files
-									</div>
-								)}
-							</SidebarGroupContent>
-						</CollapsibleContent>
-					</SidebarGroup>
-				</Collapsible>
-
-				{/* ── Section 3: Priorities ── */}
-				<Collapsible open={prioritiesOpen} onOpenChange={setPrioritiesOpen}>
-					<SidebarGroup>
-						<CollapsibleTrigger asChild>
-							<SidebarGroupLabel className="flex items-center justify-between cursor-pointer select-none hover:text-foreground">
-								Priorities
-								<ChevronDown
-									className={`h-3 w-3 transition-transform ${prioritiesOpen ? "" : "-rotate-90"}`}
-								/>
-							</SidebarGroupLabel>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<SidebarGroupContent>
-								{user ? (
-									<PriorityBucket userId={user.id} />
-								) : (
-									<div className="p-4 text-center text-xs text-muted-foreground">
-										Sign in to see tasks
-									</div>
-								)}
-							</SidebarGroupContent>
-						</CollapsibleContent>
-					</SidebarGroup>
-				</Collapsible>
+		<Sidebar collapsible="offcanvas">
+			<SidebarContent className="p-0">
+				<BucketPanel />
 			</SidebarContent>
 
 			<SidebarFooter className="p-2">

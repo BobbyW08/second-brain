@@ -1,8 +1,15 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "../utils/supabase";
 
-// Placeholder — will be replaced in Phase 1 with the app shell / dashboard redirect
 export const Route = createFileRoute("/")({
 	beforeLoad: async () => {
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
+		if (session) {
+			throw redirect({ to: "/dashboard" });
+		}
 		throw redirect({ to: "/login" });
 	},
+	component: () => null,
 });

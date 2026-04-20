@@ -58,7 +58,7 @@ function AuthCallbackPage() {
 					.throwOnError();
 			}
 
-			navigate({ to: "/calendar" });
+			navigate({ to: "/dashboard" });
 		}
 
 		handleCallback();

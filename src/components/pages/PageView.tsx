@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import "@blocknote/mantine/style.css";
 import type { PartialBlock } from "@blocknote/core";
 import { Loader2 } from "lucide-react";
-import { CommandDialogComponent } from "@/components/search/CommandDialog";
 import { useAutosave } from "@/hooks/useAutosave";
 import { usePage, useUpdatePage } from "@/queries/pages";
 import type { Json } from "@/types/database.types";
@@ -20,7 +19,6 @@ export function PageView() {
 	const { mutate: updatePage } = useUpdatePage();
 
 	const [title, setTitle] = useState(page?.title ?? "Untitled");
-	const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
 	const editor = useCreateBlockNote({
 		initialContent: (page?.content ?? undefined) as PartialBlock[] | undefined,
@@ -80,25 +78,6 @@ export function PageView() {
 				onChange={() => saveContent(editor.document)}
 				theme={theme === "dark" ? "dark" : "light"}
 				slashMenu={true}
-			/>
-
-			<CommandDialogComponent
-				mode="link"
-				open={linkDialogOpen}
-				onOpenChange={setLinkDialogOpen}
-				onLinkSelect={(result) => {
-					editor.insertInlineContent([
-						{
-							type: "linkChip" as "linkChip",
-							props: {
-								itemType: result.type,
-								itemId: result.id,
-								itemTitle: result.title,
-							},
-						},
-					]);
-					setLinkDialogOpen(false);
-				}}
 			/>
 		</div>
 	);

@@ -6,6 +6,9 @@ interface UIState {
 
 	activePageId: string | null;
 	setActivePageId: (id: string | null) => void;
+
+	leftPanelMode: "priorities" | "files";
+	setLeftPanelMode: (mode: "priorities" | "files") => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -14,4 +17,7 @@ export const useUIStore = create<UIState>((set) => ({
 
 	activePageId: null,
 	setActivePageId: (id) => set({ activePageId: id }),
+
+	leftPanelMode: "priorities",
+	setLeftPanelMode: (mode) => set({ leftPanelMode: mode }),
 }));

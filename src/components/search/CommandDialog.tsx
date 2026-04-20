@@ -1,5 +1,5 @@
 import { useRouter } from "@tanstack/react-router";
-import { FileText, ListTodo, Table } from "lucide-react";
+import { FileText, ListTodo } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
 	CommandDialog,
@@ -15,10 +15,9 @@ import { supabase } from "@/utils/supabase";
 interface SearchResult {
 	id: string;
 	title: string;
-	type: "page" | "task" | "folder" | "table_row";
+	type: "page" | "task" | "folder";
 	path?: string;
 	context?: string;
-	tableId?: string;
 }
 
 interface CommandDialogProps {
@@ -142,39 +141,6 @@ export function CommandDialogComponent({
 		[],
 	);
 
-	const searchTableRows = useCallback(
-		async (term: string, userId: string): Promise<SearchResult[]> => {
-			const { data, error } = await supabase
-				.from("table_rows")
-				.select("id, table_id, data")
-				.eq("user_id", userId)
-				.limit(10)
-				.throwOnError();
-
-			if (error) throw error;
-
-			// Filter rows based on content in data JSONB
-			const filteredRows = data.filter((row) => {
-				const rowData = row.data;
-				if (!rowData) return false;
-
-				// Convert all values to string and check if term is present
-				const flatData = JSON.stringify(rowData).toLowerCase();
-				return flatData.includes(term.toLowerCase());
-			});
-
-			return filteredRows.map((row) => ({
-				id: row.id,
-				title: `Row in ${row.table_id}`,
-				type: "table_row" as const,
-				path: "Table",
-				context: "Table row",
-				tableId: row.table_id,
-			}));
-		},
-		[],
-	);
-
 	// Perform search when debounced term changes
 	useEffect(() => {
 		if (!searchTerm.trim() || !user) {
@@ -187,12 +153,11 @@ export function CommandDialogComponent({
 
 		const performSearch = async () => {
 			try {
-				// Search all four groups in parallel
-				const [pages, tasks, folders, tableRows] = await Promise.all([
+				// Search all three groups in parallel
+				const [pages, tasks, folders] = await Promise.all([
 					searchPages(searchTerm, user.id),
 					searchTasks(searchTerm, user.id),
 					searchFolders(searchTerm, user.id),
-					searchTableRows(searchTerm, user.id),
 				]);
 
 				// Combine and sort results
@@ -200,7 +165,6 @@ export function CommandDialogComponent({
 					...pages.map((p) => ({ ...p, type: "page" as const })),
 					...tasks.map((t) => ({ ...t, type: "task" as const })),
 					...folders.map((f) => ({ ...f, type: "folder" as const })),
-					...tableRows.map((r) => ({ ...r, type: "table_row" as const })),
 				];
 
 				setResults(allResults);
@@ -213,14 +177,7 @@ export function CommandDialogComponent({
 		};
 
 		performSearch();
-	}, [
-		searchTerm,
-		user,
-		searchPages,
-		searchTasks,
-		searchFolders,
-		searchTableRows,
-	]);
+	}, [searchTerm, user, searchPages, searchTasks, searchFolders]);
 
 	const handleSelect = (result: SearchResult) => {
 		if (mode === "link" && onLinkSelect) {
@@ -231,15 +188,8 @@ export function CommandDialogComponent({
 					router.navigate({ to: `/pages/${result.id}` });
 					break;
 				case "task":
-					// Navigate to task-related destination (could be a specific task view)
-					router.navigate({ to: `/tasks` });
-					break;
-				case "table_row":
-					// Navigate to table row detail
-					router.navigate({
-						to: "/tables/$tableId/rows/$rowId",
-						params: { tableId: result.tableId ?? "", rowId: result.id },
-					});
+					// Navigate to dashboard where tasks live
+					router.navigate({ to: `/dashboard` });
 					break;
 			}
 		}
@@ -249,7 +199,7 @@ export function CommandDialogComponent({
 	return (
 		<CommandDialog open={open} onOpenChange={setOpen}>
 			<CommandInput
-				placeholder="Search pages, tasks, folders, and table rows..."
+				placeholder="Search pages, tasks, and folders..."
 				value={searchTerm}
 				onValueChange={setSearchTerm}
 			/>
@@ -288,24 +238,6 @@ export function CommandDialogComponent({
 										className="flex items-center gap-2"
 									>
 										<ListTodo className="h-4 w-4" />
-										<span>{result.title}</span>
-										<span className="ml-auto text-xs text-muted-foreground">
-											{result.context}
-										</span>
-									</CommandItem>
-								))}
-						</CommandGroup>
-
-						<CommandGroup heading="Table Rows">
-							{results
-								.filter((r) => r.type === "table_row")
-								.map((result) => (
-									<CommandItem
-										key={result.id}
-										onSelect={() => handleSelect(result)}
-										className="flex items-center gap-2"
-									>
-										<Table className="h-4 w-4" />
 										<span>{result.title}</span>
 										<span className="ml-auto text-xs text-muted-foreground">
 											{result.context}

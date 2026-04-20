@@ -30,10 +30,7 @@ export function useCreateBlock() {
 
 	return useMutation({
 		mutationFn: async (
-			block: Omit<
-				CalendarBlock,
-				"id" | "created_at" | "updated_at" | "user_id"
-			> & { user_id: string },
+			block: Omit<CalendarBlock, "id" | "created_at" | "updated_at">,
 		) => {
 			const { data, error } = await supabase
 				.from("calendar_blocks")
@@ -59,7 +56,7 @@ export function useCreateBlock() {
 				)
 					return data[0];
 
-				const googleEvent = await createGoogleEvent({
+				const googleEvent = (await createGoogleEvent({
 					data: {
 						block: {
 							title: data[0].title,
@@ -69,7 +66,7 @@ export function useCreateBlock() {
 						accessToken: profileData.google_access_token,
 						refreshToken: profileData.google_refresh_token,
 					},
-				});
+				})) as { googleEventId: string };
 
 				// Update the block with the Google event ID
 				const { data: updatedData, error: updateError } = await supabase
