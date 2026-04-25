@@ -4,6 +4,8 @@
 
 **Phase 7-A — Remove table rows from search, add tasks to search results**
 
+*Audit complete (session prior to this one). All hard rule violations fixed, AI artifacts removed, design token violations corrected, TaskCard Phase 4-B properly implemented. Build, check, and typecheck all pass clean.*
+
 Refine the global search functionality to:
 1. Remove table rows from search results
 2. Add tasks to search results
