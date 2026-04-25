@@ -120,10 +120,13 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 		<div
 			role="button"
 			tabIndex={0}
-			className="group flex items-center gap-2 rounded-[8px] bg-[#1a1a20] px-3 py-2 hover:bg-[#1e1e24] transition-colors cursor-pointer"
+			className="task-card group flex items-center gap-2 rounded-[8px] bg-[#1a1a20] px-3 py-2 hover:bg-[#1e1e24] transition-colors cursor-pointer"
 			style={{ borderLeft: `2px solid ${borderColor}` }}
 			onClick={toggle}
 			onKeyDown={(e) => e.key === "Enter" && toggle()}
+			data-task-id={task.id}
+			data-title={task.title}
+			data-duration={task.block_size === "L" ? 60 : task.block_size === "S" ? 15 : 30}
 		>
 			{/* Complete checkbox */}
 			<button

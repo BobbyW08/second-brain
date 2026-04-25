@@ -346,29 +346,33 @@ export function useUndoCompleteTask(userId: string) {
 				.throwOnError();
 		},
 		onMutate: async (taskId) => {
-			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
-			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
+			await queryClient.cancelQueries({
+				queryKey: ["tasks-completed-today", userId],
+			});
+			const previous = queryClient.getQueryData<Task[]>([
+				"tasks-completed-today",
+				userId,
+			]);
 
-			// Optimistically update task status
-			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
-				(old ?? []).map((t) =>
-					t.id === taskId
-						? {
-								...t,
-								status: "active",
-								completed_at: null,
-							}
-						: t,
-				),
+			// Optimistically remove task from completed-today list
+			queryClient.setQueryData<Task[]>(
+				["tasks-completed-today", userId],
+				(old) => (old ?? []).filter((t) => t.id !== taskId),
 			);
 
 			return { previous };
 		},
 		onError: (_err, _taskId, context) => {
-			queryClient.setQueryData(["tasks", userId], context?.previous);
+			queryClient.setQueryData(
+				["tasks-completed-today", userId],
+				context?.previous,
+			);
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+			queryClient.invalidateQueries({
+				queryKey: ["tasks-completed-today", userId],
+			});
 		},
 	});
 }

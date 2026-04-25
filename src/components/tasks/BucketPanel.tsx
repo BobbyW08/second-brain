@@ -188,7 +188,7 @@ export function BucketPanel() {
 											createTask.mutate({
 												user_id: userId,
 												title,
-												priority: bucket.name.toLowerCase(), // Legacy compatibility
+												priority: "unsorted",
 												position: bucketTasks.length,
 												bucket_id: bucket.id,
 											})

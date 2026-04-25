@@ -26,9 +26,13 @@ interface UIState {
 	scrollToTaskId: string | null;
 	setScrollToTaskId: (id: string | null) => void;
 
+	pendingLinkPickerCallback:
+		| ((result: { id: string; type: string }) => void)
+		| null;
 	openLinkPicker: (
 		callback: (result: { id: string; type: string }) => void,
 	) => void;
+	resolveLinkPicker: (result: { id: string; type: string }) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -53,13 +57,23 @@ export const useUIStore = create<UIState>((set) => ({
 	miniCalendarOpen: false,
 	setMiniCalendarOpen: (open) => set({ miniCalendarOpen: open }),
 
-	// New implementations
 	scrollToTaskId: null,
 	setScrollToTaskId: (id) => set({ scrollToTaskId: id }),
 
+	pendingLinkPickerCallback: null,
 	openLinkPicker: (callback) => {
-		// Placeholder implementation - you'll need to replace with actual link picker logic
-		set({ commandMode: "link" });
-		callback({ id: "placeholder", type: "page" });
+		set({
+			pendingLinkPickerCallback: callback,
+			commandOpen: true,
+			commandMode: "link",
+		});
+	},
+	resolveLinkPicker: (result) => {
+		set((state) => {
+			if (state.pendingLinkPickerCallback) {
+				state.pendingLinkPickerCallback(result);
+			}
+			return { pendingLinkPickerCallback: null, commandMode: "navigation" };
+		});
 	},
 }));

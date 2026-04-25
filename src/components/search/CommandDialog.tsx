@@ -1,5 +1,5 @@
 import { useRouter } from "@tanstack/react-router";
-import { FileText, ListTodo } from "lucide-react";
+import { FileText, Folder, ListTodo } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
 	CommandDialog,
@@ -10,6 +10,7 @@ import {
 	CommandList,
 } from "@/components/ui/command";
 import { useAuth } from "@/context/AuthContext";
+import { useUIStore } from "@/stores/useUIStore";
 import { supabase } from "@/utils/supabase";
 
 interface SearchResult {
@@ -24,14 +25,12 @@ interface CommandDialogProps {
 	mode?: "navigation" | "link";
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
-	onLinkSelect?: (result: SearchResult) => void;
 }
 
 export function CommandDialogComponent({
 	mode = "navigation",
 	open: controlledOpen,
 	onOpenChange: onControlledOpenChange,
-	onLinkSelect,
 }: CommandDialogProps) {
 	const [internalOpen, setInternalOpen] = useState(false);
 	const isControlled = controlledOpen !== undefined;
@@ -74,7 +73,7 @@ export function CommandDialogComponent({
 	// Search functions using useCallback to avoid dependency issues
 	const searchPages = useCallback(
 		async (term: string, userId: string): Promise<SearchResult[]> => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("pages")
 				.select("id, title, folder_id")
 				.eq("user_id", userId)
@@ -82,14 +81,11 @@ export function CommandDialogComponent({
 				.limit(10)
 				.throwOnError();
 
-			if (error) throw error;
-
 			return data.map((page) => ({
 				id: page.id,
 				title: page.title,
 				type: "page" as const,
-				path: page.folder_id ? `Folder` : `Unfoldered`,
-				context: page.folder_id ? `Folder` : `Unfoldered`,
+				context: page.folder_id ? "In folder" : "Unfoldered",
 			}));
 		},
 		[],
@@ -97,21 +93,19 @@ export function CommandDialogComponent({
 
 	const searchTasks = useCallback(
 		async (term: string, userId: string): Promise<SearchResult[]> => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("tasks")
 				.select("id, title, priority")
 				.eq("user_id", userId)
+				.eq("status", "active")
 				.ilike("title", `%${term}%`)
 				.limit(10)
 				.throwOnError();
-
-			if (error) throw error;
 
 			return data.map((task) => ({
 				id: task.id,
 				title: task.title,
 				type: "task" as const,
-				path: task.priority ?? undefined,
 				context: task.priority ?? undefined,
 			}));
 		},
@@ -120,7 +114,7 @@ export function CommandDialogComponent({
 
 	const searchFolders = useCallback(
 		async (term: string, userId: string): Promise<SearchResult[]> => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("folders")
 				.select("id, name")
 				.eq("user_id", userId)
@@ -128,13 +122,10 @@ export function CommandDialogComponent({
 				.limit(10)
 				.throwOnError();
 
-			if (error) throw error;
-
 			return data.map((folder) => ({
 				id: folder.id,
 				title: folder.name,
 				type: "folder" as const,
-				path: "Folder",
 				context: "Folder",
 			}));
 		},
@@ -179,9 +170,11 @@ export function CommandDialogComponent({
 		performSearch();
 	}, [searchTerm, user, searchPages, searchTasks, searchFolders]);
 
+	const resolveLinkPicker = useUIStore((state) => state.resolveLinkPicker);
+
 	const handleSelect = (result: SearchResult) => {
-		if (mode === "link" && onLinkSelect) {
-			onLinkSelect(result);
+		if (mode === "link") {
+			resolveLinkPicker(result);
 		} else {
 			switch (result.type) {
 				case "page":
@@ -208,44 +201,61 @@ export function CommandDialogComponent({
 					{isLoading ? "Searching..." : "No results found"}
 				</CommandEmpty>
 
-				{results.length > 0 && (
-					<>
-						<CommandGroup heading="Pages">
-							{results
-								.filter((r) => r.type === "page")
-								.map((result) => (
-									<CommandItem
-										key={result.id}
-										onSelect={() => handleSelect(result)}
-										className="flex items-center gap-2"
-									>
-										<FileText className="h-4 w-4" />
-										<span>{result.title}</span>
-										<span className="ml-auto text-xs text-muted-foreground">
-											{result.path}
-										</span>
-									</CommandItem>
-								))}
-						</CommandGroup>
+				{results.filter((r) => r.type === "page").length > 0 && (
+					<CommandGroup heading="Pages">
+						{results
+							.filter((r) => r.type === "page")
+							.map((result) => (
+								<CommandItem
+									key={result.id}
+									onSelect={() => handleSelect(result)}
+									className="flex items-center gap-2"
+								>
+									<FileText className="h-4 w-4" />
+									<span>{result.title}</span>
+									<span className="ml-auto text-xs text-muted-foreground">
+										{result.context}
+									</span>
+								</CommandItem>
+							))}
+					</CommandGroup>
+				)}
 
-						<CommandGroup heading="Tasks">
-							{results
-								.filter((r) => r.type === "task")
-								.map((result) => (
-									<CommandItem
-										key={result.id}
-										onSelect={() => handleSelect(result)}
-										className="flex items-center gap-2"
-									>
-										<ListTodo className="h-4 w-4" />
-										<span>{result.title}</span>
-										<span className="ml-auto text-xs text-muted-foreground">
-											{result.context}
-										</span>
-									</CommandItem>
-								))}
-						</CommandGroup>
-					</>
+				{results.filter((r) => r.type === "task").length > 0 && (
+					<CommandGroup heading="Tasks">
+						{results
+							.filter((r) => r.type === "task")
+							.map((result) => (
+								<CommandItem
+									key={result.id}
+									onSelect={() => handleSelect(result)}
+									className="flex items-center gap-2"
+								>
+									<ListTodo className="h-4 w-4" />
+									<span>{result.title}</span>
+									<span className="ml-auto text-xs text-muted-foreground">
+										{result.context}
+									</span>
+								</CommandItem>
+							))}
+					</CommandGroup>
+				)}
+
+				{results.filter((r) => r.type === "folder").length > 0 && (
+					<CommandGroup heading="Folders">
+						{results
+							.filter((r) => r.type === "folder")
+							.map((result) => (
+								<CommandItem
+									key={result.id}
+									onSelect={() => handleSelect(result)}
+									className="flex items-center gap-2"
+								>
+									<Folder className="h-4 w-4" />
+									<span>{result.title}</span>
+								</CommandItem>
+							))}
+					</CommandGroup>
 				)}
 			</CommandList>
 		</CommandDialog>

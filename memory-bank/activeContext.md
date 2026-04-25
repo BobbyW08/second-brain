@@ -2,43 +2,43 @@
 
 ## Current Ticket
 
-**Phase 7-A — Remove table rows from search, add tasks to search results**
+**Phase 8-A — Loading skeletons on all data-fetching views**
 
-*Audit complete (session prior to this one). All hard rule violations fixed, AI artifacts removed, design token violations corrected, TaskCard Phase 4-B properly implemented. Build, check, and typecheck all pass clean.*
+*Phase 7 complete. Search cleaned up: redundant error checks removed, tasks filtered by status:active, empty groups only render when they have results, Folders group added to results. Build, check, and typecheck all pass clean.*
 
-Refine the global search functionality to:
-1. Remove table rows from search results
-2. Add tasks to search results
-3. Confirm ⌘K shortcut functionality
-4. Verify link-picker mode works end to end
+Add loading skeleton states to all views that fetch data:
+1. BucketPanel / task lists while loading
+2. FolderTree while loading
+3. CalendarView while events load
+4. FilesLandingPage while pages/events load
+5. PageView while page content loads
 
 ---
 
 ## Broken Things to Fix
 
-These are documented in CLAUDE.md under "What is broken" — address them in the phase where they naturally come up:
-
-- FullCalendar missing droppable={true} and editable={true} → fix in Phase 5-A
-- Complete task undo button onClick is empty → fix in Phase 4-C
-- src/server/googleCalendar.ts uses googleapis → rewrite in Phase 5-I
-
----
-
-## Next 3 Tickets After Phase 6
-
-1. **Phase 7-A — Remove table rows from search, add tasks to search results**
-2. **Phase 7-B — Confirm ⌘K shortcut functionality**
-3. **Phase 7-C — Verify link-picker mode**
+All previously tracked broken items have been resolved:
+- FullCalendar droppable/editable ✓ (Phase 5-A)
+- Complete task undo button ✓ (Phase 4-C)
+- src/server/googleCalendar.ts googleapis ✓ (Phase 5-I)
 
 ---
 
-## Phase 6 Completion Summary
+## Next 3 Tickets
 
-- Implemented left panel toggle between Priorities and Files modes
-- Fixed FolderTree mutation queries and onMove handler
-- Created FilesLandingPage with recent pages and upcoming events
-- Confirmed PageView compliance
-- Verified Journal folder auto-creation on signup
+1. **Phase 8-A — Loading skeletons on all data-fetching views**
+2. **Phase 8-B — Empty states on all views that can be empty**
+3. **Phase 8-C — Error boundaries on all major views**
+
+---
+
+## Phase 7 Completion Summary
+
+- CommandDialog already had tasks in search results and no table_rows
+- Cleaned up redundant `if (error) throw error` after `.throwOnError()`
+- Added `status: 'active'` filter to task search query
+- Fixed empty groups — each group only renders when it has results
+- Added Folders group to rendered output (was searched but not shown)
 
 ---
 

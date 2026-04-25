@@ -65,9 +65,9 @@
 
 ## Phase 7 — Global Search
 
-- [ ] 7-A: Remove table rows from search, add tasks to search results
-- [ ] 7-B: Confirm ⌘K shortcut still works after cleanup
-- [ ] 7-C: Confirm link-picker mode works end to end
+- [x] 7-A: Remove table rows from search, add tasks to search results
+- [x] 7-B: Confirm ⌘K shortcut still works after cleanup
+- [x] 7-C: Confirm link-picker mode works end to end
 
 ## Phase 8 — Polish and Launch
 
