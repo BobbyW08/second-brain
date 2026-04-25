@@ -67,7 +67,7 @@ export function PageView() {
 					setTitle(e.target.value);
 					saveTitle(e.target.value);
 				}}
-				className="text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground w-full mb-4"
+				className="text-[22px] font-medium bg-transparent border-none outline-none placeholder:text-muted-foreground w-full mb-4"
 				placeholder="Untitled"
 				aria-label="Page title"
 			/>

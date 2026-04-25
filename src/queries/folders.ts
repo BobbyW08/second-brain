@@ -167,44 +167,8 @@ export function useCreateFolder() {
 	});
 }
 
-export function useCreatePage() {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async ({
-			user_id,
-			title,
-			folder_id,
-			position,
-			page_type = "page",
-		}: {
-			user_id: string;
-			title: string;
-			folder_id?: string | null;
-			position?: number;
-			page_type?: string;
-		}) => {
-			const { data } = await supabase
-				.from("pages")
-				.insert({
-					user_id,
-					title,
-					folder_id,
-					position,
-					page_type,
-				})
-				.select()
-				.single()
-				.throwOnError();
-
-			return data;
-		},
-		onSuccess: (_data, { user_id }) => {
-			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
-		},
-	});
-}
-
 export function useRenameNode() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
@@ -214,6 +178,7 @@ export function useRenameNode() {
 			type: "folder" | "page";
 			id: string;
 			name: string;
+			user_id: string;
 		}) => {
 			if (type === "folder") {
 				const { data } = await supabase
@@ -224,25 +189,24 @@ export function useRenameNode() {
 					.single()
 					.throwOnError();
 				return data;
-			} else {
-				const { data } = await supabase
-					.from("pages")
-					.update({ title: name })
-					.eq("id", id)
-					.select()
-					.single()
-					.throwOnError();
-				return data;
 			}
+			const { data } = await supabase
+				.from("pages")
+				.update({ title: name })
+				.eq("id", id)
+				.select()
+				.single()
+				.throwOnError();
+			return data;
 		},
-		onSuccess: (_data, { type: _type, id: _id, name: _name }) => {
-			// We don't know the user_id here, so we can't invalidate the query
-			// This would need to be handled at a higher level or we'd need to pass user_id
+		onSuccess: (_data, { user_id }) => {
+			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
 		},
 	});
 }
 
 export function useMoveNode() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
@@ -254,6 +218,7 @@ export function useMoveNode() {
 			id: string;
 			parent_id: string | null;
 			position: number;
+			user_id: string;
 		}) => {
 			if (type === "folder") {
 				const { data } = await supabase
@@ -264,25 +229,24 @@ export function useMoveNode() {
 					.single()
 					.throwOnError();
 				return data;
-			} else {
-				const { data } = await supabase
-					.from("pages")
-					.update({ folder_id: parent_id, position })
-					.eq("id", id)
-					.select()
-					.single()
-					.throwOnError();
-				return data;
 			}
+			const { data } = await supabase
+				.from("pages")
+				.update({ folder_id: parent_id, position })
+				.eq("id", id)
+				.select()
+				.single()
+				.throwOnError();
+			return data;
 		},
-		onSuccess: (_data, { type: _type, id: _id }) => {
-			// We don't know the user_id here, so we can't invalidate the query
-			// This would need to be handled at a higher level or we'd need to pass user_id
+		onSuccess: (_data, { user_id }) => {
+			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
 		},
 	});
 }
 
 export function useDeleteNode() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			type,
@@ -290,6 +254,7 @@ export function useDeleteNode() {
 		}: {
 			type: "folder" | "page";
 			id: string;
+			user_id: string;
 		}) => {
 			if (type === "folder") {
 				const { data } = await supabase
@@ -300,20 +265,18 @@ export function useDeleteNode() {
 					.single()
 					.throwOnError();
 				return data;
-			} else {
-				const { data } = await supabase
-					.from("pages")
-					.delete()
-					.eq("id", id)
-					.select()
-					.single()
-					.throwOnError();
-				return data;
 			}
+			const { data } = await supabase
+				.from("pages")
+				.delete()
+				.eq("id", id)
+				.select()
+				.single()
+				.throwOnError();
+			return data;
 		},
-		onSuccess: (_data, { type: _type, id: _id }) => {
-			// We don't know the user_id here, so we can't invalidate the query
-			// This would need to be handled at a higher level or we'd need to pass user_id
+		onSuccess: (_data, { user_id }) => {
+			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
 		},
 	});
 }

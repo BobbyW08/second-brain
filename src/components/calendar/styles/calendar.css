@@ -1,11 +1,50 @@
-/* Zone background tints — light mode */
+/* Design Tokens */
+:root {
+	--app-base: #0f0f11;
+	--border-color: #2a2a30;
+	--text-primary: #e8e8f0;
+	--text-secondary: #aaaab8;
+	--text-muted: #666672;
+
+	--morning-bg: #1a1600;
+	--morning-label: #7a6830;
+	--afternoon-bg: #001520;
+	--afternoon-label: #2e5a7a;
+	--evening-bg: #0f0820;
+	--evening-label: #5a3a7a;
+}
+
+/* Base resets for FullCalendar */
+.fc {
+	background-color: var(--app-base);
+	color: var(--text-primary);
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid {
+	border-color: var(--border-color);
+}
+
+.fc-col-header-cell-cushion,
+.fc-daygrid-day-number,
+.fc-timegrid-axis-cushion,
+.fc-timegrid-slot-label-cushion {
+	color: var(--text-secondary);
+}
+
+/* Zone background tints */
+.fc-timegrid-slot-lane {
+	background-color: var(--app-base);
+}
+
 .fc-timegrid-slot[data-time^="06"],
 .fc-timegrid-slot[data-time^="07"],
 .fc-timegrid-slot[data-time^="08"],
 .fc-timegrid-slot[data-time^="09"],
 .fc-timegrid-slot[data-time^="10"],
 .fc-timegrid-slot[data-time^="11"] {
-	background-color: rgba(250, 220, 100, 0.12);
+	background-color: var(--morning-bg);
 }
 
 .fc-timegrid-slot[data-time^="12"],
@@ -14,92 +53,83 @@
 .fc-timegrid-slot[data-time^="15"],
 .fc-timegrid-slot[data-time^="16"],
 .fc-timegrid-slot[data-time^="17"] {
-	background-color: rgba(100, 160, 255, 0.1);
+	background-color: var(--afternoon-bg);
 }
 
 .fc-timegrid-slot[data-time^="18"],
 .fc-timegrid-slot[data-time^="19"],
 .fc-timegrid-slot[data-time^="20"],
 .fc-timegrid-slot[data-time^="21"] {
-	background-color: rgba(140, 100, 200, 0.1);
+	background-color: var(--evening-bg);
 }
 
-/* Zone background tints — dark mode */
-.dark .fc-timegrid-slot[data-time^="06"],
-.dark .fc-timegrid-slot[data-time^="07"],
-.dark .fc-timegrid-slot[data-time^="08"],
-.dark .fc-timegrid-slot[data-time^="09"],
-.dark .fc-timegrid-slot[data-time^="10"],
-.dark .fc-timegrid-slot[data-time^="11"] {
-	background-color: rgba(250, 220, 100, 0.08);
+/* Today column highlight */
+.fc-day-today {
+	background: rgba(58, 143, 212, 0.06);
 }
 
-.dark .fc-timegrid-slot[data-time^="12"],
-.dark .fc-timegrid-slot[data-time^="13"],
-.dark .fc-timegrid-slot[data-time^="14"],
-.dark .fc-timegrid-slot[data-time^="15"],
-.dark .fc-timegrid-slot[data-time^="16"],
-.dark .fc-timegrid-slot[data-time^="17"] {
-	background-color: rgba(100, 160, 255, 0.08);
+/* Now indicator line */
+.fc-timegrid-now-indicator-line {
+	border-color: #e05555;
 }
 
-.dark .fc-timegrid-slot[data-time^="18"],
-.dark .fc-timegrid-slot[data-time^="19"],
-.dark .fc-timegrid-slot[data-time^="20"],
-.dark .fc-timegrid-slot[data-time^="21"] {
-	background-color: rgba(140, 100, 200, 0.08);
+/* Default event appearance */
+.fc-event {
+	background: #1a1a20;
+	border: none;
+	border-radius: 8px;
 }
 
-/* FullCalendar dark mode overrides */
-.dark .fc {
-	color: oklch(0.985 0 0);
+.fc-v-event {
+	background: #1a1a20;
+	border: none;
 }
 
-.dark .fc-theme-standard td,
-.dark .fc-theme-standard th,
-.dark .fc-theme-standard .fc-scrollgrid {
-	border-color: oklch(1 0 0 / 10%);
-}
-
-.dark .fc-col-header-cell-cushion,
-.dark .fc-daygrid-day-number,
-.dark .fc-timegrid-axis-cushion,
-.dark .fc-timegrid-slot-label-cushion {
-	color: oklch(0.708 0 0);
-}
-
-.dark .fc-timegrid-now-indicator-line {
-	border-color: oklch(0.488 0.243 264.376);
-}
-
-.dark .fc-button-primary {
-	background-color: oklch(0.269 0 0);
-	border-color: oklch(1 0 0 / 10%);
-	color: oklch(0.985 0 0);
-}
-
-.dark .fc-button-primary:hover {
-	background-color: oklch(0.32 0 0);
-}
-
-.dark .fc-button-primary:not(:disabled).fc-button-active {
-	background-color: oklch(0.488 0.243 264.376);
-	border-color: oklch(0.488 0.243 264.376);
-}
-
-.dark .fc-daygrid-day.fc-day-today,
-.dark .fc-timegrid-col.fc-day-today {
-	background-color: oklch(1 0 0 / 3%);
+.fc-event-title {
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--text-primary);
 }
 
 /* Zone label styling */
 .zone-label {
-	font-size: 0.6rem;
-	font-weight: 600;
-	letter-spacing: 0.08em;
+	font-size: 10px;
+	font-weight: 500;
+	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	opacity: 0.55;
 	pointer-events: none;
 	user-select: none;
-	padding-left: 4px;
+	padding: 4px;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.zone-label--morning {
+	color: var(--morning-label);
+}
+
+.zone-label--afternoon {
+	color: var(--afternoon-label);
+}
+
+.zone-label--evening {
+	color: var(--evening-label);
+}
+
+/* FullCalendar Header Overrides */
+.fc-button-primary {
+	background-color: #1a1a20;
+	border-color: var(--border-color);
+	color: var(--text-primary);
+	text-transform: capitalize;
+}
+
+.fc-button-primary:hover {
+	background-color: #1e1e24;
+}
+
+.fc-button-primary:not(:disabled).fc-button-active {
+	background-color: #2e2e38;
+	border-color: var(--border-color);
 }

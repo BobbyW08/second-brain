@@ -5,13 +5,16 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { archiveCompletedTasks } from "@/lib/archiveTasks";
+import { useUIStore } from "@/stores/useUIStore";
 import { AppSidebar } from "./AppSidebar";
+import { MiniCalendarDrawer } from "./MiniCalendarDrawer";
 import { TopBar } from "./TopBar";
 
 export function AppLayout() {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
 	const userId = user?.id;
+	const { leftPanelMode } = useUIStore();
 
 	// Archive tasks completed before today — runs once per authenticated session
 	useEffect(() => {
@@ -30,14 +33,15 @@ export function AppLayout() {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<SidebarInset className="flex flex-col overflow-hidden">
+			<SidebarInset className="flex flex-col relative overflow-hidden">
 				<TopBar />
-				<div className="flex flex-1 overflow-hidden min-h-0">
-					<main className="flex-1 overflow-y-auto p-4 min-w-0">
+				<div className="flex flex-1 min-h-0 overflow-hidden">
+					<main className="flex-1 min-w-0 p-4 overflow-y-auto">
 						<ErrorBoundary>
 							<Outlet />
 						</ErrorBoundary>
 					</main>
+					{leftPanelMode === "files" && <MiniCalendarDrawer />}
 				</div>
 			</SidebarInset>
 		</SidebarProvider>

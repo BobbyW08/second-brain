@@ -16,6 +16,22 @@ export function useBacklinks(targetId: string) {
 	});
 }
 
+export function useTaskLinks(taskId: string) {
+	return useQuery({
+		queryKey: ["links", "task", taskId],
+		enabled: !!taskId,
+		queryFn: async () => {
+			const { data } = await supabase
+				.from("links")
+				.select("*")
+				.eq("source_id", taskId)
+				.eq("source_type", "task")
+				.throwOnError();
+			return data ?? [];
+		},
+	});
+}
+
 export function useCreateLink() {
 	const queryClient = useQueryClient();
 	return useMutation({

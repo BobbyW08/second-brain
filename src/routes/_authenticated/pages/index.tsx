@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FilePlus, FolderPlus } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
-import { useCreateFolder, useCreatePage } from "../../../queries/folders";
+import { useCreateFolder } from "../../../queries/folders";
+import { useCreatePage } from "../../../queries/pages";
 
 export const Route = createFileRoute("/_authenticated/pages/")({
 	head: () => ({

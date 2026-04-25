@@ -61,6 +61,45 @@ export function usePages(folderId?: string) {
 	});
 }
 
+// ─── Create Page ───────────────────────────────────────────────────────────────
+
+export function useCreatePage() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			user_id,
+			title,
+			folder_id,
+			position,
+			page_type = "page",
+		}: {
+			user_id: string;
+			title: string;
+			folder_id?: string | null;
+			position?: number;
+			page_type?: string;
+		}) => {
+			const { data } = await supabase
+				.from("pages")
+				.insert({ user_id, title, folder_id, position, page_type } as {
+					user_id: string;
+					title: string;
+					folder_id?: string | null;
+					position?: number;
+					page_type?: string;
+				})
+				.select("id, title, folder_id, page_type")
+				.single()
+				.throwOnError();
+			return data;
+		},
+		onSuccess: (_data, { user_id }) => {
+			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
+		},
+	});
+}
+
 // ─── Delete Page ───────────────────────────────────────────────────────────────
 
 export function useDeletePage() {

@@ -83,9 +83,11 @@ export function useCreateTask() {
 				bucket_id: input.bucket_id ?? null,
 				color: null,
 				description: null,
+				end_time: null,
 				labels: null,
 				location: null,
 				recurring: null,
+				start_time: null,
 			};
 			queryClient.setQueryData<Task[]>(["tasks", input.user_id], (old) => [
 				...(old ?? []),
@@ -145,6 +147,8 @@ export function useMoveTask(userId: string) {
 
 export function useCompleteTask(userId: string) {
 	const queryClient = useQueryClient();
+	const { mutate: undoCompleteTask } = useUndoCompleteTask(userId);
+
 	return useMutation({
 		mutationFn: async (taskId: string) => {
 			await supabase
@@ -175,16 +179,19 @@ export function useCompleteTask(userId: string) {
 		onError: (_err, _taskId, context) => {
 			queryClient.setQueryData(["tasks", userId], context?.previous);
 		},
-		onSuccess: () => {
-			toast.success("Marked complete", {
+		onSuccess: (_data, taskId) => {
+			toast.success("Task complete", {
 				action: {
 					label: "Undo",
-					onClick: () => {}, // Will be implemented in the component
+					onClick: () => undoCompleteTask(taskId),
 				},
 			});
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+			queryClient.invalidateQueries({
+				queryKey: ["tasks-completed-today", userId],
+			});
 		},
 	});
 }

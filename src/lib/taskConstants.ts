@@ -1,7 +1,10 @@
-export const BLOCK_SIZE_DURATIONS: Record<"S" | "M" | "L", string> = {
-	S: "00:30", // 30 minutes
-	M: "01:00", // 60 minutes
-	L: "01:30", // 90 minutes
+export const BLOCK_SIZE_DURATIONS: Record<string, string> = {
+	S: "00:30",
+	M: "01:00",
+	L: "01:30",
+	small: "00:30",
+	medium: "01:00",
+	large: "01:30",
 };
 
 export const PRIORITY_LABELS: Record<string, string> = {
@@ -17,3 +20,9 @@ export const PRIORITY_ORDER = [
 	"someday",
 	"unsorted",
 ] as const;
+
+export const TASK_STATUS = {
+	ACTIVE: "active",
+	COMPLETED_TODAY: "completed_today",
+	ARCHIVED: "archived",
+} as const;

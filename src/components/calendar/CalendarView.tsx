@@ -1,34 +1,33 @@
 import dayGridPlugin from "@fullcalendar/daygrid";
+import type {
+	DropArg,
+	EventDragStopArg,
+	EventResizeDoneArg,
+} from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { useEffect, useState } from "react";
-import "./styles/calendar.css";
-import { Sparkles, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLogAIUsage } from "@/queries/aiUsage";
-import {
-	useCalendarBlocks,
-	useCreateBlock,
-	useUpdateBlock,
-} from "@/queries/calendarBlocks";
-import { useCompleteTask } from "@/queries/tasks";
-import { getSchedulingSuggestions } from "@/server/schedulingSuggestions";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCalendarBlocks } from "@/queries/calendarBlocks";
+import { useCreatePage } from "@/queries/pages";
+import { useUIStore } from "@/stores/useUIStore";
+import { supabase } from "@/utils/supabase";
+import { CalendarBlock } from "./CalendarBlock";
+import { EventSidePanel } from "./EventSidePanel";
+import "./styles/calendar.css";
 
 export function CalendarView() {
-	const { user } = useAuth();
-
-	const userId = user?.id;
+	const { userId } = useCurrentUser();
+	const queryClient = useQueryClient();
+	const {
+		sidePanelBlockId,
+		setSidePanelBlockId,
+		setActivePageId,
+		setLeftPanelMode,
+	} = useUIStore();
 
 	const today = new Date();
 	const rangeStart = new Date(today);
@@ -36,104 +35,149 @@ export function CalendarView() {
 	const rangeEnd = new Date(today);
 	rangeEnd.setDate(today.getDate() + 14);
 
-	const { data: calendarBlocks } = useCalendarBlocks({
+	const { data: calendarBlocks = [] } = useCalendarBlocks({
 		start: rangeStart.toISOString(),
 		end: rangeEnd.toISOString(),
 	});
 
-	const { mutate: updateBlock } = useUpdateBlock();
-	const createBlock = useCreateBlock();
-	const completeTask = useCompleteTask(userId ?? "");
+	const { mutateAsync: createPage } = useCreatePage();
 
-	const [pendingBlock, setPendingBlock] = useState<{
-		start: string;
-		end: string;
-	} | null>(null);
-
-	const [title, setTitle] = useState("");
-	const [blockType, setBlockType] = useState<string>("focus");
-
-	// Scheduling suggestions state
-	const [suggestions, setSuggestions] = useState<
-		Array<{
-			taskId: string;
-			suggestedStart: string;
-			suggestedEnd: string;
-			reason: string;
-		}>
-	>([]);
-	const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(
-		new Set(),
-	);
-	const { mutate: logUsage } = useLogAIUsage();
 	const isMobile = useIsMobile();
 
-	const handleConfirm = () => {
-		if (!title.trim() || !pendingBlock || !userId) return;
+	const handleDrop = async (info: DropArg) => {
+		const taskId = info.draggedEl.getAttribute("data-task-id");
+		const title = info.draggedEl.getAttribute("data-title") ?? "";
+		const durationStr = info.draggedEl.getAttribute("data-duration") ?? "01:00";
+		if (!taskId || !userId) return;
 
-		createBlock.mutate({
-			user_id: userId,
-			title: title.trim(),
-			start_time: pendingBlock.start,
-			end_time: pendingBlock.end,
-			block_type: blockType,
-			task_id: null,
-			color: null,
-			google_event_id: null,
-			is_synced: null,
-			linked_page_id: null,
-		});
+		const start_time = info.date.toISOString();
+		const [dHours, dMins] = durationStr.split(":").map(Number);
+		const endDate = new Date(info.date);
+		endDate.setHours(endDate.getHours() + dHours, endDate.getMinutes() + dMins);
+		const end_time = endDate.toISOString();
 
-		setTitle("");
-		setBlockType("focus");
-		setPendingBlock(null);
+		// Create the calendar block
+		const { data: newBlock } = await supabase
+			.from("calendar_blocks")
+			.insert({
+				task_id: taskId,
+				user_id: userId,
+				start_time,
+				end_time,
+				title,
+				block_type: "task",
+			})
+			.select()
+			.single()
+			.throwOnError();
+
+		// Update the task status to 'scheduled'
+		await supabase
+			.from("tasks")
+			.update({ status: "scheduled" })
+			.eq("id", taskId)
+			.eq("user_id", userId)
+			.throwOnError();
+
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+		queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+
+		// Open the side panel for the new block
+		setSidePanelBlockId(newBlock.id);
 	};
 
-	// Fetch scheduling suggestions when user is logged in and calendar blocks are available
-	useEffect(() => {
-		if (!userId || !calendarBlocks) return;
+	const handleEventDrop = async (info: EventDragStopArg) => {
+		const { event } = info;
+		const blockId = event.id;
+		const start_time = event.start?.toISOString() ?? null;
+		const end_time = event.end?.toISOString() ?? undefined;
+		if (!blockId || !start_time || !userId) return;
+		await supabase
+			.from("calendar_blocks")
+			.update({ start_time, end_time })
+			.eq("id", blockId)
+			.eq("user_id", userId)
+			.throwOnError();
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+	};
 
-		// Only fetch if we have tasks (non-empty calendar blocks with task_id)
-		const tasks = calendarBlocks.filter((block) => block.task_id !== null);
-		if (tasks.length === 0) return;
+	const handleEventResize = async (info: EventResizeDoneArg) => {
+		const { event } = info;
+		const blockId = event.id;
+		const end_time = event.end?.toISOString() ?? undefined;
+		if (!blockId || !end_time || !userId) return;
+		await supabase
+			.from("calendar_blocks")
+			.update({ end_time })
+			.eq("id", blockId)
+			.eq("user_id", userId)
+			.throwOnError();
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+	};
 
-		// Prepare the data for the API call
-		const tasksData = tasks.map((block) => ({
-			id: block.task_id ?? "",
-			title: block.title,
-			priority: block.block_type ?? "", // Using block_type as priority for now
-			block_size: "M", // Default to medium block size
-		}));
+	const handleJournalClick = async (date: Date) => {
+		if (!userId) return;
 
-		const existingBlocks = calendarBlocks.map((block) => ({
-			start_time: block.start_time,
-			end_time: block.end_time,
-			title: block.title,
-		}));
+		const { data: journalFolder } = await supabase
+			.from("folders")
+			.select("id")
+			.eq("user_id", userId)
+			.eq("name", "Journal")
+			.single()
+			.throwOnError();
 
-		// Call the API to get scheduling suggestions
-		getSchedulingSuggestions({
-			data: {
-				tasks: tasksData,
-				existingBlocks,
-				date: new Date().toISOString().split("T")[0],
-			},
-		})
-			.then((result) => {
-				if (result && Array.isArray(result)) {
-					setSuggestions(result);
-					// Log usage
-					logUsage({
-						userId,
-						feature: "scheduling",
-						tokensUsed: 100,
-					});
-				}
-			})
-			.catch((error) => {
-				console.error("Error fetching scheduling suggestions:", error);
-			});
-	}, [userId, calendarBlocks, logUsage]);
+		if (!journalFolder) return;
+
+		const dateTitle = date.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+		});
+
+		const { data: existingPage } = await supabase
+			.from("pages")
+			.select("id")
+			.eq("user_id", userId)
+			.eq("folder_id", journalFolder.id)
+			.eq("title", dateTitle)
+			.maybeSingle()
+			.throwOnError();
+
+		if (existingPage) {
+			setActivePageId(existingPage.id);
+			setLeftPanelMode("files");
+			return;
+		}
+
+		const newPage = await createPage({
+			user_id: userId,
+			folder_id: journalFolder.id,
+			title: dateTitle,
+		});
+
+		if (newPage) {
+			setActivePageId(newPage.id);
+			setLeftPanelMode("files");
+			queryClient.invalidateQueries({ queryKey: ["pages", userId] });
+		}
+	};
+
+	const getZoneBlockCount = (
+		date: Date,
+		startHour: number,
+		endHour: number,
+	) => {
+		if (!calendarBlocks) return 0;
+		return calendarBlocks.filter((block) => {
+			const blockDate = new Date(block.start_time);
+			const blockHour = blockDate.getHours();
+			const sameDay =
+				blockDate.getFullYear() === date.getFullYear() &&
+				blockDate.getMonth() === date.getMonth() &&
+				blockDate.getDate() === date.getDate();
+			return sameDay && blockHour >= startHour && blockHour < endHour;
+		}).length;
+	};
 
 	if (!calendarBlocks) {
 		return (
@@ -149,10 +193,12 @@ export function CalendarView() {
 	const initialView = isMobile ? "timeGridDay" : "timeGridThreeDay";
 
 	return (
-		<>
+		<div style={{ position: "relative", width: "100%", height: "100%" }}>
 			<FullCalendar
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
 				initialView={initialView}
+				droppable={true}
+				editable={true}
 				views={{
 					timeGridThreeDay: {
 						type: "timeGrid",
@@ -166,31 +212,38 @@ export function CalendarView() {
 				slotMinTime="06:00:00"
 				slotMaxTime="22:00:00"
 				slotLaneContent={(arg) => {
-					if (!arg.time) return null;
+					if (!arg.time || !arg.date) return null;
 
 					const ms = arg.time.milliseconds;
+					const NOON = 12 * 60 * 60 * 1000;
+					const EVENING = 18 * 60 * 60 * 1000;
 
-					const NOON = 12 * 60 * 60 * 1000; // 43200000ms
-					const EVENING = 18 * 60 * 60 * 1000; // 64800000ms
-
-					// Only inject label at the start of each zone, not every slot
-					const isMorningStart = ms === 6 * 60 * 60 * 1000; // 06:00
-					const isAfternoonStart = ms === NOON; // 12:00
-					const isEveningStart = ms === EVENING; // 18:00
+					const isMorningStart = ms === 6 * 60 * 60 * 1000;
+					const isAfternoonStart = ms === NOON;
+					const isEveningStart = ms === EVENING;
 
 					if (isMorningStart) {
+						const count = getZoneBlockCount(arg.date, 6, 12);
 						return (
-							<div className="zone-label zone-label--morning">Morning</div>
+							<div className="zone-label zone-label--morning">
+								☀ Morning {count > 0 && `(${count})`}
+							</div>
 						);
 					}
 					if (isAfternoonStart) {
+						const count = getZoneBlockCount(arg.date, 12, 18);
 						return (
-							<div className="zone-label zone-label--afternoon">Afternoon</div>
+							<div className="zone-label zone-label--afternoon">
+								◑ Afternoon {count > 0 && `(${count})`}
+							</div>
 						);
 					}
 					if (isEveningStart) {
+						const count = getZoneBlockCount(arg.date, 18, 22);
 						return (
-							<div className="zone-label zone-label--evening">Evening</div>
+							<div className="zone-label zone-label--evening">
+								☽ Evening {count > 0 && `(${count})`}
+							</div>
 						);
 					}
 					return null;
@@ -202,160 +255,115 @@ export function CalendarView() {
 				}}
 				height="100%"
 				selectable={true}
-				select={(info) => {
-					setPendingBlock({ start: info.startStr, end: info.endStr });
-				}}
-				events={(calendarBlocks ?? []).map((block) => ({
-					id: block.id,
-					title: block.title,
-					start: block.start_time,
-					end: block.end_time,
-					extendedProps: {
-						block_type: block.block_type,
-						task_id: block.task_id,
-						is_synced: block.is_synced,
-					},
-				}))}
-				eventDrop={(info) => {
-					updateBlock({
-						blockId: info.event.id,
-						updates: {
-							start_time: info.event.startStr,
-							end_time: info.event.endStr,
-						},
-					});
-				}}
-				eventResize={(info) => {
-					updateBlock({
-						blockId: info.event.id,
-						updates: {
-							end_time: info.event.endStr,
-						},
-					});
-				}}
-				eventReceive={(info) => {
+				selectMirror={true}
+				select={async (info) => {
 					if (!userId) return;
+					const start_time = info.start.toISOString();
+					const end_time = info.end.toISOString();
 
-					const taskId = info.event.id;
-					const title = info.event.title;
-					const start = info.event.startStr;
-					const end = info.event.endStr;
+					const { data: newTask } = await supabase
+						.from("tasks")
+						.insert({
+							user_id: userId,
+							title: "New task",
+							status: "active",
+							color: "#666672",
+							priority: "unsorted",
+							block_size: "M",
+						})
+						.select()
+						.single()
+						.throwOnError();
 
-					createBlock.mutate({
-						user_id: userId,
-						title,
-						start_time: start,
-						end_time: end,
-						block_type: "task",
-						task_id: taskId,
-						color: null,
-						google_event_id: null,
-						is_synced: null,
-						linked_page_id: null,
-					});
+					const { data: newBlock } = await supabase
+						.from("calendar_blocks")
+						.insert({
+							task_id: newTask.id,
+							user_id: userId,
+							start_time,
+							end_time,
+							title: "New task",
+							block_type: "task",
+						})
+						.select()
+						.single()
+						.throwOnError();
 
-					completeTask.mutate(taskId);
+					queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+					queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 
-					// Remove the ghost event FullCalendar added — the real block comes from the DB
-					info.event.remove();
+					setSidePanelBlockId(newBlock.id);
 				}}
-				eventContent={(arg) => (
-					<div className="fc-event-main-frame">
-						<div className="fc-event-title">{arg.event.title}</div>
-						{arg.event.extendedProps.is_synced && (
-							<span className="text-[10px] opacity-60 ml-1">G</span>
-						)}
+				dateClick={() => setSidePanelBlockId(null)}
+				dayHeaderContent={(arg) => (
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							justifyContent: "space-between",
+							width: "100%",
+							padding: "0 4px",
+						}}
+					>
+						<span>{arg.text}</span>
+						<button
+							type="button"
+							onClick={(e) => {
+								e.stopPropagation();
+								if (arg.date) handleJournalClick(arg.date);
+							}}
+							style={{
+								fontSize: 10,
+								color: "#666672",
+								background: "none",
+								border: "1px solid #2a2a30",
+								borderRadius: 4,
+								padding: "1px 5px",
+								cursor: "pointer",
+								lineHeight: "1.4",
+							}}
+						>
+							+ Journal
+						</button>
 					</div>
+				)}
+				drop={handleDrop}
+				eventDrop={handleEventDrop}
+				eventResize={handleEventResize}
+				eventClick={(info) => setSidePanelBlockId(info.event.id)}
+				events={(calendarBlocks ?? []).map((block) => {
+					const source = block.task_id ? "task" : "google";
+					return {
+						id: block.id,
+						title: block.title,
+						start: block.start_time,
+						end: block.end_time,
+						extendedProps: {
+							source,
+							taskId: block.task_id,
+							googleEventId: block.google_event_id,
+							block_type: block.block_type,
+							is_synced: block.is_synced,
+						},
+					};
+				})}
+				eventContent={(arg) => (
+					<CalendarBlock
+						event={arg.event}
+						timeText={arg.timeText}
+						isMirror={arg.isMirror}
+					/>
 				)}
 			/>
 
-			{/* Scheduling suggestions bar */}
-			{suggestions.filter((s) => !dismissedSuggestions.has(s.taskId)).length >
-				0 && (
-				<div className="flex gap-2 overflow-x-auto pb-2 mb-3">
-					{suggestions
-						.filter((s) => !dismissedSuggestions.has(s.taskId))
-						.map((s) => (
-							<div
-								key={s.taskId}
-								className="flex-shrink-0 bg-muted/50 border rounded-lg px-3 py-2 text-xs max-w-[200px]"
-							>
-								<div className="flex justify-between items-start gap-1 mb-1">
-									<Sparkles className="h-3 w-3 text-amber-500 mt-0.5" />
-									<button
-										type="button"
-										onClick={() =>
-											setDismissedSuggestions((p) => new Set([...p, s.taskId]))
-										}
-									>
-										<X className="h-3 w-3 text-muted-foreground" />
-									</button>
-								</div>
-								<p className="text-muted-foreground leading-tight">
-									{s.reason}
-								</p>
-							</div>
-						))}
-				</div>
+			{sidePanelBlockId && (
+				<EventSidePanel
+					blockId={sidePanelBlockId}
+					onClose={() => setSidePanelBlockId(null)}
+					userId={userId ?? ""}
+				/>
 			)}
-
-			<Dialog
-				open={!!pendingBlock}
-				onOpenChange={(open) => {
-					if (!open) {
-						setPendingBlock(null);
-						setTitle("");
-						setBlockType("focus");
-					}
-				}}
-			>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>New block</DialogTitle>
-					</DialogHeader>
-					<Input
-						placeholder="Title"
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") handleConfirm();
-						}}
-						autoFocus
-					/>
-					{/* Block type selector */}
-					<div className="flex gap-2 mt-2">
-						{["focus", "task", "event"].map((type) => (
-							<button
-								key={type}
-								type="button"
-								onClick={() => setBlockType(type)}
-								className={
-									blockType === type
-										? "ring-2 ring-primary rounded px-2 py-1 text-sm capitalize"
-										: "px-2 py-1 text-sm capitalize"
-								}
-							>
-								{type}
-							</button>
-						))}
-					</div>
-					<div className="flex justify-end gap-2 mt-4">
-						<Button
-							variant="outline"
-							onClick={() => {
-								setPendingBlock(null);
-								setTitle("");
-								setBlockType("focus");
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleConfirm} disabled={!title.trim()}>
-							Add
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
-		</>
+		</div>
 	);
 }

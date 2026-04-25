@@ -392,6 +392,7 @@ export type Database = {
 					completed_at: string | null;
 					created_at: string;
 					description: string | null;
+					end_time: string | null;
 					id: string;
 					labels: string[] | null;
 					location: string | null;
@@ -399,6 +400,7 @@ export type Database = {
 					position: number | null;
 					priority: string;
 					recurring: string | null;
+					start_time: string | null;
 					status: string;
 					title: string;
 					updated_at: string;
@@ -412,6 +414,7 @@ export type Database = {
 					completed_at?: string | null;
 					created_at?: string;
 					description?: string | null;
+					end_time?: string | null;
 					id?: string;
 					labels?: string[] | null;
 					location?: string | null;
@@ -419,6 +422,7 @@ export type Database = {
 					position?: number | null;
 					priority: string;
 					recurring?: string | null;
+					start_time?: string | null;
 					status?: string;
 					title: string;
 					updated_at?: string;
@@ -432,6 +436,7 @@ export type Database = {
 					completed_at?: string | null;
 					created_at?: string;
 					description?: string | null;
+					end_time?: string | null;
 					id?: string;
 					labels?: string[] | null;
 					location?: string | null;
@@ -439,6 +444,7 @@ export type Database = {
 					position?: number | null;
 					priority?: string;
 					recurring?: string | null;
+					start_time?: string | null;
 					status?: string;
 					title?: string;
 					updated_at?: string;

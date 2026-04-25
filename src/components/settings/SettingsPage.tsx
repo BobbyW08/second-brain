@@ -39,7 +39,12 @@ import {
 	useReorderBuckets,
 	useUpdateBucket,
 } from "@/queries/buckets";
-import { useProfile, useUpdateProfile } from "@/queries/profile";
+import { useSyncGoogleEvents } from "@/queries/calendarBlocks";
+import {
+	useDisconnectGoogle,
+	useProfile,
+	useUpdateProfile,
+} from "@/queries/profile";
 import { supabase } from "@/utils/supabase";
 
 const profileSchema = z.object({
@@ -62,6 +67,9 @@ export function SettingsPage() {
 	const updateBucket = useUpdateBucket(userId);
 	const deleteBucket = useDeleteBucket(userId);
 	const reorderBuckets = useReorderBuckets(userId);
+
+	const disconnectGoogle = useDisconnectGoogle();
+	const syncGoogle = useSyncGoogleEvents();
 
 	const { data: taskCounts = {} } = useQuery({
 		queryKey: ["tasks-by-bucket-count", userId],
@@ -357,8 +365,93 @@ export function SettingsPage() {
 
 			<Separator className="my-8" />
 
-			{/* SECTION 4 — AI PREFERENCES (PLACEHOLDER) */}
+			{/* SECTION 4 — GOOGLE CALENDAR */}
 			<div className="space-y-4">
+				<div>
+					<h2 className="text-lg font-semibold">Google Calendar</h2>
+					<p className="text-sm text-muted-foreground">
+						Sync your tasks with Google Calendar
+					</p>
+				</div>
+
+				{!profile?.google_access_token ? (
+					<Button
+						variant="outline"
+						onClick={() =>
+							supabase.auth.signInWithOAuth({
+								provider: "google",
+								options: {
+									scopes: "https://www.googleapis.com/auth/calendar",
+									queryParams: {
+										access_type: "offline",
+										prompt: "consent",
+									},
+								},
+							})
+						}
+					>
+						Connect Google Calendar
+					</Button>
+				) : (
+					<div className="space-y-4">
+						<div className="flex items-center gap-2">
+							<div className="h-2 w-2 rounded-full bg-[#3A8A3A]" />
+							<span className="text-[13px] font-medium text-[#e8e8f0]">
+								Connected
+							</span>
+						</div>
+
+						<div className="flex flex-col gap-1">
+							<p className="text-[11px] text-[#666672]">
+								Last synced: {new Date(profile.updated_at).toLocaleString()}
+							</p>
+						</div>
+
+						<div className="flex gap-3">
+							<Button
+								size="sm"
+								onClick={() => syncGoogle.mutate(userId)}
+								disabled={syncGoogle.isPending}
+							>
+								{syncGoogle.isPending ? "Syncing..." : "Sync now"}
+							</Button>
+
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button variant="outline" size="sm">
+										Disconnect
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											Disconnect Google Calendar?
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											Disconnecting will stop syncing events between Second
+											Brain and Google Calendar. Existing blocks will remain.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={() => disconnectGoogle.mutate(userId)}
+											className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+										>
+											Disconnect
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						</div>
+					</div>
+				)}
+			</div>
+
+			<Separator className="my-8" />
+
+			{/* SECTION 5 — AI PREFERENCES (PLACEHOLDER) */}
+			<div className="space-y-4 pb-12">
 				<div>
 					<h2 className="text-lg font-semibold">AI Preferences</h2>
 					<p className="text-sm text-muted-foreground">

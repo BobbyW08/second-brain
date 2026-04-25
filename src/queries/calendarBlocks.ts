@@ -32,13 +32,11 @@ export function useCreateBlock() {
 		mutationFn: async (
 			block: Omit<CalendarBlock, "id" | "created_at" | "updated_at">,
 		) => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("calendar_blocks")
 				.insert(block)
 				.select()
 				.throwOnError();
-
-			if (error) throw error;
 
 			// If this is a synced block, also create on Google Calendar
 			if (data[0].is_synced) {
@@ -64,19 +62,17 @@ export function useCreateBlock() {
 							end_time: data[0].end_time,
 						},
 						accessToken: profileData.google_access_token,
-						refreshToken: profileData.google_refresh_token,
 					},
 				})) as { googleEventId: string };
 
 				// Update the block with the Google event ID
-				const { data: updatedData, error: updateError } = await supabase
+				const { data: updatedData } = await supabase
 					.from("calendar_blocks")
 					.update({ google_event_id: googleEvent.googleEventId })
 					.eq("id", data[0].id)
 					.select()
 					.throwOnError();
 
-				if (updateError) throw updateError;
 				return updatedData[0];
 			}
 
@@ -100,23 +96,19 @@ export function useUpdateBlock() {
 			updates: Partial<CalendarBlock>;
 		}) => {
 			// First get the current block to check if it's synced
-			const { data: currentBlock, error: fetchError } = await supabase
+			const { data: currentBlock } = await supabase
 				.from("calendar_blocks")
 				.select("*")
 				.eq("id", blockId)
 				.single()
 				.throwOnError();
 
-			if (fetchError) throw fetchError;
-
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("calendar_blocks")
 				.update(updates)
 				.eq("id", blockId)
 				.select()
 				.throwOnError();
-
-			if (error) throw error;
 
 			// If this is a synced block and we're updating it, also update on Google Calendar
 			if (currentBlock.is_synced && currentBlock.google_event_id) {
@@ -151,7 +143,6 @@ export function useUpdateBlock() {
 							googleEventId: currentBlock.google_event_id,
 							updates: updateData,
 							accessToken: profileData.google_access_token,
-							refreshToken: profileData.google_refresh_token,
 						},
 					});
 				}
@@ -171,22 +162,18 @@ export function useDeleteBlock() {
 	return useMutation({
 		mutationFn: async (blockId: string) => {
 			// First get the current block to check if it's synced
-			const { data: currentBlock, error: fetchError } = await supabase
+			const { data: currentBlock } = await supabase
 				.from("calendar_blocks")
 				.select("*")
 				.eq("id", blockId)
 				.single()
 				.throwOnError();
 
-			if (fetchError) throw fetchError;
-
-			const { error } = await supabase
+			await supabase
 				.from("calendar_blocks")
 				.delete()
 				.eq("id", blockId)
 				.throwOnError();
-
-			if (error) throw error;
 
 			// If this is a synced block, also delete from Google Calendar
 			if (currentBlock.is_synced && currentBlock.google_event_id) {
@@ -208,7 +195,6 @@ export function useDeleteBlock() {
 					data: {
 						googleEventId: currentBlock.google_event_id,
 						accessToken: profileData.google_access_token,
-						refreshToken: profileData.google_refresh_token,
 					},
 				});
 			}
@@ -227,13 +213,12 @@ export function useUndoDeleteCalendarBlock() {
 	return useMutation({
 		mutationFn: async (blockData: CalendarBlock) => {
 			// Re-insert the deleted block with its original data
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("calendar_blocks")
 				.insert(blockData)
 				.select()
 				.throwOnError();
 
-			if (error) throw error;
 			return data[0];
 		},
 		onMutate: async (blockData) => {

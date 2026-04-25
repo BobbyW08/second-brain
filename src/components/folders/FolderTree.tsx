@@ -1,37 +1,26 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { Tree } from "react-arborist";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-	useCreatePage,
 	useDeleteNode,
 	useFoldersAndPages,
 	useMoveNode,
 	useRenameNode,
 } from "@/queries/folders";
+import { useCreatePage } from "@/queries/pages";
+import { useUIStore } from "@/stores/useUIStore";
 import { FolderNode } from "./FolderNode";
 
 export function FolderTree({ userId }: { userId: string }) {
 	const { data: tree, isLoading } = useFoldersAndPages(userId);
+	const { setActivePageId } = useUIStore();
 
 	const { mutate: createPage } = useCreatePage();
 	const { mutate: renameNode } = useRenameNode();
 	const { mutate: moveNode } = useMoveNode();
 	const { mutate: deleteNode } = useDeleteNode();
 
-	const navigate = useNavigate();
-
-	if (isLoading) {
-		return (
-			<div className="space-y-1 p-2">
-				{[1, 2, 3, 4, 5].map((i) => (
-					<Skeleton key={i} className="h-6 w-full rounded" />
-				))}
-			</div>
-		);
-	}
-
-	if (!tree) {
+	if (isLoading || !tree) {
 		return (
 			<div className="space-y-1 p-2">
 				{[1, 2, 3, 4, 5].map((i) => (
@@ -54,11 +43,9 @@ export function FolderTree({ userId }: { userId: string }) {
 						createPage(
 							{ user_id: userId, title: "Untitled", page_type: "page" },
 							{
-								onSuccess: (page) =>
-									navigate({
-										to: "/pages/$pageId",
-										params: { pageId: page.id },
-									}),
+								onSuccess: (page) => {
+									setActivePageId(page.id);
+								},
 							},
 						)
 					}
@@ -73,29 +60,31 @@ export function FolderTree({ userId }: { userId: string }) {
 			<Tree
 				data={tree ?? []}
 				onRename={({ id, name, node }) =>
-					renameNode({ type: node.data.type, id, name })
+					renameNode({ type: node.data.type, id, name, user_id: userId })
 				}
 				onMove={({ dragIds, parentId, index }) =>
 					dragIds.forEach((id) => {
-						// For simplicity, we're assuming all dragged items are pages
-						// In a real implementation, we'd need to check the node type
-						moveNode({
-							type: "page",
-							id,
-							parent_id: parentId,
-							position: index,
-						});
+						const node = tree.find((n) => n.id === id);
+						if (node) {
+							moveNode({
+								type: node.type,
+								id,
+								parent_id: parentId,
+								position: index,
+								user_id: userId,
+							});
+						}
 					})
 				}
 				onDelete={({ ids, nodes }) =>
 					ids.forEach((id, i) => {
-						deleteNode({ type: nodes[i].data.type, id });
+						deleteNode({ type: nodes[i].data.type, id, user_id: userId });
 					})
 				}
 				onSelect={(nodes) => {
 					const node = nodes[0];
 					if (node && node.data.type === "page") {
-						navigate({ to: "/pages/$pageId", params: { pageId: node.id } });
+						setActivePageId(node.id);
 					}
 				}}
 				openByDefault={false}

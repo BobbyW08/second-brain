@@ -57,7 +57,7 @@ export function AddTaskInline({ bucketId, onAdd }: AddTaskInlineProps) {
 				onBlur={handleAdd}
 				onKeyDown={handleKeyDown}
 				placeholder="Task name"
-				className="w-full rounded-lg border border-[#2a2a30] bg-[#1e1e24] px-[10px] py-[6px] text-[13px] text-[#e8e8f0] outline-none focus:border-[#3A8FD4]"
+				className="w-full rounded-[8px] border border-[#2a2a30] bg-[#1e1e24] px-[10px] py-[6px] text-[13px] text-[#e8e8f0] outline-none focus:border-[#3A8FD4]"
 			/>
 		</div>
 	);

@@ -9,15 +9,57 @@ interface UIState {
 
 	leftPanelMode: "priorities" | "files";
 	setLeftPanelMode: (mode: "priorities" | "files") => void;
+
+	openTaskId: string | null;
+	setOpenTaskId: (id: string | null) => void;
+
+	sidePanelBlockId: string | null;
+	setSidePanelBlockId: (id: string | null) => void;
+
+	miniCalendarOpen: boolean;
+	setMiniCalendarOpen: (open: boolean) => void;
+
+	commandMode: "navigation" | "link";
+	setCommandMode: (mode: "navigation" | "link") => void;
+
+	// New properties to address TypeScript errors
+	scrollToTaskId: string | null;
+	setScrollToTaskId: (id: string | null) => void;
+
+	openLinkPicker: (
+		callback: (result: { id: string; type: string }) => void,
+	) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
 	commandOpen: false,
 	setCommandOpen: (open) => set({ commandOpen: open }),
 
+	commandMode: "navigation",
+	setCommandMode: (mode) => set({ commandMode: mode }),
+
 	activePageId: null,
 	setActivePageId: (id) => set({ activePageId: id }),
 
 	leftPanelMode: "priorities",
 	setLeftPanelMode: (mode) => set({ leftPanelMode: mode }),
+
+	openTaskId: null,
+	setOpenTaskId: (id) => set({ openTaskId: id }),
+
+	sidePanelBlockId: null,
+	setSidePanelBlockId: (id) => set({ sidePanelBlockId: id }),
+
+	miniCalendarOpen: false,
+	setMiniCalendarOpen: (open) => set({ miniCalendarOpen: open }),
+
+	// New implementations
+	scrollToTaskId: null,
+	setScrollToTaskId: (id) => set({ scrollToTaskId: id }),
+
+	openLinkPicker: (callback) => {
+		// Placeholder implementation - you'll need to replace with actual link picker logic
+		set({ commandMode: "link" });
+		callback({ id: "placeholder", type: "page" });
+	},
 }));

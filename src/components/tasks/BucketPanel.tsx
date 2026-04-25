@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AddTaskInline } from "@/components/tasks/AddTaskInline";
 import { BucketHeader } from "@/components/tasks/BucketHeader";
 import { CompletedTodaySection } from "@/components/tasks/CompletedTodaySection";
-import { TaskStub } from "@/components/tasks/TaskStub";
+import { TaskCard } from "@/components/tasks/TaskCard";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
 	useBuckets,
@@ -16,7 +16,8 @@ import { useUIStore } from "@/stores/useUIStore";
 
 export function BucketPanel() {
 	const { userId } = useCurrentUser();
-	const { leftPanelMode, setLeftPanelMode } = useUIStore();
+	const { leftPanelMode, setLeftPanelMode, scrollToTaskId, setScrollToTaskId } =
+		useUIStore();
 	const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(
 		new Set(),
 	);
@@ -50,15 +51,42 @@ export function BucketPanel() {
 	useEffect(() => {
 		if (!bucketListRef.current) return;
 		const draggable = new Draggable(bucketListRef.current, {
-			itemSelector: ".task-stub",
+			itemSelector: ".task-card",
 			eventData: (el) => ({
-				id: el.dataset.taskId,
-				title: el.dataset.title,
-				duration: el.dataset.duration,
+				id: (el as HTMLElement).dataset.taskId,
+				title: (el as HTMLElement).dataset.title,
+				duration: (el as HTMLElement).dataset.duration,
 			}),
 		});
 		return () => draggable.destroy();
 	}, []);
+
+	// Handle scrolling to a specific task
+	useEffect(() => {
+		if (!scrollToTaskId) return;
+
+		// Find which bucket contains this task
+		const task = tasks.find((t) => t.id === scrollToTaskId);
+		if (task?.bucket_id) {
+			// Expand the bucket containing the task
+			setExpandedBuckets((prev) => {
+				const next = new Set(prev);
+				next.add(task.bucket_id as string);
+				return next;
+			});
+
+			// Scroll to the task element
+			setTimeout(() => {
+				const taskElement = document.querySelector(
+					`[data-task-id="${scrollToTaskId}"]`,
+				);
+				if (taskElement) {
+					taskElement.scrollIntoView({ behavior: "smooth", block: "center" });
+				}
+				setScrollToTaskId(null);
+			}, 100);
+		}
+	}, [scrollToTaskId, tasks, setScrollToTaskId]);
 
 	const toggleExpand = (id: string) => {
 		const next = new Set(expandedBuckets);
@@ -151,12 +179,9 @@ export function BucketPanel() {
 							{isExpanded && (
 								<div className="flex flex-col gap-1 px-2 pb-2">
 									{bucketTasks.map((task) => (
-										<TaskStub
-											key={task.id}
-											task={task}
-											bucketColor={bucket.color || "#666672"}
-										/>
+										<TaskCard key={task.id} task={task} userId={userId} />
 									))}
+
 									<AddTaskInline
 										bucketId={bucket.id}
 										onAdd={(title) =>
