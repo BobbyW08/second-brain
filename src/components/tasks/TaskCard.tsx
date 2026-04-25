@@ -126,7 +126,9 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 			onKeyDown={(e) => e.key === "Enter" && toggle()}
 			data-task-id={task.id}
 			data-title={task.title}
-			data-duration={task.block_size === "L" ? 60 : task.block_size === "S" ? 15 : 30}
+			data-duration={
+				task.block_size === "L" ? 60 : task.block_size === "S" ? 15 : 30
+			}
 		>
 			{/* Complete checkbox */}
 			<button
