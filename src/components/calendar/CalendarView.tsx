@@ -1,9 +1,6 @@
+import type { EventDropArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import type {
-	DropArg,
-	EventDragStopArg,
-	EventResizeDoneArg,
-} from "@fullcalendar/interaction";
+import type { DropArg, EventResizeDoneArg } from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -86,7 +83,7 @@ export function CalendarView() {
 		setSidePanelBlockId(newBlock.id);
 	};
 
-	const handleEventDrop = async (info: EventDragStopArg) => {
+	const handleEventDrop = async (info: EventDropArg) => {
 		const { event } = info;
 		const blockId = event.id;
 		const start_time = event.start?.toISOString() ?? null;

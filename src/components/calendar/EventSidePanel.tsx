@@ -82,7 +82,7 @@ export function EventSidePanel({
 				top: 0,
 				height: "100%",
 				width: "320px",
-				background: "#141418",
+				background: "#1a1a20",
 				borderLeft: "1px solid #2a2a30",
 				borderRadius: "12px 0 0 12px",
 				boxShadow: "0 0 24px rgba(0,0,0,0.4)",
