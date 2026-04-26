@@ -42,6 +42,12 @@ Deploy:        Vercel (Nitro preset via process.env.VERCEL in vite.config.ts)
 Not in v0.1 — comes in v0.5: @blocknote/xl-ai, assistant-ui, @ai-sdk/anthropic,
 @ai-sdk/react, Vercel AI SDK, Anthropic API. Do not install or import any of these.
 
+CRITICAL for v0.5 AI work: Before writing a single line of AI code, clone and study
+osadavc/tanchat (Apache-2.0) — the only known repo porting vercel/ai-chatbot to
+TanStack Start. The route pattern is:
+  src/routes/api/chat.ts → returns streamText().toUIMessageStreamResponse()
+Do NOT port Next.js App Router AI examples directly. Use tanchat as the translation layer.
+
 Never use: googleapis npm package — 29 MB, crashes the build. Google Calendar calls
 use direct fetch to REST endpoints with Bearer token auth only.
 
@@ -180,6 +186,9 @@ Right panel content: CalendarView (Priorities mode) or FilesLandingPage/PageView
 RLS enabled on all tables. Standard policy: auth.uid() = user_id.
 Dropped in v0.1 migrations: tables_schema, table_rows (Migration 6).
 
+Do not add v1.0 schema (page_tags, reminder_at, inbox_folder_id, drive tables) until
+v1.0 work begins. Full schema specs are in second-brain-build-plan-addendum.md.
+
 ---
 
 ## Design tokens — always use these exact values
@@ -230,6 +239,19 @@ Spacing scale: 4px, 8px, 12px, 16px, 24px
 
 ---
 
+## Reference repos — MIT licensed, copy freely
+
+Pre-vetted implementations to use as structural references. Never copy styles
+verbatim — always apply Second Brain design tokens.
+
+- TaskCard (4-A / 4-B): `satnaing/shadcn-admin` → `src/features/tasks/`
+- FullCalendar styling (5-B / 5-C): `robskinney/shadcn-ui-fullcalendar-example`
+- FilesLandingPage cover/icon (6-C, optional): `sanidhyy/notion-clone` →
+  `components/cover.tsx` + `components/icon-picker.tsx`
+- v0.5 AI routes (Apache-2.0): `osadavc/tanchat` — read before any AI route work
+
+---
+
 ## What is already built and working — do not rewrite
 
 - Auth: Google OAuth, invite gate in auth.callback.tsx, requireAuth, admin invite page
@@ -239,38 +261,20 @@ Spacing scale: 4px, 8px, 12px, 16px, 24px
 - Global search: ⌘K CommandDialog with navigation and link-picker modes
 - BlockNote page editor: PageView with autosave (800ms), saving indicator, inline title
   editing. Default schema only — no custom inline content specs.
-- FolderTree: react-arborist with FolderNode renderer, inline rename on double-click.
-  Note: onSuccess handlers in rename/move/delete mutations need userId fix (see broken)
+- FolderTree: react-arborist with FolderNode renderer, inline rename on double-click
 - All TanStack Query hooks in src/queries/: correct optimistic updates and throwOnError
   throughout. These are the foundation — do not change their patterns.
 - FullCalendar base: 3-day view, zone label structure, morning/afternoon/evening CSS,
-  now indicator. Note: missing droppable and editable props (see broken)
+  now indicator, droppable and editable enabled, drag-to-reschedule, drag-to-create
 - Settings: profile and theme sections work correctly
 - Vitest tests: journalUtils.test.ts (5 passing), auth.test.ts (3 passing)
 - Utils: useAutosave, useCurrentUser, useMediaQuery, archiveTasks, queryClient
 
 ---
 
-## What is broken and must be fixed — do not work around, fix directly
+## What is broken and must be fixed
 
-1. FullCalendar missing droppable={true} and editable={true} in CalendarView.tsx.
-   Without these, drag from bucket fails silently and block resize/move don't work.
-
-2. FolderTree useRenameNode, useMoveNode, useDeleteNode in src/queries/folders.ts
-   have empty onSuccess callbacks. Pass userId into these mutations so
-   queryClient.invalidateQueries fires correctly after tree operations.
-
-3. Root route src/routes/index.tsx always redirects to /login unconditionally.
-   Must check session first and redirect to /dashboard if authenticated.
-
-4. Priority names in src/lib/taskConstants.ts use high/medium/low.
-   Must be urgent/important/someday/unsorted to match the database design.
-
-5. Complete task toast undo button in src/queries/tasks.ts useCompleteTask has
-   onClick: () => {}. Must call useUndoCompleteTask which is already implemented.
-
-6. src/server/googleCalendar.ts uses googleapis package (29 MB, crashes build).
-   Must be rewritten to use direct fetch calls. See Phase 5-I of build plan.
+All previously reported issues have been resolved in phases 2–7. No critical bugs remain.
 
 ---
 
@@ -310,6 +314,22 @@ server/routes/api/ai-chat.ts               — no AI in v0.1
 
 If any import references these files, remove the import.
 Do not ask whether to restore them. They are gone for v0.1.
+
+---
+
+## Feature roadmap summary
+
+| Feature | Version | Status |
+|---|---|---|
+| Auth, app shell, editor, search, buckets, calendar base | v0.1 | ✅ Phases 0–3 complete |
+| TaskCard, EventSidePanel, FilesLandingPage, Google sync, Polish | v0.1 | 🔄 Phases 4–9 in progress |
+| AI chat, AI writing, scheduling suggestions | v0.5 | Confirmed — read tanchat first |
+| Inline page linking + backlinks, task icons, mobile, recurring events | v0.5 | Confirmed |
+| Google Drive folder import | v0.5 | Confirmed — recover April 6 session code |
+| Inbox Folder, Page Tags, Web Clipper, PDF Capture, Page Reminders, Presentation Mode | v1.0 | Confirmed |
+
+Full specs for v0.5 and v1.0 features are in second-brain-build-plan-addendum.md.
+Do not begin v0.5 until v0.1 has been in daily personal use for at least 2 weeks.
 
 ---
 

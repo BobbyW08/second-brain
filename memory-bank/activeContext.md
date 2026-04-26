@@ -47,6 +47,17 @@ All previously tracked broken items have been resolved:
 
 ---
 
+## Roadmap Reference
+
+The authoritative post-v0.1 roadmap is in `second-brain-build-plan-addendum.md`
+(last updated April 25, 2026). Key notes:
+- Do NOT begin v0.5 until v0.1 has been in daily personal use for at least 2 weeks
+- v0.5 AI work: read osadavc/tanchat FIRST before writing any AI route code
+- v1.0 has 6 confirmed features — see progress.md for the full list
+- All hard rules in CLAUDE.md apply across all versions
+
+---
+
 ## Session Instructions
 
 At the start of every session, read these files in order:

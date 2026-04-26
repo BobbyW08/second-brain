@@ -32,6 +32,25 @@ fetch to REST endpoints with Bearer token auth only.
 
 ---
 
+## Reference Repos (MIT licensed — copy freely)
+
+These are pre-vetted reference implementations to use when building specific tickets.
+Do not copy styles verbatim — apply Second Brain design tokens.
+
+| Ticket | Repo | What to use |
+|---|---|---|
+| 4-A / 4-B TaskCard | `satnaing/shadcn-admin` → `src/features/tasks/` | Calm Linear-style card with closed/open states in shadcn |
+| 5-B / 5-C Calendar styling | `robskinney/shadcn-ui-fullcalendar-example` | CSS variable overrides for FullCalendar with shadcn tokens |
+| 6-C FilesLandingPage (optional) | `sanidhyy/notion-clone` → `components/cover.tsx` + `components/icon-picker.tsx` | Cover images + emoji icon picker — skip if unwanted for launch |
+| v0.5 AI routes | `osadavc/tanchat` (Apache-2.0) | ONLY known repo porting vercel/ai-chatbot to TanStack Start — read this before writing any AI route |
+
+**v0.5 AI note:** When starting AI work, clone osadavc/tanchat first and study the
+API route pattern before writing a single line. The pattern is:
+`src/routes/api/chat.ts` → returns `streamText().toUIMessageStreamResponse()`
+Do NOT port Next.js App Router AI examples directly. tanchat is the translation layer.
+
+---
+
 ## Folder Structure
 
 ```
@@ -119,6 +138,12 @@ ADMIN_EMAIL=[your-email]                       # admin invite page access check
 RLS enabled on all tables. Standard policy: `auth.uid() = user_id`.
 
 **Dropped in v0.1 migrations:** `tables_schema`, `table_rows` (Migration 6).
+
+**Planned in v1.0 (do not add until then):**
+- `page_tags` — join table for freeform page tags
+- `reminder_at` + `reminder_dismissed_at` columns on pages (Page Reminders)
+- `inbox_folder_id` column on profiles (Inbox Folder)
+- `drive_synced_folders` + `drive_files` tables (Google Drive import, v0.5)
 
 ---
 
