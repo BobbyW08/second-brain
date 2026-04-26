@@ -78,17 +78,20 @@ export function BucketHeader({
 
 	return (
 		<>
-			<button
-				type="button"
+			{/* biome-ignore lint/a11y/useSemanticElements: contains nested interactive elements */}
+			<div
+				role="button"
+				tabIndex={0}
 				className="group flex w-full items-center justify-between px-3 py-2 cursor-pointer select-none"
 				onClick={onToggleExpand}
 				onDoubleClick={(e) => {
 					e.stopPropagation();
 					setIsEditing(true);
 				}}
-				onContextMenu={(_e) => {
-					// DropdownMenu handles right click usually, but if we want custom context menu behavior:
-					// For now we rely on the DropdownMenuTrigger which we can style as needed or just use the icon.
+				onKeyDown={(e) => {
+					if (e.key === "Enter") {
+						onToggleExpand();
+					}
 				}}
 			>
 				<div className="flex items-center gap-2 flex-1 min-w-0">
@@ -148,7 +151,7 @@ export function BucketHeader({
 						}`}
 					/>
 				</div>
-			</button>
+			</div>
 
 			<AlertDialog
 				open={isDeleteDialogOpen}
