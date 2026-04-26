@@ -1,5 +1,6 @@
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { Tree } from "react-arborist";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	useDeleteNode,
@@ -56,45 +57,55 @@ export function FolderTree({ userId }: { userId: string }) {
 				</button>
 			</div>
 
-			{/* Tree */}
-			<Tree
-				data={tree ?? []}
-				onRename={({ id, name, node }) =>
-					renameNode({ type: node.data.type, id, name, user_id: userId })
-				}
-				onMove={({ dragIds, parentId, index }) =>
-					dragIds.forEach((id) => {
-						const node = tree.find((n) => n.id === id);
-						if (node) {
-							moveNode({
-								type: node.type,
-								id,
-								parent_id: parentId,
-								position: index,
-								user_id: userId,
-							});
-						}
-					})
-				}
-				onDelete={({ ids, nodes }) =>
-					ids.forEach((id, i) => {
-						deleteNode({ type: nodes[i].data.type, id, user_id: userId });
-					})
-				}
-				onSelect={(nodes) => {
-					const node = nodes[0];
-					if (node && node.data.type === "page") {
-						setActivePageId(node.id);
+			{/* Tree or Empty State */}
+			{tree && tree.length === 0 ? (
+				<div className="flex-1 flex items-center justify-center p-4">
+					<EmptyState
+						icon={FileText}
+						title="No pages yet"
+						description="Create a page to get started."
+					/>
+				</div>
+			) : (
+				<Tree
+					data={tree ?? []}
+					onRename={({ id, name, node }) =>
+						renameNode({ type: node.data.type, id, name, user_id: userId })
 					}
-				}}
-				openByDefault={false}
-				width="100%"
-				height={600}
-				indent={16}
-				rowHeight={32}
-			>
-				{FolderNode}
-			</Tree>
+					onMove={({ dragIds, parentId, index }) =>
+						dragIds.forEach((id) => {
+							const node = tree.find((n) => n.id === id);
+							if (node) {
+								moveNode({
+									type: node.type,
+									id,
+									parent_id: parentId,
+									position: index,
+									user_id: userId,
+								});
+							}
+						})
+					}
+					onDelete={({ ids, nodes }) =>
+						ids.forEach((id, i) => {
+							deleteNode({ type: nodes[i].data.type, id, user_id: userId });
+						})
+					}
+					onSelect={(nodes) => {
+						const node = nodes[0];
+						if (node && node.data.type === "page") {
+							setActivePageId(node.id);
+						}
+					}}
+					openByDefault={false}
+					width="100%"
+					height={600}
+					indent={16}
+					rowHeight={32}
+				>
+					{FolderNode}
+				</Tree>
+			)}
 		</div>
 	);
 }

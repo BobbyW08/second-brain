@@ -3,6 +3,7 @@ import { CalendarView } from "../../components/calendar/CalendarView";
 import { FilesLandingPage } from "../../components/files/FilesLandingPage";
 import { FolderTree } from "../../components/folders/FolderTree";
 import { PageView } from "../../components/pages/PageView";
+import { ErrorBoundary } from "../../components/shared/ErrorBoundary";
 import { BucketPanel } from "../../components/tasks/BucketPanel";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useUIStore } from "../../stores/useUIStore";
@@ -28,11 +29,13 @@ function DashboardPage() {
 						leftPanelMode === "files" ? "translateX(-100%)" : "translateX(0)",
 				}}
 			>
-				{leftPanelMode === "priorities" ? (
-					<BucketPanel />
-				) : (
-					<FolderTree userId={userId} />
-				)}
+				<ErrorBoundary>
+					{leftPanelMode === "priorities" ? (
+						<BucketPanel />
+					) : (
+						<FolderTree userId={userId} />
+					)}
+				</ErrorBoundary>
 			</div>
 
 			{/* Right Panel */}
@@ -44,13 +47,15 @@ function DashboardPage() {
 						leftPanelMode === "files" ? "translateX(0)" : "translateX(100%)",
 				}}
 			>
-				{leftPanelMode === "priorities" ? (
-					<CalendarView />
-				) : activePageId ? (
-					<PageView />
-				) : (
-					<FilesLandingPage userId={userId} />
-				)}
+				<ErrorBoundary>
+					{leftPanelMode === "priorities" ? (
+						<CalendarView />
+					) : activePageId ? (
+						<PageView />
+					) : (
+						<FilesLandingPage userId={userId} />
+					)}
+				</ErrorBoundary>
 			</div>
 		</div>
 	);

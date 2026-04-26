@@ -1,5 +1,7 @@
 import { Draggable } from "@fullcalendar/interaction";
+import { Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { AddTaskInline } from "@/components/tasks/AddTaskInline";
 import { BucketHeader } from "@/components/tasks/BucketHeader";
 import { CompletedTodaySection } from "@/components/tasks/CompletedTodaySection";
@@ -209,6 +211,14 @@ export function BucketPanel() {
 						</div>
 					);
 				})}
+
+				{buckets.length === 0 && (
+					<EmptyState
+						icon={Layers}
+						title="No buckets yet"
+						description="Add your first bucket to organize tasks."
+					/>
+				)}
 
 				<button
 					type="button"

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, FileText } from "lucide-react";
+import { Calendar, Clock, FileText } from "lucide-react";
 import { useState } from "react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUIStore } from "@/stores/useUIStore";
 import { supabase } from "@/utils/supabase";
@@ -117,9 +118,11 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 						)}
 					</>
 				) : (
-					<p className="text-[13px] text-[#666672] text-center">
-						No pages yet. Create one from the folder tree.
-					</p>
+					<EmptyState
+						icon={Clock}
+						title="No recent pages"
+						description="Create a page to see it here."
+					/>
 				)}
 			</div>
 
@@ -172,9 +175,11 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 						</button>
 					))
 				) : (
-					<p className="text-[13px] text-[#666672] text-center">
-						No documents tied to upcoming events.
-					</p>
+					<EmptyState
+						icon={Calendar}
+						title="Nothing coming up"
+						description="Schedule an event to tie it to a page."
+					/>
 				)}
 			</div>
 		</div>
