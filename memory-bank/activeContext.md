@@ -4,7 +4,7 @@
 
 **Phase 8-A — Loading skeletons on all data-fetching views**
 
-*Phase 4 bugs fixed. Critical issues resolved: drag-to-calendar now working (TaskCard has data-* attributes), undo button refreshes Completed Today section, link picker no longer writes garbage data to Supabase. Build, check, and typecheck all pass clean.*
+*Phase 4 & 5 audited and bugs fixed. Phase 4: drag-to-calendar working (TaskCard data-* attributes), undo refreshes, link picker resolved. Phase 5: EventDropArg type fixed (drag-reschedule), panel colors aligned. Build, check, and typecheck all pass clean.*
 
 Add loading skeleton states to all views that fetch data:
 1. BucketPanel / task lists while loading
@@ -24,6 +24,8 @@ All previously tracked broken items have been resolved:
 - TaskCard drag-to-calendar integration ✓ (Phase 4 audit)
 - useUndoCompleteTask Completed Today cache ✓ (Phase 4 audit)
 - useUIStore openLinkPicker garbage data ✓ (Phase 4 audit)
+- Calendar block drag-reschedule event type ✓ (Phase 5 audit)
+- EventSidePanel background color token ✓ (Phase 5 audit)
 
 ---
 
