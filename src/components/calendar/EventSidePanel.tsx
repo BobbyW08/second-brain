@@ -18,6 +18,7 @@ import {
 	useDeleteBlock,
 	useUndoDeleteCalendarBlock,
 } from "@/queries/calendarBlocks";
+import { useUpdateTask } from "@/queries/tasks";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
@@ -51,6 +52,7 @@ export function EventSidePanel({
 
 	const deleteBlock = useDeleteBlock();
 	const undoDelete = useUndoDeleteCalendarBlock();
+	const updateTask = useUpdateTask(userId);
 
 	const handleClose = () => {
 		setIsClosing(true);
@@ -60,6 +62,15 @@ export function EventSidePanel({
 	const handleRemove = () => {
 		if (!block) return;
 		deleteBlock.mutate(blockId);
+
+		// Restore task status to 'active' if this block is linked to a task
+		if (block.task_id && task) {
+			updateTask.mutate({
+				taskId: block.task_id,
+				updates: { status: "active" },
+			});
+		}
+
 		toast("Removed from calendar", {
 			action: {
 				label: "Undo",

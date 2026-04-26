@@ -4,6 +4,7 @@ import { AddTaskInline } from "@/components/tasks/AddTaskInline";
 import { BucketHeader } from "@/components/tasks/BucketHeader";
 import { CompletedTodaySection } from "@/components/tasks/CompletedTodaySection";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
 	useBuckets,
@@ -121,8 +122,17 @@ export function BucketPanel() {
 
 	if (loadingBuckets) {
 		return (
-			<div className="p-4 text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
-				Loading buckets...
+			<div className="flex h-full flex-col gap-4 bg-[#141418] p-4">
+				{Array.from({ length: 3 }).map((_) => (
+					<div
+						key={`bucket-skeleton-${Math.random()}`}
+						className="flex flex-col gap-2"
+					>
+						<Skeleton className="h-8 w-24 bg-[#1e1e24]" />
+						<Skeleton className="h-12 w-full bg-[#1e1e24]" />
+						<Skeleton className="h-12 w-full bg-[#1e1e24]" />
+					</div>
+				))}
 			</div>
 		);
 	}

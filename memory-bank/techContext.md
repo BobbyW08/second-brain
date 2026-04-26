@@ -20,7 +20,7 @@
 | Toasts | Sonner | latest | Non-blocking, undo button support |
 | Linting | Biome | latest | ESLint + Prettier replacement, one config file |
 | Testing | Vitest | latest | Unit tests for pure functions |
-| Deployment | Vercel Hobby | free | Nitro adapter, no custom vercel.json needed |
+| Deployment | Vercel Hobby | free | Nitro adapter, personal/non-commercial use |
 
 **Not in v0.1 — comes in v0.5:**
 @blocknote/xl-ai, assistant-ui, @ai-sdk/anthropic, @ai-sdk/react, Vercel AI SDK,
@@ -32,22 +32,79 @@ fetch to REST endpoints with Bearer token auth only.
 
 ---
 
-## Reference Repos (MIT licensed — copy freely)
+## v0.5 Stack Additions (plan ahead — do not install yet)
 
-These are pre-vetted reference implementations to use when building specific tickets.
-Do not copy styles verbatim — apply Second Brain design tokens.
-
-| Ticket | Repo | What to use |
+| Layer | Tool | Notes |
 |---|---|---|
-| 4-A / 4-B TaskCard | `satnaing/shadcn-admin` → `src/features/tasks/` | Calm Linear-style card with closed/open states in shadcn |
-| 5-B / 5-C Calendar styling | `robskinney/shadcn-ui-fullcalendar-example` | CSS variable overrides for FullCalendar with shadcn tokens |
-| 6-C FilesLandingPage (optional) | `sanidhyy/notion-clone` → `components/cover.tsx` + `components/icon-picker.tsx` | Cover images + emoji icon picker — skip if unwanted for launch |
-| v0.5 AI routes | `osadavc/tanchat` (Apache-2.0) | ONLY known repo porting vercel/ai-chatbot to TanStack Start — read this before writing any AI route |
+| AI SDK | Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/react`) | Use tanchat as integration reference |
+| AI UI | assistant-ui (`@assistant-ui/react`, `@assistant-ui/react-ai-sdk`) | Chat panel component |
+| AI routes | TanStack Start API routes (`createAPIFileRoute`) | See tanchat pattern below |
+| MCP server | Supabase MCP server (official) | Exposes DB to Claude.ai — no API cost for analysis |
+| Scheduled AI | Supabase Edge Functions + pg_cron | Daily briefs, weekly reviews, event-triggered AI |
+| AI SDK alt | TanStack AI (`@tanstack/ai`) | In alpha April 2026 — evaluate at v0.5 start |
 
-**v0.5 AI note:** When starting AI work, clone osadavc/tanchat first and study the
-API route pattern before writing a single line. The pattern is:
-`src/routes/api/chat.ts` → returns `streamText().toUIMessageStreamResponse()`
-Do NOT port Next.js App Router AI examples directly. tanchat is the translation layer.
+**AI SDK decision at v0.5 start:**
+TanStack AI is in alpha as of April 2026 — it's the native TanStack ecosystem choice
+but may have breaking changes. Vercel AI SDK is production-stable and assistant-ui
+targets it. Default to Vercel AI SDK unless TanStack AI has reached stable by then.
+
+**MCP + Scheduled AI architecture:**
+- Supabase MCP server → connect to Claude.ai → analyze tasks/calendar/pages on Pro subscription (no API cost)
+- pg_cron schedules Edge Functions (daily brief at 7am, weekly review Sunday evening)
+- Database webhooks trigger Edge Functions on events (task complete → debrief page, etc.)
+- Edge Functions call Anthropic API, write BlockNote JSON to pages table
+- Supabase Realtime notifies app → Sonner toast → user opens the pre-written page
+- This means heavy analysis/reports run on subscription; embedded interactive AI uses API
+
+---
+
+## Reference Repos (MIT licensed unless noted — copy freely)
+
+Pre-vetted implementations for specific tickets. Full per-ticket porting notes with
+exact file paths and code patterns are in memory-bank/second-brain-build-plan-addendum-v2.md.
+Never copy styles verbatim — apply Second Brain design tokens.
+
+| Ticket | Repo | What to use | Key note |
+|---|---|---|---|
+| 4-A / 4-B TaskCard | `satnaing/shadcn-admin` → `src/features/tasks/` | Form field structure from tasks-dialogs.tsx | Take fields, NOT the Sheet wrapper — use expand-in-place |
+| 5-B / 5-C Calendar styling | `robskinney/shadcn-ui-fullcalendar-example` | CSS variable overrides for FullCalendar + shadcn | Apply Second Brain zone colors |
+| 6-X Page headers | `sanidhyy/notion-clone` → `components/cover.tsx`, `icon-picker.tsx`, `toolbar.tsx` | Cover image + emoji icon + page toolbar | Replace Convex→Supabase, EdgeStore→Supabase Storage, no emoji-picker-react package |
+| v0.5 AI routes (Apache-2.0) | `osadavc/tanchat` | TanStack Start + Vercel AI SDK integration | ONLY known TanStack Start AI chatbot reference — read before any AI route code |
+
+**FullCalendar drag — exact pattern (from official docs):**
+```tsx
+// Two required props on <FullCalendar>:
+droppable={true}   // external drops
+editable={true}    // move/resize existing events
+
+// Draggable setup in BucketPanel useEffect:
+new Draggable(containerEl, {
+  itemSelector: '.task-card',
+  eventData: (el) => ({
+    title: el.dataset.title,
+    duration: el.dataset.duration,
+    extendedProps: { taskId: el.dataset.taskId },
+  }),
+})
+
+// On each TaskCard div:
+className="task-card"
+data-task-id={task.id}
+data-title={task.title}
+data-duration={task.duration ?? '01:00'}
+```
+
+**tanchat AI route pattern:**
+```typescript
+// src/routes/api/chat.ts
+export const APIRoute = createAPIFileRoute('/api/chat')({
+  POST: async ({ request }) => {
+    const { messages } = await request.json()
+    const result = streamText({ model: anthropic(AI_MODELS.default), system: TONE_SYSTEM_PROMPT, messages })
+    return result.toUIMessageStreamResponse()
+  },
+})
+```
 
 ---
 
@@ -74,6 +131,7 @@ memory-bank/        # Agent memory (this folder)
 ## Key Patterns
 
 **Supabase calls:** Every call ends with `.throwOnError()`. No empty catch blocks.
+Do not add `if (error) throw error` after `.throwOnError()` — it's redundant.
 
 **Server functions:** All server logic lives in `src/server/` as TanStack Start
 `createServerFn` calls. Never in a separate `api/` folder.
@@ -113,21 +171,27 @@ VITE_SUPABASE_URL=https://[project-ref].supabase.co
 VITE_SUPABASE_ANON_KEY=[anon-key]
 SUPABASE_SERVICE_ROLE_KEY=[service-role-key]   # server functions only
 
-# Google OAuth (set in Supabase dashboard, not .env)
-# Client ID and secret live in Supabase Auth settings
+# Google OAuth — credentials live in Supabase Auth dashboard, not .env
+# For server-side token refresh (Drive import, v0.5):
+# GOOGLE_CLIENT_ID=[same value as in Supabase dashboard]
+# GOOGLE_CLIENT_SECRET=[same value as in Supabase dashboard]
 
 # App
 VITE_APP_URL=http://localhost:3000             # Vercel URL in production
 ADMIN_EMAIL=[your-email]                       # admin invite page access check
+
+# v0.5 only (do not add until then):
+# ANTHROPIC_API_KEY=[api-key]
 ```
 
 ---
 
 ## Database Tables
 
+### v0.1 (all exist, RLS enabled)
 - `profiles` — extended user data, Google OAuth tokens, tone preference
 - `folders` — nested hierarchy (parent_id self-reference)
-- `pages` — BlockNote JSON content, position column, linked_page_id on calendar_blocks
+- `pages` — BlockNote JSON content, position column
 - `tasks` — bucket items with bucket_id, chrono-node parsed date/time fields
 - `calendar_blocks` — scheduled time slots, google_event_id (unique), linked_page_id
 - `buckets` — user-configurable priority buckets with color and position
@@ -135,15 +199,24 @@ ADMIN_EMAIL=[your-email]                       # admin invite page access check
 - `invites` — admin-issued invite tokens with expiry
 - `ai_usage` — reserved for v0.5, exists in schema but unused in v0.1
 
-RLS enabled on all tables. Standard policy: `auth.uid() = user_id`.
+Dropped in v0.1: `tables_schema`, `table_rows` (Migration 6).
 
-**Dropped in v0.1 migrations:** `tables_schema`, `table_rows` (Migration 6).
+### Phase 6-X (add when Phase 6-X begins)
+- `pages.icon` — text column, emoji character
+- `pages.cover_url` — text column, Supabase Storage public URL
+- Supabase Storage bucket: `page-covers` (public, 5MB limit, image/* types)
 
-**Planned in v1.0 (do not add until then):**
-- `page_tags` — join table for freeform page tags
-- `reminder_at` + `reminder_dismissed_at` columns on pages (Page Reminders)
-- `inbox_folder_id` column on profiles (Inbox Folder)
-- `drive_synced_folders` + `drive_files` tables (Google Drive import, v0.5)
+### v0.5 (do not add until v0.5 work begins)
+- `drive_synced_folders` — Google Drive folders the user has imported
+- `drive_files` — cached Drive file metadata (flat, reconstructed as tree client-side)
+- `ai_threads` — chat thread history for the AI panel
+- `tasks.icon` — emoji column for task icons
+
+### v1.0 (do not add until v1.0 work begins)
+- `page_tags` — join table: page_id + user_id + tag (freeform text)
+- `pages.reminder_at` — timestamptz for page reminders
+- `pages.reminder_dismissed_at` — timestamptz for dismissed reminders
+- `profiles.inbox_folder_id` — uuid pointing to the system Inbox folder
 
 ---
 
@@ -166,7 +239,8 @@ npm run db:types     # Regenerate src/types/database.types.ts
 
 When in doubt, look at existing working code before inventing a new pattern:
 
-- Data layer pattern: `src/queries/tasks.ts`
-- Calendar pattern: `src/components/calendar/CalendarView.tsx`
-- Layout pattern: `src/components/layout/AppLayout.tsx`
-- Auth pattern: `src/utils/auth.ts`
+- Data layer: `src/queries/tasks.ts`
+- Calendar: `src/components/calendar/CalendarView.tsx`
+- Layout: `src/components/layout/AppLayout.tsx`
+- Auth: `src/utils/auth.ts`
+- Server function: `src/server/googleCalendar.ts`

@@ -5,6 +5,9 @@ import { supabase } from "@/utils/supabase";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
+// Task status values: 'active', 'completed_today', 'archived', 'scheduled'
+// ('scheduled' = task is on calendar; becomes 'active' again if calendar block is deleted)
+
 // ─── Read ────────────────────────────────────────────────────────────────────
 
 export function useTasksByPriority(userId: string) {

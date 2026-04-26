@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, FileText } from "lucide-react";
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUIStore } from "@/stores/useUIStore";
 import { supabase } from "@/utils/supabase";
 
@@ -24,7 +25,7 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 	const { setActivePageId } = useUIStore();
 	const [showAllPages, setShowAllPages] = useState(false);
 
-	const { data: recentPages } = useQuery({
+	const { data: recentPages, isLoading: isLoadingPages } = useQuery({
 		queryKey: ["pages", "recent", userId],
 		queryFn: async () => {
 			const { data } = await supabase
@@ -42,7 +43,7 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 	const now = new Date();
 	const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
 
-	const { data: linkedBlocks } = useQuery({
+	const { data: linkedBlocks, isLoading: isLoadingBlocks } = useQuery({
 		queryKey: ["calendar_blocks", "linked", userId],
 		queryFn: async () => {
 			const { data } = await supabase
@@ -77,7 +78,16 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 			{/* Recent Pages Section */}
 			<div>
 				<h2 className="text-[16px] font-medium text-[#e8e8f0] mb-4">Recent</h2>
-				{recentPages && recentPages.length > 0 ? (
+				{isLoadingPages ? (
+					<div className="flex flex-col gap-2">
+						{Array.from({ length: 3 }).map((_) => (
+							<Skeleton
+								key={`page-skeleton-${Math.random()}`}
+								className="h-12 w-full bg-[#1e1e24]"
+							/>
+						))}
+					</div>
+				) : recentPages && recentPages.length > 0 ? (
 					<>
 						{(showAllPages ? recentPages : recentPages.slice(0, 5)).map(
 							(page) => (
@@ -118,7 +128,16 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 				<h2 className="text-[16px] font-medium text-[#e8e8f0] mb-4">
 					Upcoming
 				</h2>
-				{linkedBlocks && linkedBlocks.length > 0 ? (
+				{isLoadingBlocks ? (
+					<div className="flex flex-col gap-2">
+						{Array.from({ length: 3 }).map((_) => (
+							<Skeleton
+								key={`block-skeleton-${Math.random()}`}
+								className="h-12 w-full bg-[#1e1e24]"
+							/>
+						))}
+					</div>
+				) : linkedBlocks && linkedBlocks.length > 0 ? (
 					linkedBlocks.map((block) => (
 						<button
 							key={block.id}

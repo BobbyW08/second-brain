@@ -31,7 +31,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 						Something went wrong
 					</h2>
 					<p className="mt-2 text-muted-foreground">
-						We're sorry, but an error occurred while loading this content.
+						Something went wrong loading this section.
 					</p>
 					<button
 						type="button"

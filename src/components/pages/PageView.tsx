@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import "@blocknote/mantine/style.css";
 import type { PartialBlock } from "@blocknote/core";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAutosave } from "@/hooks/useAutosave";
 import { usePage, useUpdatePage } from "@/queries/pages";
 import type { Json } from "@/types/database.types";
@@ -15,7 +16,7 @@ export function PageView() {
 	const { pageId } = useParams({ strict: false });
 	const resolvedPageId = pageId ?? "";
 
-	const { data: page } = usePage(resolvedPageId);
+	const { data: page, isLoading } = usePage(resolvedPageId);
 	const { mutate: updatePage } = useUpdatePage();
 
 	const [title, setTitle] = useState(page?.title ?? "Untitled");
@@ -60,17 +61,21 @@ export function PageView() {
 				)}
 			</div>
 
-			{/* Inline editable title */}
-			<input
-				value={title}
-				onChange={(e) => {
-					setTitle(e.target.value);
-					saveTitle(e.target.value);
-				}}
-				className="text-[22px] font-medium bg-transparent border-none outline-none placeholder:text-muted-foreground w-full mb-4"
-				placeholder="Untitled"
-				aria-label="Page title"
-			/>
+			{/* Inline editable title or skeleton */}
+			{isLoading ? (
+				<Skeleton className="h-[32px] w-48 bg-[#1e1e24] mb-4" />
+			) : (
+				<input
+					value={title}
+					onChange={(e) => {
+						setTitle(e.target.value);
+						saveTitle(e.target.value);
+					}}
+					className="text-[22px] font-medium bg-transparent border-none outline-none placeholder:text-muted-foreground w-full mb-4"
+					placeholder="Untitled"
+					aria-label="Page title"
+				/>
+			)}
 
 			{/* BlockNote editor */}
 			<BlockNoteView

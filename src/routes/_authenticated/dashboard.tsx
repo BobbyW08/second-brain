@@ -1,6 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { CalendarView } from "../../components/calendar/CalendarView";
 import { FilesLandingPage } from "../../components/files/FilesLandingPage";
 import { FolderTree } from "../../components/folders/FolderTree";
@@ -8,7 +6,6 @@ import { PageView } from "../../components/pages/PageView";
 import { BucketPanel } from "../../components/tasks/BucketPanel";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useUIStore } from "../../stores/useUIStore";
-import { archiveCompletedTasks } from "../../utils/archiveTasks";
 import { requireAuth } from "../../utils/auth";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -18,16 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardPage() {
 	const { userId } = useCurrentUser();
-	const queryClient = useQueryClient();
 	const { leftPanelMode, activePageId } = useUIStore();
-
-	useEffect(() => {
-		if (userId) {
-			archiveCompletedTasks(userId).then(() => {
-				queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
-			});
-		}
-	}, [userId, queryClient]);
 
 	return (
 		<div className="flex h-full w-full">

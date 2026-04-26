@@ -47,7 +47,7 @@ function AdminInvitePage() {
 		} catch (error) {
 			setMessage({
 				type: "error",
-				text: error instanceof Error ? error.message : "Failed to send invite",
+				text: error instanceof Error ? error.message : "Could not send invite",
 			});
 		} finally {
 			setIsSubmitting(false);

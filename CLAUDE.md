@@ -30,6 +30,7 @@ Database:      Supabase (PostgreSQL + RLS + Google OAuth)
 UI:            shadcn/ui + Tailwind v4
 Calendar:      FullCalendar v6 (timeGrid + interaction + dayGrid plugins)
 Editor:        BlockNote + @blocknote/mantine (default schema only)
+Folder tree:   react-arborist (drag-drop, inline rename, keyboard nav)
 State client:  Zustand (UI state only)
 State server:  TanStack Query (all async/server state)
 Date parsing:  chrono-node (free-text date input in task cards)
@@ -37,7 +38,7 @@ Forms:         React Hook Form + Zod
 Toasts:        Sonner
 Linting:       Biome
 Testing:       Vitest
-Deploy:        Vercel (Nitro preset via process.env.VERCEL in vite.config.ts)
+Deploy:        Vercel Hobby (Nitro preset via process.env.VERCEL in vite.config.ts)
 
 Not in v0.1 — comes in v0.5: @blocknote/xl-ai, assistant-ui, @ai-sdk/anthropic,
 @ai-sdk/react, Vercel AI SDK, Anthropic API. Do not install or import any of these.
@@ -74,7 +75,7 @@ use direct fetch to REST endpoints with Bearer token auth only.
    from @fullcalendar/interaction is the only drag library that touches the calendar.
 
 6. Never use the googleapis npm package. Google Calendar API calls use direct fetch
-   to REST endpoints with Bearer token auth. See Phase 5-I of the build plan.
+   to REST endpoints with Bearer token auth. See src/server/googleCalendar.ts.
 
 7. After completing a session, update memory-bank/activeContext.md with the next
    ticket and update memory-bank/progress.md to check off completed items.
@@ -186,8 +187,11 @@ Right panel content: CalendarView (Priorities mode) or FilesLandingPage/PageView
 RLS enabled on all tables. Standard policy: auth.uid() = user_id.
 Dropped in v0.1 migrations: tables_schema, table_rows (Migration 6).
 
-Do not add v1.0 schema (page_tags, reminder_at, inbox_folder_id, drive tables) until
-v1.0 work begins. Full schema specs are in second-brain-build-plan-addendum.md.
+Do not add post-v0.1 schema until that version's work begins:
+- v0.5: drive_synced_folders, drive_files, ai_threads, tasks.icon column
+- v1.0: page_tags, pages.reminder_at + reminder_dismissed_at, profiles.inbox_folder_id,
+        pages.icon + pages.cover_url (Phase 6-X migration)
+Full specs are in memory-bank/second-brain-build-plan-addendum-v2.md.
 
 ---
 
@@ -242,58 +246,90 @@ Spacing scale: 4px, 8px, 12px, 16px, 24px
 ## Reference repos — MIT licensed, copy freely
 
 Pre-vetted implementations to use as structural references. Never copy styles
-verbatim — always apply Second Brain design tokens.
+verbatim — always apply Second Brain design tokens. Full per-ticket porting notes
+are in memory-bank/second-brain-build-plan-addendum-v2.md.
 
 - TaskCard (4-A / 4-B): `satnaing/shadcn-admin` → `src/features/tasks/`
+  Take the form field structure from tasks-dialogs.tsx. Do NOT copy the Sheet wrapper —
+  Second Brain uses expand-in-place, not a slide-in panel.
+
 - FullCalendar styling (5-B / 5-C): `robskinney/shadcn-ui-fullcalendar-example`
-- FilesLandingPage cover/icon (6-C, optional): `sanidhyy/notion-clone` →
-  `components/cover.tsx` + `components/icon-picker.tsx`
-- v0.5 AI routes (Apache-2.0): `osadavc/tanchat` — read before any AI route work
+  CSS variable overrides for FullCalendar with shadcn tokens.
+
+- Page headers — icon + cover (Phase 6-X): `sanidhyy/notion-clone` →
+  `components/cover.tsx` + `components/icon-picker.tsx` + `components/toolbar.tsx`
+  Replace Convex → Supabase, EdgeStore → Supabase Storage, Clerk → useCurrentUser().
+  Do NOT install emoji-picker-react — use a hardcoded emoji array instead.
+  Full porting ticket: memory-bank/ticket-jotion-page-headers.md
+
+- v0.5 AI routes (Apache-2.0): `osadavc/tanchat` — read before any AI route work.
+  Route pattern: src/routes/api/chat.ts → streamText().toUIMessageStreamResponse()
 
 ---
 
 ## What is already built and working — do not rewrite
 
+### Infrastructure
 - Auth: Google OAuth, invite gate in auth.callback.tsx, requireAuth, admin invite page
-- Database: all tables with RLS, migration files, generated types in
-  src/types/database.types.ts (regenerate after Phase 1 migrations)
+- Database: all v0.1 tables with RLS, all 6 migration files run, generated types in
+  src/types/database.types.ts
 - App shell: AppLayout, AppSidebar, TopBar, dark mode ThemeProvider, Sonner Toaster
-- Global search: ⌘K CommandDialog with navigation and link-picker modes
-- BlockNote page editor: PageView with autosave (800ms), saving indicator, inline title
-  editing. Default schema only — no custom inline content specs.
-- FolderTree: react-arborist with FolderNode renderer, inline rename on double-click
-- All TanStack Query hooks in src/queries/: correct optimistic updates and throwOnError
-  throughout. These are the foundation — do not change their patterns.
-- FullCalendar base: 3-day view, zone label structure, morning/afternoon/evening CSS,
-  now indicator, droppable and editable enabled, drag-to-reschedule, drag-to-create
-- Settings: profile and theme sections work correctly
-- Vitest tests: journalUtils.test.ts (5 passing), auth.test.ts (3 passing)
 - Utils: useAutosave, useCurrentUser, useMediaQuery, archiveTasks, queryClient
+- Vitest tests: auth.test.ts (3 passing)
+
+### Data layer (src/queries/)
+- tasks.ts — full CRUD with optimistic updates, useCompleteTask, useUndoCompleteTask
+- buckets.ts — full CRUD with optimistic updates
+- pages.ts — full CRUD, position, autosave
+- folders.ts — full CRUD, rename, move, delete (onSuccess callbacks fixed in Phase 6-B)
+- calendar.ts — calendar blocks CRUD, Google sync hooks
+
+### Components
+- Global search: ⌘K CommandDialog with navigation, link-picker mode, tasks + pages + folders
+- BlockNote page editor: PageView with 800ms autosave, saving indicator, inline title editing.
+  Default schema only — no custom inline content specs in v0.1.
+- FolderTree: react-arborist, FolderNode renderer, inline rename on double-click
+- BucketPanel: left panel in Priorities mode, configurable buckets, drag data attributes
+- TaskCard: closed state + expand-in-place open state, chrono-node date parsing, all fields
+- CompletedTodaySection: completed tasks with working undo
+- CalendarView: 3-day default, zone labels + colors, droppable + editable, drag-to-schedule,
+  drag-to-reschedule, drag-to-create, EventSidePanel wired on block click
+- EventSidePanel: slides over calendar, shows block details, delete block, link to page
+- MiniCalendarDrawer: narrow calendar drawer in Files mode
+- FilesLandingPage: recent pages + linked calendar events
+- SettingsPage: profile, theme, Google Calendar connect/disconnect/sync sections
+- AppSidebar: ⌘B collapse, Priorities/Files mode toggle
+
+### Server functions (src/server/)
+- googleCalendar.ts: full rewrite using direct fetch (no googleapis), token refresh,
+  create/update/delete/list events, inbound sync
 
 ---
 
 ## What is broken and must be fixed
 
-All previously reported issues have been resolved in phases 2–7. No critical bugs remain.
+All previously reported issues have been resolved in Phases 2–7. No critical bugs remain.
 
 ---
 
-## What does not exist yet and must be built in v0.1
+## What remains to be built in v0.1
 
-- src/components/tasks/BucketPanel.tsx — configurable buckets panel (left panel)
-- src/components/tasks/TaskCard.tsx — replaces TaskPill, expand-in-place open state
-- src/components/calendar/EventSidePanel.tsx — slides over calendar on block click
-- src/components/layout/MiniCalendarDrawer.tsx — narrow drawer in Files mode
-- src/components/files/FilesLandingPage.tsx — recent pages + linked events
-- src/queries/buckets.ts — CRUD hooks for custom buckets
-- Buckets database table and default bucket creation on signup (migration)
-- pages.position column (migration)
-- calendar_blocks.linked_page_id column (migration)
-- calendar_blocks.google_event_id unique constraint (migration)
-- Google Calendar two-way sync via direct fetch REST API calls (Phase 5-I)
-- Sidebar collapse with ⌘B shortcut (shadcn SidebarTrigger already handles this)
-- Journal folder auto-created on signup
-- chrono-node free-text date parsing in task card
+**Phase 8 — Polish and Launch (current)**
+- 8-A: Loading skeletons on all data-fetching views ← CURRENT TICKET
+- 8-B: Empty states on all views that can be empty
+- 8-C: Error boundaries on all major views
+- 8-D: Tone audit — grep for banned words across all JSX files
+- 8-E: Deploy to Vercel
+
+**Phase 6-X — Jotion-style page headers (after Phase 8)**
+- Migration: add pages.icon (text) and pages.cover_url (text) columns
+- src/server/pageHeader.ts — uploadPageCover + removePageCover server functions
+- src/components/editor/IconPicker.tsx — emoji picker popover (no emoji-picker-react)
+- src/components/editor/PageCover.tsx — cover image upload/display/remove
+- src/components/editor/PageHeader.tsx — icon + add-cover + add-icon buttons above editor
+- Wire PageHeader into PageView above the BlockNote editor
+- Show page icon in FolderTree item alongside title
+Full paste-ready Cline ticket: memory-bank/ticket-jotion-page-headers.md
 
 ---
 
@@ -322,13 +358,16 @@ Do not ask whether to restore them. They are gone for v0.1.
 | Feature | Version | Status |
 |---|---|---|
 | Auth, app shell, editor, search, buckets, calendar base | v0.1 | ✅ Phases 0–3 complete |
-| TaskCard, EventSidePanel, FilesLandingPage, Google sync, Polish | v0.1 | 🔄 Phases 4–9 in progress |
-| AI chat, AI writing, scheduling suggestions | v0.5 | Confirmed — read tanchat first |
+| TaskCard, EventSidePanel, FilesLandingPage, Google sync, Search | v0.1 | ✅ Phases 4–7 complete |
+| Polish (skeletons, empty states, errors, tone audit) + Deploy | v0.1 | 🔄 Phase 8 in progress |
+| Jotion page headers (icon + cover image on pages) | v0.1 | ⏳ Phase 6-X — after Phase 8 |
+| AI chat, writing toolbar, journal prompts, scheduling | v0.5 | Confirmed — read tanchat first |
+| MCP server for Second Brain + scheduled AI via Edge Functions | v0.5 | Confirmed — see addendum v2 |
 | Inline page linking + backlinks, task icons, mobile, recurring events | v0.5 | Confirmed |
-| Google Drive folder import | v0.5 | Confirmed — recover April 6 session code |
-| Inbox Folder, Page Tags, Web Clipper, PDF Capture, Page Reminders, Presentation Mode | v1.0 | Confirmed |
+| Google Drive folder import | v0.5 | Confirmed — use google-drive-import-recovered.md |
+| Inbox Folder, Page Tags, Web Clipper, PDF Capture, Reminders, Presentation | v1.0 | Confirmed |
 
-Full specs for v0.5 and v1.0 features are in second-brain-build-plan-addendum.md.
+Full specs for v0.5 and v1.0 are in memory-bank/second-brain-build-plan-addendum-v2.md.
 Do not begin v0.5 until v0.1 has been in daily personal use for at least 2 weeks.
 
 ---
