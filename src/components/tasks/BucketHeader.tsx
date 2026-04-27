@@ -109,15 +109,15 @@ export function BucketHeader({
 							onBlur={handleSave}
 							onKeyDown={handleKeyDown}
 							onClick={(e) => e.stopPropagation()}
-							className="flex-1 bg-transparent text-[10px] font-medium uppercase tracking-[0.06em] text-[#e8e8f0] outline-none border-b border-[#3A8FD4]"
+							className="flex-1 bg-transparent text-[10px] font-medium uppercase tracking-[0.06em] text-foreground outline-none border-b border-[#3A8FD4]"
 						/>
 					) : (
-						<span className="truncate text-[10px] font-medium uppercase tracking-[0.06em] text-[#aaaaB8] group-hover:text-[#e8e8f0]">
+						<span className="truncate text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground group-hover:text-foreground">
 							{bucket.name}
 						</span>
 					)}
 
-					<div className="flex items-center justify-center rounded-full bg-[#1e1e24] px-1.5 py-0.5 text-[11px] font-normal text-[#aaaaB8]">
+					<div className="flex items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
 						{taskCount}
 					</div>
 				</div>
@@ -127,9 +127,9 @@ export function BucketHeader({
 						<DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
 							<button
 								type="button"
-								className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#1e1e24] transition-opacity"
+								className="p-1 rounded hover:bg-accent transition-colors"
 							>
-								<MoreVertical className="h-3 w-3 text-[#666672]" />
+								<MoreVertical className="h-3 w-3 text-muted-foreground" />
 							</button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-32">
@@ -146,7 +146,7 @@ export function BucketHeader({
 					</DropdownMenu>
 
 					<ChevronDown
-						className={`h-3.5 w-3.5 text-[#666672] transition-transform duration-150 ${
+						className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${
 							isExpanded ? "" : "-rotate-90"
 						}`}
 					/>

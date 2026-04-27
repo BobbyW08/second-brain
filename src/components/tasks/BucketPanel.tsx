@@ -124,15 +124,15 @@ export function BucketPanel() {
 
 	if (loadingBuckets) {
 		return (
-			<div className="flex h-full flex-col gap-4 bg-[#141418] p-4">
+			<div className="flex h-full flex-col gap-4 bg-[hsl(var(--secondary))] p-4">
 				{Array.from({ length: 3 }).map((_) => (
 					<div
 						key={`bucket-skeleton-${Math.random()}`}
 						className="flex flex-col gap-2"
 					>
-						<Skeleton className="h-8 w-24 bg-[#1e1e24]" />
-						<Skeleton className="h-12 w-full bg-[#1e1e24]" />
-						<Skeleton className="h-12 w-full bg-[#1e1e24]" />
+						<Skeleton className="h-8 w-24 bg-accent" />
+						<Skeleton className="h-12 w-full bg-accent" />
+						<Skeleton className="h-12 w-full bg-accent" />
 					</div>
 				))}
 			</div>
@@ -140,17 +140,17 @@ export function BucketPanel() {
 	}
 
 	return (
-		<div className="flex h-full flex-col bg-[#141418]">
+		<div className="flex h-full flex-col bg-[hsl(var(--secondary))]">
 			{/* Mode Toggle */}
 			<div className="px-2 pt-2">
-				<div className="flex border-b border-[#2a2a30]">
+				<div className="flex border-b border-border">
 					<button
 						type="button"
 						onClick={() => setLeftPanelMode("priorities")}
 						className={`relative flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
 							leftPanelMode === "priorities"
-								? "text-[#e8e8f0]"
-								: "text-[#666672]"
+								? "text-foreground"
+								: "text-muted-foreground"
 						}`}
 					>
 						Priorities
@@ -162,7 +162,9 @@ export function BucketPanel() {
 						type="button"
 						onClick={() => setLeftPanelMode("files")}
 						className={`flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
-							leftPanelMode === "files" ? "text-[#e8e8f0]" : "text-[#666672]"
+							leftPanelMode === "files"
+								? "text-foreground"
+								: "text-muted-foreground"
 						}`}
 					>
 						Files
@@ -176,7 +178,7 @@ export function BucketPanel() {
 					const isExpanded = expandedBuckets.has(bucket.id);
 
 					return (
-						<div key={bucket.id} className="border-b border-[#2a2a30]/50">
+						<div key={bucket.id} className="border-b border-border/50">
 							<BucketHeader
 								bucket={bucket}
 								taskCount={bucketTasks.length}
@@ -223,7 +225,7 @@ export function BucketPanel() {
 				<button
 					type="button"
 					onClick={handleAddBucket}
-					className="w-full px-3 py-2 text-left text-[11px] text-[#666672] transition-colors hover:text-[#aaaaB8]"
+					className="w-full px-3 py-2 text-left text-[11px] text-muted-foreground transition-colors hover:text-muted-foreground"
 				>
 					+ Add bucket
 				</button>

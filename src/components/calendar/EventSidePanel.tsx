@@ -93,8 +93,8 @@ export function EventSidePanel({
 				top: 0,
 				height: "100%",
 				width: "320px",
-				background: "#1a1a20",
-				borderLeft: "1px solid #2a2a30",
+				background: "hsl(var(--card))",
+				borderLeft: "1px solid hsl(var(--border))",
 				borderRadius: "12px 0 0 12px",
 				boxShadow: "0 0 24px rgba(0,0,0,0.4)",
 				zIndex: 10,
@@ -106,10 +106,10 @@ export function EventSidePanel({
 		>
 			<div className="flex items-center justify-between">
 				<X
-					className="h-5 w-5 cursor-pointer text-[#666672] hover:text-[#e8e8f0]"
+					className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-foreground"
 					onClick={handleClose}
 				/>
-				<h2 className="text-[16px] font-medium text-[#e8e8f0]">
+				<h2 className="text-[16px] font-medium text-foreground">
 					{isTask ? "Edit task" : "Event details"}
 				</h2>
 				<div className="w-5" />
@@ -120,7 +120,7 @@ export function EventSidePanel({
 					<>
 						<TitleField task={task} userId={userId} />
 						<DescriptionField task={task} userId={userId} />
-						<div className="h-[1px] bg-[#2a2a30] my-2" />
+						<div className="h-[1px] bg-border my-2" />
 						<BucketSelector task={task} userId={userId} />
 						<ColorSwatches task={task} userId={userId} />
 						<LabelsField task={task} userId={userId} />
@@ -130,10 +130,10 @@ export function EventSidePanel({
 						<AttendeesField task={task} userId={userId} />
 						<LinksField task={task} />
 
-						<div className="mt-8 border-t border-[#2a2a30] pt-4">
+						<div className="mt-8 border-t border-border pt-4">
 							<button
 								type="button"
-								className="text-[11px] text-[#666672] hover:text-[#E05555] transition-colors"
+								className="text-[11px] text-muted-foreground hover:text-[#E05555] transition-colors"
 								onClick={handleRemove}
 							>
 								Remove from calendar
@@ -143,14 +143,14 @@ export function EventSidePanel({
 				) : (
 					// Google Calendar Read-only View
 					<div className="flex flex-col gap-4">
-						<div className="text-[16px] font-medium text-[#e8e8f0]">
+						<div className="text-[16px] font-medium text-foreground">
 							{block.title}
 						</div>
 						<div className="flex flex-col gap-1">
-							<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+							<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 								Date & time
 							</span>
-							<div className="text-[11px] font-mono text-[#e8e8f0]">
+							<div className="text-[11px] font-mono text-foreground">
 								{new Date(block.start_time).toLocaleString()} -{" "}
 								{new Date(block.end_time).toLocaleTimeString()}
 							</div>

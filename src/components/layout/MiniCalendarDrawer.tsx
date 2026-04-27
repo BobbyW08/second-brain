@@ -36,15 +36,15 @@ export function MiniCalendarDrawer() {
 			<button
 				type="button"
 				onClick={() => setMiniCalendarOpen(!miniCalendarOpen)}
-				className="fixed right-0 top-1/2 -translate-y-1/2 w-9 h-20 bg-[#141418] border-l border-[#2a2a30] rounded-l-xl cursor-pointer flex items-center justify-center z-30 transition-colors hover:bg-[#1e1e24]"
+				className="fixed right-0 top-1/2 -translate-y-1/2 w-9 h-20 bg-[hsl(var(--secondary))] border-l border-border rounded-l-xl cursor-pointer flex items-center justify-center z-30 transition-colors hover:bg-accent"
 			>
-				<CalendarIcon className="h-4 w-4 text-[#666672]" />
+				<CalendarIcon className="h-4 w-4 text-muted-foreground" />
 			</button>
 
 			{/* Drawer */}
 			<div
 				className={cn(
-					"fixed right-9 top-0 h-screen w-[280px] bg-[#141418] border-l border-[#2a2a30] z-20 flex flex-col gap-8 p-4 overflow-y-auto transform transition-transform duration-200 ease-in-out shadow-[-8px_0_24px_rgba(0,0,0,0.3)]",
+					"fixed right-9 top-0 h-screen w-[280px] bg-[hsl(var(--secondary))] border-l border-border z-20 flex flex-col gap-8 p-4 overflow-y-auto transform transition-transform duration-200 ease-in-out shadow-[-8px_0_24px_rgba(0,0,0,0.3)]",
 					miniCalendarOpen ? "translate-x-0" : "translate-x-full",
 				)}
 			>
@@ -68,7 +68,7 @@ export function MiniCalendarDrawer() {
 
 					{/* Agenda List View */}
 					<div className="flex flex-col gap-2">
-						<h3 className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672] px-1">
+						<h3 className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground px-1">
 							Upcoming
 						</h3>
 						<FullCalendar
@@ -94,7 +94,7 @@ export function MiniCalendarDrawer() {
 						padding: 2px 4px !important;
 					}
                     .fc-list-day-cushion {
-                        background: #1e1e24 !important;
+                        background: hsl(var(--accent)) !important;
                         padding: 4px 8px !important;
                     }
                     .fc-list-event {

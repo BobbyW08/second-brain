@@ -19,16 +19,9 @@ function DashboardPage() {
 	const { leftPanelMode, activePageId } = useUIStore();
 
 	return (
-		<div className="flex h-full w-full">
+		<div className="flex h-full w-full overflow-hidden">
 			{/* Left Panel */}
-			<div
-				className="w-[300px] bg-[#141418] border-r border-[#2a2a30]"
-				style={{
-					transition: "transform 250ms ease",
-					transform:
-						leftPanelMode === "files" ? "translateX(-100%)" : "translateX(0)",
-				}}
-			>
+			<div className="w-[300px] bg-[hsl(var(--secondary))] border-r border-border overflow-hidden">
 				<ErrorBoundary>
 					{leftPanelMode === "priorities" ? (
 						<BucketPanel />
@@ -39,14 +32,7 @@ function DashboardPage() {
 			</div>
 
 			{/* Right Panel */}
-			<div
-				className="flex-1 min-w-0"
-				style={{
-					transition: "transform 250ms ease",
-					transform:
-						leftPanelMode === "files" ? "translateX(0)" : "translateX(100%)",
-				}}
-			>
+			<div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
 				<ErrorBoundary>
 					{leftPanelMode === "priorities" ? (
 						<CalendarView />

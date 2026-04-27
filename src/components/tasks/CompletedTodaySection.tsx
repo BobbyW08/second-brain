@@ -21,14 +21,14 @@ export function CompletedTodaySection({ userId }: CompletedTodaySectionProps) {
 		<Collapsible
 			open={isOpen}
 			onOpenChange={setIsOpen}
-			className="mt-4 border-t border-[#2a2a30]"
+			className="mt-4 border-t border-border"
 		>
 			<CollapsibleTrigger className="group flex w-full items-center justify-between px-3 py-4 text-left">
-				<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672] transition-colors group-hover:text-[#aaaaB8]">
+				<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground transition-colors group-hover:text-muted-foreground">
 					Completed today ({tasks.length})
 				</span>
 				<ChevronDown
-					className={`h-3 w-3 text-[#666672] transition-transform duration-150 ${
+					className={`h-3 w-3 text-muted-foreground transition-transform duration-150 ${
 						isOpen ? "" : "-rotate-90"
 					}`}
 				/>
@@ -37,11 +37,11 @@ export function CompletedTodaySection({ userId }: CompletedTodaySectionProps) {
 				{tasks.map((task) => (
 					<div key={task.id} className="flex items-center gap-2 py-1">
 						<Check className="h-3 w-3 shrink-0 text-[#3A8A3A]" />
-						<span className="flex-1 text-[13px] text-[#666672] line-through">
+						<span className="flex-1 text-[13px] text-muted-foreground line-through">
 							{task.title}
 						</span>
 						{task.completed_at && (
-							<span className="shrink-0 font-mono text-[11px] text-[#666672]">
+							<span className="shrink-0 font-mono text-[11px] text-muted-foreground">
 								{new Date(task.completed_at)
 									.toLocaleTimeString("en-US", {
 										hour: "numeric",

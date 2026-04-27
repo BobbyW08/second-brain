@@ -39,7 +39,7 @@ export function AddTaskInline({ bucketId, onAdd }: AddTaskInlineProps) {
 			<button
 				type="button"
 				onClick={() => setIsAdding(true)}
-				className="flex w-full items-center px-3 py-2 text-[11px] text-[#666672] transition-colors hover:text-[#aaaaB8]"
+				className="flex w-full items-center px-3 py-2 text-[11px] text-muted-foreground transition-colors hover:text-muted-foreground"
 				data-bucket-id={bucketId}
 			>
 				+ Add task
@@ -57,7 +57,7 @@ export function AddTaskInline({ bucketId, onAdd }: AddTaskInlineProps) {
 				onBlur={handleAdd}
 				onKeyDown={handleKeyDown}
 				placeholder="Task name"
-				className="w-full rounded-[8px] border border-[#2a2a30] bg-[#1e1e24] px-[10px] py-[6px] text-[13px] text-[#e8e8f0] outline-none focus:border-[#3A8FD4]"
+				className="w-full rounded-[8px] border border-border bg-accent px-[10px] py-[6px] text-[13px] text-foreground outline-none focus:border-[#3A8FD4]"
 			/>
 		</div>
 	);

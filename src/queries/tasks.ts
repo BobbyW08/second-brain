@@ -398,3 +398,31 @@ export function useArchiveCompletedBefore(userId: string) {
 		},
 	});
 }
+
+// ─── Delete Task ────────────────────────────────────────────────────────────
+
+export function useDeleteTask(userId: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (taskId: string) => {
+			await supabase.from("tasks").delete().eq("id", taskId).throwOnError();
+		},
+		onMutate: async (taskId) => {
+			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
+			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
+			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
+				(old ?? []).filter((t) => t.id !== taskId),
+			);
+			return { previous };
+		},
+		onError: (_err, _taskId, context) => {
+			queryClient.setQueryData(["tasks", userId], context?.previous);
+		},
+		onSuccess: () => {
+			toast.success("Task deleted");
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+		},
+	});
+}

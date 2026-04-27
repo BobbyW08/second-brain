@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, Settings } from "lucide-react";
+import { FolderTree } from "@/components/folders/FolderTree";
 import { BucketPanel } from "@/components/tasks/BucketPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,11 +16,13 @@ import {
 	SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
+import { useUIStore } from "@/stores/useUIStore";
 import { supabase } from "@/utils/supabase";
 
 export function AppSidebar() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
+	const { leftPanelMode } = useUIStore();
 
 	const displayName =
 		user?.user_metadata?.display_name ?? user?.email?.split("@")[0] ?? "User";
@@ -32,9 +35,16 @@ export function AppSidebar() {
 	}
 
 	return (
-		<Sidebar collapsible="offcanvas">
+		<Sidebar
+			collapsible="offcanvas"
+			className="w-[220px] min-w-[220px] overflow-x-hidden flex-shrink-0"
+		>
 			<SidebarContent className="p-0">
-				<BucketPanel />
+				{leftPanelMode === "priorities" ? (
+					<BucketPanel />
+				) : (
+					<FolderTree userId={user?.id ?? ""} />
+				)}
 			</SidebarContent>
 
 			<SidebarFooter className="p-2">

@@ -195,7 +195,16 @@ Full specs are in memory-bank/second-brain-build-plan-addendum-v2.md.
 
 ---
 
-## Design tokens — always use these exact values
+## Design tokens — Jotion CSS variable system
+
+Second Brain uses the Jotion (notion-clone) design system with HSL-based CSS variables defined in
+`src/styles.css`. All colors are referenced via `hsl(var(--token))` CSS syntax, enabling consistent
+theming and easy future palette changes. Source: sanidhyy/notion-clone/app/globals.css (MIT).
+
+Core tokens (light and dark modes in `:root` and `.dark` blocks):
+  --background, --foreground, --card, --card-foreground, --popover, --popover-foreground,
+  --primary, --primary-foreground, --secondary, --secondary-foreground, --muted, --muted-foreground,
+  --accent, --accent-foreground, --destructive, --border, --input, --ring
 
 Fonts:
   Primary:    Inter, system-ui, sans-serif
@@ -209,34 +218,21 @@ Font sizes:
   11px  labels, metadata, timestamps
   10px  uppercase bucket headers (+ uppercase + 0.06em letter-spacing)
 
-Dark mode backgrounds:
-  App base:        #0f0f11
-  Panel:           #141418
-  Card/task:       #1a1a20
-  Hover/input:     #1e1e24
-  Selected/active: #2e2e38
-  Borders:         #2a2a30
+Domain-specific colors (remain as hex — NOT replaced with variables):
+  Priority left border colors:
+    Urgent:    #E05555
+    Important: #D4943A
+    Someday:   #3A8FD4
+    Unsorted:  #666672
 
-Dark mode text:
-  Primary:      #e8e8f0
-  Secondary:    #aaaaB8
-  Muted:        #666672
-  Hints:        #444450
+  Calendar zone backgrounds (not themeable):
+    Morning (06:00–11:59):   #1a1600
+    Afternoon (12:00–17:59): #001520
+    Evening (18:00–21:59):   #0f0820
 
-Priority left border colors:
-  Urgent:    #E05555
-  Important: #D4943A
-  Someday:   #3A8FD4
-  Unsorted:  #666672
-
-Calendar zone backgrounds:
-  Morning (06:00–11:59):   #1a1600
-  Afternoon (12:00–17:59): #001520
-  Evening (18:00–21:59):   #0f0820
-
-Calendar block left borders:
-  Second Brain task: #3A8FD4
-  Google Calendar:   #3A8A3A
+  Calendar block left borders (domain-specific):
+    Second Brain task: #3A8FD4
+    Google Calendar:   #3A8A3A
 
 Border radius: tags 4px, cards and inputs 8px, panels and chrome 12px
 Spacing scale: 4px, 8px, 12px, 16px, 24px
@@ -293,7 +289,8 @@ are in memory-bank/second-brain-build-plan-addendum-v2.md.
 - TaskCard: closed state + expand-in-place open state, chrono-node date parsing, all fields
 - CompletedTodaySection: completed tasks with working undo
 - CalendarView: 3-day default, zone labels + colors, droppable + editable, drag-to-schedule,
-  drag-to-reschedule, drag-to-create, EventSidePanel wired on block click
+  drag-to-reschedule, drag-to-create, EventSidePanel wired on block click.
+  Wrapper div fixed to `flex-1 min-h-0 h-full overflow-hidden` — calendar now renders at full height.
 - EventSidePanel: slides over calendar, shows block details, delete block, link to page
 - MiniCalendarDrawer: narrow calendar drawer in Files mode
 - FilesLandingPage: recent pages + linked calendar events
@@ -308,15 +305,36 @@ are in memory-bank/second-brain-build-plan-addendum-v2.md.
 
 ## What is broken and must be fixed
 
-All previously reported issues have been resolved in Phases 2–7. No critical bugs remain.
+### Fixed this session
+- CalendarView.tsx overflow bug ✅ — wrapper div changed from inline style to
+  `className="flex-1 min-h-0 h-full overflow-hidden"`. FullCalendar `height="100%"` prop
+  was already correct. AppLayout main panel flex layout was already correct.
+
+### Still open — Ticket B
+Files panel overlay and FolderTree not rendering. Fix prompt is Prompt 2 in
+`memory-bank/fix-prompts-v2.md`. Run it in Claude Code before the next feature session.
+
+**Ticket B symptoms:**
+- Switching to Files mode may render BucketPanel on top of FolderTree (overlay)
+- FolderTree may render empty even when folders/pages exist in Supabase
+
+**Ticket B fix:**
+```tsx
+// AppSidebar — use ternary swap, not display:none stacking
+<SidebarContent>
+  {mode === 'priorities' ? <BucketPanel /> : <FolderTree userId={user.id} />}
+</SidebarContent>
+```
+Sidebar must have: `w-[220px] min-w-[220px] overflow-x-hidden flex-shrink-0`
+Reference: `satnaing/shadcn-admin` → `src/components/layout/app-sidebar.tsx`
 
 ---
 
 ## What remains to be built in v0.1
 
 **Phase 8 — Polish and Launch (current)**
-- 8-A: Loading skeletons on all data-fetching views ← CURRENT TICKET
-- 8-B: Empty states on all views that can be empty
+- 8-A: Loading skeletons on all data-fetching views ✅ COMPLETE
+- 8-B: Empty states on all views that can be empty ← CURRENT TICKET
 - 8-C: Error boundaries on all major views
 - 8-D: Tone audit — grep for banned words across all JSX files
 - 8-E: Deploy to Vercel
@@ -359,7 +377,8 @@ Do not ask whether to restore them. They are gone for v0.1.
 |---|---|---|
 | Auth, app shell, editor, search, buckets, calendar base | v0.1 | ✅ Phases 0–3 complete |
 | TaskCard, EventSidePanel, FilesLandingPage, Google sync, Search | v0.1 | ✅ Phases 4–7 complete |
-| Polish (skeletons, empty states, errors, tone audit) + Deploy | v0.1 | 🔄 Phase 8 in progress |
+| Loading skeletons | v0.1 | ✅ Phase 8-A complete |
+| Empty states, error boundaries, tone audit, deploy | v0.1 | 🔄 Phase 8-B current |
 | Jotion page headers (icon + cover image on pages) | v0.1 | ⏳ Phase 6-X — after Phase 8 |
 | AI chat, writing toolbar, journal prompts, scheduling | v0.5 | Confirmed — read tanchat first |
 | MCP server for Second Brain + scheduled AI via Edge Functions | v0.5 | Confirmed — see addendum v2 |

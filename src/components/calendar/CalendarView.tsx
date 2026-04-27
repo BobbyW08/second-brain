@@ -32,10 +32,11 @@ export function CalendarView() {
 	const rangeEnd = new Date(today);
 	rangeEnd.setDate(today.getDate() + 14);
 
-	const { data: calendarBlocks = [] } = useCalendarBlocks({
-		start: rangeStart.toISOString(),
-		end: rangeEnd.toISOString(),
-	});
+	const { data: calendarBlocks = [], isLoading: loadingBlocks } =
+		useCalendarBlocks({
+			start: rangeStart.toISOString(),
+			end: rangeEnd.toISOString(),
+		});
 
 	const { mutateAsync: createPage } = useCreatePage();
 
@@ -176,13 +177,31 @@ export function CalendarView() {
 		}).length;
 	};
 
-	if (!calendarBlocks) {
+	if (loadingBlocks) {
 		return (
-			<div className="h-full p-4">
-				<div className="space-y-4">
-					<Skeleton className="h-8 w-32" />
-					<Skeleton className="h-64 w-full" />
+			<div className="h-full p-2 flex flex-col gap-1">
+				{/* Day header row */}
+				<div className="flex gap-1 mb-2">
+					<div className="w-12 shrink-0" />
+					{[0, 1, 2].map((i) => (
+						<Skeleton key={i} className="h-8 flex-1 bg-accent" />
+					))}
 				</div>
+				{/* Hour rows — 10 rows representing ~10 visible hours */}
+				{Array.from({ length: 10 }).map((_, rowIdx) => {
+					const hour = 6 + rowIdx;
+					return (
+						<div key={`skeleton-hour-${hour}`} className="flex gap-1">
+							<Skeleton className="h-12 w-12 shrink-0 bg-accent" />
+							{[1, 2, 3].map((colId) => (
+								<Skeleton
+									key={`skeleton-col-${colId}`}
+									className="h-12 flex-1 bg-accent opacity-40"
+								/>
+							))}
+						</div>
+					);
+				})}
 			</div>
 		);
 	}
@@ -190,7 +209,7 @@ export function CalendarView() {
 	const initialView = isMobile ? "timeGridDay" : "timeGridThreeDay";
 
 	return (
-		<div style={{ position: "relative", width: "100%", height: "100%" }}>
+		<div className="flex-1 min-h-0 h-full overflow-hidden">
 			<FullCalendar
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
 				initialView={initialView}
@@ -312,9 +331,9 @@ export function CalendarView() {
 							}}
 							style={{
 								fontSize: 10,
-								color: "#666672",
+								color: "hsl(var(--muted-foreground))",
 								background: "none",
-								border: "1px solid #2a2a30",
+								border: "1px solid hsl(var(--border))",
 								borderRadius: 4,
 								padding: "1px 5px",
 								cursor: "pointer",

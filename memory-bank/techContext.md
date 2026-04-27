@@ -12,7 +12,9 @@
 | Styling | Tailwind CSS | v4 | Utility-first, dark mode via CSS vars |
 | Calendar | FullCalendar React | v6 | timeGrid + interaction + dayGrid plugins |
 | Block editor | BlockNote + @blocknote/mantine | latest | Default schema only — no custom inline content |
-| Folder tree | react-arborist | latest | Drag-drop, inline rename, keyboard nav — MIT |
+| Folder tree | react-arborist (⚠️ react-arborist was abandoned by its maintainer June 2025 (Issue #310).
+ Functional for now. Migrate to lukasbach/headless-tree before v0.5.)
+ | latest | Drag-drop, inline rename, keyboard nav — MIT |
 | Date parsing | chrono-node | latest | Free-text date input in task cards |
 | State (client) | Zustand | latest | UI state only — panel open/closed, selected item |
 | State (server) | TanStack Query | latest | All async/server state, caching, optimistic updates |
@@ -62,12 +64,12 @@ targets it. Default to Vercel AI SDK unless TanStack AI has reached stable by th
 
 Pre-vetted implementations for specific tickets. Full per-ticket porting notes with
 exact file paths and code patterns are in memory-bank/second-brain-build-plan-addendum-v2.md.
-Never copy styles verbatim — apply Second Brain design tokens.
+Never copy styles verbatim — apply Jotion design tokens (hsl(var(--token)) syntax).
 
 | Ticket | Repo | What to use | Key note |
 |---|---|---|---|
 | 4-A / 4-B TaskCard | `satnaing/shadcn-admin` → `src/features/tasks/` | Form field structure from tasks-dialogs.tsx | Take fields, NOT the Sheet wrapper — use expand-in-place |
-| 5-B / 5-C Calendar styling | `robskinney/shadcn-ui-fullcalendar-example` | CSS variable overrides for FullCalendar + shadcn | Apply Second Brain zone colors |
+| 5-B / 5-C Calendar styling | `robskinney/shadcn-ui-fullcalendar-example` | CSS variable overrides for FullCalendar + shadcn | Apply Jotion CSS variable tokens |
 | 6-X Page headers | `sanidhyy/notion-clone` → `components/cover.tsx`, `icon-picker.tsx`, `toolbar.tsx` | Cover image + emoji icon + page toolbar | Replace Convex→Supabase, EdgeStore→Supabase Storage, no emoji-picker-react package |
 | v0.5 AI routes (Apache-2.0) | `osadavc/tanchat` | TanStack Start + Vercel AI SDK integration | ONLY known TanStack Start AI chatbot reference — read before any AI route code |
 

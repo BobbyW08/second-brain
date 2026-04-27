@@ -36,6 +36,7 @@ export function useUpdatePage() {
 		},
 		onSuccess: (_data, { pageId }) => {
 			queryClient.invalidateQueries({ queryKey: ["page", pageId] });
+			queryClient.invalidateQueries({ queryKey: ["folders-pages"] });
 		},
 	});
 }

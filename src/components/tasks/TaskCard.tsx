@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, X } from "lucide-react";
-import { useCompleteTask } from "@/queries/tasks";
+import { Check, Trash2, X } from "lucide-react";
+import { useCompleteTask, useDeleteTask } from "@/queries/tasks";
 import { useUIStore } from "@/stores/useUIStore";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
@@ -38,6 +38,7 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 	const isOpen = openTaskId === task.id;
 
 	const { mutate: completeTask } = useCompleteTask(userId);
+	const { mutate: deleteTask } = useDeleteTask(userId);
 
 	const borderColor = task.color || PRIORITY_COLORS[task.priority] || "#666672";
 
@@ -48,6 +49,11 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 		e.stopPropagation();
 		completeTask(task.id);
 		close();
+	};
+
+	const handleDelete = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		deleteTask(task.id);
 	};
 
 	const handlePaperclipClick = (e: React.MouseEvent) => {
@@ -70,7 +76,7 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 	if (isOpen) {
 		return (
 			<div
-				className="rounded-[8px] bg-[#1a1a20] border border-[#2a2a30] flex flex-col"
+				className="rounded-[8px] bg-card border border-border flex flex-col"
 				style={{ borderLeftColor: borderColor, borderLeftWidth: 2 }}
 			>
 				{/* Open header */}
@@ -78,7 +84,7 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 					<TitleField task={task} userId={userId} />
 					<button
 						type="button"
-						className="ml-2 shrink-0 text-[#666672] hover:text-[#aaaaB8] transition-colors"
+						className="ml-2 shrink-0 text-muted-foreground hover:text-muted-foreground transition-colors"
 						onClick={close}
 						aria-label="Close"
 					>
@@ -89,7 +95,7 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 				{/* Fields */}
 				<div className="flex flex-col gap-3 px-3 pb-3">
 					<DescriptionField task={task} userId={userId} />
-					<div className="h-[1px] bg-[#2a2a30]" />
+					<div className="h-[1px] bg-border" />
 					<BucketSelector task={task} userId={userId} />
 					<ColorSwatches task={task} userId={userId} />
 					<LabelsField task={task} userId={userId} />
@@ -101,10 +107,10 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 				</div>
 
 				{/* Complete button */}
-				<div className="border-t border-[#2a2a30] px-3 py-2">
+				<div className="border-t border-border px-3 py-2">
 					<button
 						type="button"
-						className="flex items-center gap-1.5 text-[11px] text-[#666672] hover:text-[#3A8A3A] transition-colors"
+						className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-[#3A8A3A] transition-colors"
 						onClick={handleComplete}
 					>
 						<Check className="h-3.5 w-3.5" />
@@ -120,7 +126,7 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 		<div
 			role="button"
 			tabIndex={0}
-			className="task-card group flex items-center gap-2 rounded-[8px] bg-[#1a1a20] px-3 py-2 hover:bg-[#1e1e24] transition-colors cursor-pointer"
+			className="task-card group flex items-center gap-2 rounded-[8px] bg-card px-3 py-2 hover:bg-accent transition-colors cursor-pointer"
 			style={{ borderLeft: `2px solid ${borderColor}` }}
 			onClick={toggle}
 			onKeyDown={(e) => e.key === "Enter" && toggle()}
@@ -130,32 +136,39 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 				task.block_size === "L" ? 60 : task.block_size === "S" ? 15 : 30
 			}
 		>
-			{/* Complete checkbox */}
-			<button
-				type="button"
-				className="shrink-0 h-4 w-4 rounded-full border border-[#444450] hover:border-[#3A8A3A] hover:bg-[#3A8A3A]/10 transition-colors flex items-center justify-center"
-				onClick={handleComplete}
-				aria-label="Complete task"
-			>
-				<Check className="h-2.5 w-2.5 text-transparent group-hover:text-[#3A8A3A]" />
-			</button>
+			{/* Colored dot */}
+			<div
+				className="shrink-0 w-2.5 h-2.5 rounded-full"
+				style={{ backgroundColor: borderColor }}
+				aria-hidden="true"
+			/>
 
 			{/* Title */}
-			<span className="flex-1 truncate text-[13px] text-[#e8e8f0]">
+			<span className="flex-1 truncate text-[13px] text-foreground">
 				{task.title}
 			</span>
 
 			{/* Date chip */}
 			{task.start_time && (
-				<span className="shrink-0 font-['JetBrains_Mono'] text-[11px] text-[#666672]">
+				<span className="shrink-0 font-['JetBrains_Mono'] text-[11px] text-muted-foreground">
 					{formatChip(task.start_time)}
 				</span>
 			)}
 
-			{/* Paperclip */}
+			{/* Delete button (hover) */}
 			<button
 				type="button"
-				className="shrink-0 text-[#444450] hover:text-[#aaaaB8] transition-colors opacity-0 group-hover:opacity-100"
+				className="shrink-0 text-muted hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+				onClick={handleDelete}
+				aria-label="Delete task"
+			>
+				<Trash2 className="h-3.5 w-3.5" />
+			</button>
+
+			{/* Paperclip (hover) */}
+			<button
+				type="button"
+				className="shrink-0 text-muted hover:text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
 				onClick={handlePaperclipClick}
 				aria-label="Link"
 			>
@@ -170,6 +183,14 @@ export function TaskCard({ task, userId }: { task: Task; userId: string }) {
 					<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
 				</svg>
 			</button>
+
+			{/* Complete checkbox (empty circle) */}
+			<button
+				type="button"
+				className="shrink-0 h-4 w-4 rounded-full border border-border hover:border-foreground transition-colors flex items-center justify-center"
+				onClick={handleComplete}
+				aria-label="Complete task"
+			/>
 		</div>
 	);
 }

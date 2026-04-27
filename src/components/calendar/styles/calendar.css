@@ -1,10 +1,10 @@
-/* Design Tokens */
+/* Design Tokens — migrated to Jotion CSS variables */
 :root {
-	--app-base: #0f0f11;
-	--border-color: #2a2a30;
-	--text-primary: #e8e8f0;
-	--text-secondary: #aaaab8;
-	--text-muted: #666672;
+	--app-base: hsl(var(--background));
+	--border-color: hsl(var(--border));
+	--text-primary: hsl(var(--foreground));
+	--text-secondary: hsl(var(--muted-foreground));
+	--text-muted: hsl(var(--muted-foreground));
 
 	--morning-bg: #1a1600;
 	--morning-label: #7a6830;
@@ -75,13 +75,13 @@
 
 /* Default event appearance */
 .fc-event {
-	background: #1a1a20;
+	background: hsl(var(--card));
 	border: none;
 	border-radius: 8px;
 }
 
 .fc-v-event {
-	background: #1a1a20;
+	background: hsl(var(--card));
 	border: none;
 }
 
@@ -119,17 +119,17 @@
 
 /* FullCalendar Header Overrides */
 .fc-button-primary {
-	background-color: #1a1a20;
+	background-color: hsl(var(--card));
 	border-color: var(--border-color);
 	color: var(--text-primary);
 	text-transform: capitalize;
 }
 
 .fc-button-primary:hover {
-	background-color: #1e1e24;
+	background-color: hsl(var(--accent));
 }
 
 .fc-button-primary:not(:disabled).fc-button-active {
-	background-color: #2e2e38;
+	background-color: hsl(var(--accent));
 	border-color: var(--border-color);
 }

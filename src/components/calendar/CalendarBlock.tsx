@@ -20,7 +20,7 @@ export function CalendarBlock({ event, timeText }: CalendarBlockProps) {
 		<div
 			style={{
 				borderLeft: `3px solid ${borderColor}`,
-				background: "#1a1a20",
+				background: "hsl(var(--card))",
 				borderRadius: "4px",
 				padding: "3px 6px",
 				height: "100%",
@@ -36,7 +36,7 @@ export function CalendarBlock({ event, timeText }: CalendarBlockProps) {
 				style={{
 					fontSize: "13px",
 					fontWeight: 400,
-					color: "#e8e8f0",
+					color: "hsl(var(--foreground))",
 					wordBreak: "break-word",
 					lineHeight: "1.2",
 				}}
@@ -48,7 +48,7 @@ export function CalendarBlock({ event, timeText }: CalendarBlockProps) {
 					style={{
 						fontSize: "11px",
 						fontFamily: "JetBrains Mono",
-						color: "#aaaaB8",
+						color: "hsl(var(--muted-foreground))",
 					}}
 				>
 					{timeText}

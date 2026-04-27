@@ -78,13 +78,13 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 		>
 			{/* Recent Pages Section */}
 			<div>
-				<h2 className="text-[16px] font-medium text-[#e8e8f0] mb-4">Recent</h2>
+				<h2 className="text-[16px] font-medium text-foreground mb-4">Recent</h2>
 				{isLoadingPages ? (
 					<div className="flex flex-col gap-2">
 						{Array.from({ length: 3 }).map((_) => (
 							<Skeleton
 								key={`page-skeleton-${Math.random()}`}
-								className="h-12 w-full bg-[#1e1e24]"
+								className="h-12 w-full bg-accent"
 							/>
 						))}
 					</div>
@@ -96,12 +96,12 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 									key={page.id}
 									type="button"
 									onClick={() => setActivePageId(page.id)}
-									className="w-full text-left bg-[#1a1a20] rounded-[8px] p-[12px] mb-[4px] cursor-pointer hover:bg-[#1e1e24] transition-colors"
+									className="w-full text-left bg-card rounded-[8px] p-[12px] mb-[4px] cursor-pointer hover:bg-accent transition-colors"
 								>
-									<div className="text-[13px] font-medium text-[#e8e8f0]">
+									<div className="text-[13px] font-medium text-foreground">
 										{page.title || "Untitled"}
 									</div>
-									<div className="text-[11px] font-['JetBrains_Mono'] text-[#666672] mt-[2px]">
+									<div className="text-[11px] font-['JetBrains_Mono'] text-muted-foreground mt-[2px]">
 										{formatRelativeTime(page.updated_at)}
 									</div>
 								</button>
@@ -111,7 +111,7 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 							<button
 								type="button"
 								onClick={() => setShowAllPages(true)}
-								className="text-[11px] text-[#666672] hover:text-[#aaaaB8] transition-colors"
+								className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
 							>
 								Show more
 							</button>
@@ -128,7 +128,7 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 
 			{/* Upcoming Events Section */}
 			<div>
-				<h2 className="text-[16px] font-medium text-[#e8e8f0] mb-4">
+				<h2 className="text-[16px] font-medium text-foreground mb-4">
 					Upcoming
 				</h2>
 				{isLoadingBlocks ? (
@@ -136,7 +136,7 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 						{Array.from({ length: 3 }).map((_) => (
 							<Skeleton
 								key={`block-skeleton-${Math.random()}`}
-								className="h-12 w-full bg-[#1e1e24]"
+								className="h-12 w-full bg-accent"
 							/>
 						))}
 					</div>
@@ -146,15 +146,15 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 							key={block.id}
 							type="button"
 							onClick={() => block.page && setActivePageId(block.page.id)}
-							className="w-full text-left flex items-center gap-2 p-[12px] rounded-[8px] bg-[#1a1a20] mb-[4px] cursor-pointer hover:bg-[#1e1e24] transition-colors"
+							className="w-full text-left flex items-center gap-2 p-[12px] rounded-[8px] bg-card mb-[4px] cursor-pointer hover:bg-accent transition-colors"
 						>
 							<div className="flex-1">
 								<div className="flex items-center gap-2">
-									<Calendar className="h-[12px] w-[12px] text-[#aaaaB8]" />
+									<Calendar className="h-[12px] w-[12px] text-muted-foreground" />
 									<span className="text-[13px]">
 										{block.task?.title || "Event"}
 									</span>
-									<span className="text-[11px] font-['JetBrains_Mono'] text-[#666672] ml-1">
+									<span className="text-[11px] font-['JetBrains_Mono'] text-muted-foreground ml-1">
 										·{" "}
 										{new Date(block.start_time).toLocaleString("en-US", {
 											month: "short",
@@ -166,8 +166,8 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 									</span>
 								</div>
 								<div className="flex items-center gap-2 mt-1">
-									<FileText className="h-[12px] w-[12px] text-[#666672]" />
-									<span className="text-[13px] text-[#e8e8f0]">
+									<FileText className="h-[12px] w-[12px] text-muted-foreground" />
+									<span className="text-[13px] text-foreground">
 										{block.page?.title || "Untitled"}
 									</span>
 								</div>

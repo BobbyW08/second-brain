@@ -70,7 +70,7 @@ export function TitleField({ task, userId }: FieldProps) {
 
 	return (
 		<input
-			className="w-full bg-transparent text-[16px] font-medium text-[#e8e8f0] focus:outline-none"
+			className="w-full bg-transparent text-[16px] font-medium text-foreground focus:outline-none"
 			value={title}
 			onChange={(e) => setTitle(e.target.value)}
 			onBlur={handleBlur}
@@ -95,7 +95,7 @@ export function DescriptionField({ task, userId }: FieldProps) {
 		<div className="flex flex-col gap-2">
 			<Textarea
 				placeholder="Add details..."
-				className="min-h-[60px] w-full resize-none rounded-lg border border-[#2a2a30] bg-[#1e1e24] p-2 text-[13px] text-[#e8e8f0] focus-visible:ring-0 placeholder:text-[#444450]"
+				className="min-h-[60px] w-full resize-none rounded-lg border border-border bg-accent p-2 text-[13px] text-foreground focus-visible:ring-0 placeholder:text-muted"
 				value={description}
 				onChange={(e) => setDescription(e.target.value)}
 				onBlur={handleBlur}
@@ -108,7 +108,7 @@ export function DescriptionField({ task, userId }: FieldProps) {
 							href={url}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="flex items-center gap-1 rounded bg-[#1e1e24] px-2 py-1 text-[11px] text-[#3A8FD4] hover:bg-[#2e2e38]"
+							className="flex items-center gap-1 rounded bg-accent px-2 py-1 text-[11px] text-[#3A8FD4] hover:bg-[hsl(var(--accent) / 80%)]"
 						>
 							<Globe className="h-3 w-3" />
 							{new URL(url).hostname}
@@ -126,7 +126,7 @@ export function BucketSelector({ task, userId }: FieldProps) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Bucket
 			</span>
 			<div className="flex flex-wrap gap-1">
@@ -143,8 +143,8 @@ export function BucketSelector({ task, userId }: FieldProps) {
 						className={cn(
 							"flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] transition-colors",
 							task.bucket_id === b.id
-								? "bg-[#2e2e38] text-white"
-								: "bg-[#1e1e24] text-[#aaaaB8] hover:bg-[#2e2e38]",
+								? "bg-[hsl(var(--accent) / 80%)] text-white"
+								: "bg-accent text-muted-foreground hover:bg-[hsl(var(--accent) / 80%)]",
 						)}
 					>
 						<div
@@ -163,7 +163,7 @@ export function ColorSwatches({ task, userId }: FieldProps) {
 	const updateTask = useUpdateTask(userId);
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Color
 			</span>
 			<div className="flex gap-2.5">
@@ -208,18 +208,18 @@ export function LabelsField({ task, userId }: FieldProps) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Labels
 			</span>
 			<div className="flex flex-wrap gap-1 items-center">
 				{(task.labels || []).map((l) => (
 					<div
 						key={l}
-						className="flex items-center gap-1 rounded bg-[#1e1e24] border border-[#2a2a30] px-1.5 py-0.5 text-[11px] text-[#e8e8f0]"
+						className="flex items-center gap-1 rounded bg-accent border border-border px-1.5 py-0.5 text-[11px] text-foreground"
 					>
 						{l}
 						<X
-							className="h-2.5 w-2.5 cursor-pointer text-[#666672] hover:text-[#aaaaB8]"
+							className="h-2.5 w-2.5 cursor-pointer text-muted-foreground hover:text-muted-foreground"
 							onClick={() =>
 								updateTask.mutate({
 									taskId: task.id,
@@ -232,7 +232,7 @@ export function LabelsField({ task, userId }: FieldProps) {
 					</div>
 				))}
 				<input
-					className="h-6 w-20 bg-transparent text-[11px] text-[#e8e8f0] focus:outline-none focus:w-32 transition-all placeholder:text-[#444450]"
+					className="h-6 w-20 bg-transparent text-[11px] text-foreground focus:outline-none focus:w-32 transition-all placeholder:text-muted"
 					placeholder="+ Label"
 					value={labelInput}
 					onChange={(e) => setLabelInput(e.target.value)}
@@ -281,7 +281,7 @@ export function DateTimeField({ task, userId }: FieldProps) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Date & time
 			</span>
 			{isEditingDate ? (
@@ -289,7 +289,7 @@ export function DateTimeField({ task, userId }: FieldProps) {
 					<Input
 						autoFocus
 						className={cn(
-							"h-8 border-[#2a2a30] bg-[#1e1e24] px-2 font-mono text-[11px] text-[#e8e8f0] focus-visible:ring-0",
+							"h-8 border-border bg-accent px-2 font-mono text-[11px] text-foreground focus-visible:ring-0",
 							dateError && "border-[rgba(224,85,85,0.6)]",
 						)}
 						placeholder="e.g. tomorrow 3pm"
@@ -299,7 +299,7 @@ export function DateTimeField({ task, userId }: FieldProps) {
 						onKeyDown={(e) => e.key === "Enter" && handleDateBlur()}
 					/>
 					{dateError && (
-						<p className="text-[11px] text-[#666672]">
+						<p className="text-[11px] text-muted-foreground">
 							Try: tomorrow 3pm or 04/18 1600
 						</p>
 					)}
@@ -308,7 +308,7 @@ export function DateTimeField({ task, userId }: FieldProps) {
 				<div className="flex items-center gap-2">
 					<button
 						type="button"
-						className="text-[11px] font-mono text-[#e8e8f0] hover:text-white"
+						className="text-[11px] font-mono text-foreground hover:text-foreground"
 						onClick={() => {
 							setDateInput(formatDateRange(task.start_time, task.end_time));
 							setIsEditingDate(true);
@@ -320,7 +320,7 @@ export function DateTimeField({ task, userId }: FieldProps) {
 					</button>
 					{task.start_time && (
 						<X
-							className="h-3 w-3 cursor-pointer text-[#666672] hover:text-[#aaaaB8]"
+							className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground"
 							onClick={() =>
 								updateTask.mutate({
 									taskId: task.id,
@@ -340,7 +340,7 @@ export function RecurringField({ task, userId }: FieldProps) {
 	if (!task.start_time) return null;
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Repeats
 			</span>
 			<Select
@@ -349,7 +349,7 @@ export function RecurringField({ task, userId }: FieldProps) {
 					updateTask.mutate({ taskId: task.id, updates: { recurring: val } })
 				}
 			>
-				<SelectTrigger className="h-8 border-[#2a2a30] bg-[#1e1e24] text-[11px] text-[#e8e8f0]">
+				<SelectTrigger className="h-8 border-border bg-accent text-[11px] text-foreground">
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>
@@ -368,11 +368,11 @@ export function LocationField({ task, userId }: FieldProps) {
 	if (!task.start_time) return null;
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Location
 			</span>
 			<Input
-				className="h-8 border-[#2a2a30] bg-[#1e1e24] px-2 text-[13px] text-[#e8e8f0] focus-visible:ring-0"
+				className="h-8 border-border bg-accent px-2 text-[13px] text-foreground focus-visible:ring-0"
 				value={task.location || ""}
 				onChange={(e) =>
 					updateTask.mutate({
@@ -409,7 +409,7 @@ export function AttendeesField({ task, userId }: FieldProps) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Attendees
 			</span>
 			<div className="flex flex-wrap gap-1 items-center">
@@ -419,11 +419,11 @@ export function AttendeesField({ task, userId }: FieldProps) {
 				).map((email) => (
 					<div
 						key={email}
-						className="flex items-center gap-1 rounded bg-[#1e1e24] border border-[#2a2a30] px-1.5 py-0.5 text-[11px] text-[#e8e8f0]"
+						className="flex items-center gap-1 rounded bg-accent border border-border px-1.5 py-0.5 text-[11px] text-foreground"
 					>
 						{email}
 						<X
-							className="h-2.5 w-2.5 cursor-pointer text-[#666672] hover:text-[#aaaaB8]"
+							className="h-2.5 w-2.5 cursor-pointer text-muted-foreground hover:text-muted-foreground"
 							onClick={() =>
 								updateTask.mutate({
 									taskId: task.id,
@@ -438,7 +438,7 @@ export function AttendeesField({ task, userId }: FieldProps) {
 					</div>
 				))}
 				<input
-					className="h-6 w-28 bg-transparent text-[11px] text-[#e8e8f0] focus:outline-none placeholder:text-[#444450]"
+					className="h-6 w-28 bg-transparent text-[11px] text-foreground focus:outline-none placeholder:text-muted"
 					placeholder="+ invite email"
 					value={attendeeInput}
 					onChange={(e) => setAttendeeInput(e.target.value)}
@@ -457,13 +457,13 @@ export function LinksField({ task }: { task: Task }) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#666672]">
+			<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 				Links
 			</span>
 			<div className="flex flex-wrap gap-2 items-center">
 				<button
 					type="button"
-					className="rounded-full bg-[#1e1e24] p-1.5 text-[#666672] hover:text-[#e8e8f0]"
+					className="rounded-full bg-accent p-1.5 text-muted-foreground hover:text-foreground"
 					onClick={() => {
 						setCommandMode("link");
 						setCommandOpen(true);
@@ -472,7 +472,7 @@ export function LinksField({ task }: { task: Task }) {
 					<Paperclip className="h-4 w-4" />
 				</button>
 				<Input
-					className="h-8 flex-1 border-[#2a2a30] bg-[#1e1e24] px-2 text-[11px] text-[#e8e8f0] focus-visible:ring-0"
+					className="h-8 flex-1 border-border bg-accent px-2 text-[11px] text-foreground focus-visible:ring-0"
 					placeholder="Paste a URL..."
 					value={linkInput}
 					onChange={(e) => setLinkInput(e.target.value)}
@@ -487,18 +487,18 @@ export function LinksField({ task }: { task: Task }) {
 				{links.map((link) => (
 					<div
 						key={link.id}
-						className="flex items-center gap-1.5 rounded-full bg-[#1e1e24] border border-[#2a2a30] px-2 py-0.5 text-[11px]"
+						className="flex items-center gap-1.5 rounded-full bg-accent border border-border px-2 py-0.5 text-[11px]"
 					>
 						{link.target_type === "page" ? (
 							<FileIcon className="h-3 w-3" />
 						) : (
 							<LinkIcon className="h-3 w-3" />
 						)}
-						<span className="text-[#e8e8f0]">
+						<span className="text-foreground">
 							{link.target_type === "page" ? "Page" : "Link"}
 						</span>
 						<X
-							className="h-3 w-3 cursor-pointer text-[#666672] hover:text-[#aaaaB8]"
+							className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground"
 							onClick={() =>
 								deleteLink.mutate({
 									linkId: link.id,

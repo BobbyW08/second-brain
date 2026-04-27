@@ -2,30 +2,35 @@
 
 ## Current Ticket
 
-**Phase 8-A — Loading skeletons on all data-fetching views**
+**Phase 8-B — Empty states on all views that can be empty**
 
-*Phases 0–7 complete. Build, check, and typecheck all pass clean.*
+*Phases 0–7 and 8-A complete. Build, check, and typecheck all pass clean.*
 
-Add loading skeleton states to all views that fetch data:
-1. BucketPanel / task lists while loading
-2. FolderTree while loading
-3. CalendarView while events load
-4. FilesLandingPage while pages/events load
-5. PageView while page content loads
+Add empty state UI (via EmptyState component) to all views that can render with no data:
+1. BucketPanel when no buckets exist
+2. FolderTree when no folders/pages exist
+3. FilesLandingPage when no recent pages or upcoming events
+4. CalendarView when no events in the date range (rare but possible)
 
-Use the shadcn Skeleton component (`npx shadcn@latest add skeleton` if not already
-installed — flag if install is needed). Match the shape of the real content in each
-view. No spinner language in skeleton states.
+Match existing EmptyState usage. Use consistent icons and messaging.
 
+
+IMPORTANT: Do not use Second Brain hex tokens anywhere. Use Jotion CSS variables.
+ See second-brain-master-reference.md for the full decision log.
+ 
 ---
+## Remaining Issues
+- ~~Ticket A (calendar overflow)~~ ✓ Fixed April 27 — CalendarView.tsx wrapper now uses flex-1 min-h-0 h-full overflow-hidden
+- Ticket B (Files panel overlay + FolderTree) — still open. Fix prompt is Prompt 2 in fix-prompts-v2.md. Depends on nothing — can be run next.
 
-## Resolved Issues
+## Issues
 
-All previously tracked broken items have been resolved:
 - FullCalendar droppable/editable ✓ (Phase 5-A)
 - Complete task undo button ✓ (Phase 4-C)
 - src/server/googleCalendar.ts googleapis ✓ (Phase 5-I)
-- TaskCard drag-to-calendar integration ✓ (Phase 4 audit)
+- Calendar layout overflow ✓ (fix-prompts-v2 Prompt 1) — CalendarView.tsx wrapper div changed from inline style={{ position: "relative", width: "100%", height: "100%" }} to className="flex-1 min-h-0 h-full overflow-hidden". FullCalendar height="100%" prop was already correct. Build + Biome pass.
+- TaskCard drag-to-calendar integration - Can now be confirmed visually (calendar renders). Verify drag works end-to-end next session.
+
 - useUndoCompleteTask Completed Today cache ✓ (Phase 4 audit)
 - useUIStore openLinkPicker garbage data ✓ (Phase 4 audit)
 - Calendar block drag-reschedule event type ✓ (Phase 5 audit)
@@ -37,8 +42,8 @@ All previously tracked broken items have been resolved:
 
 ## Remaining v0.1 Tickets (in order)
 
-1. **Phase 8-A — Loading skeletons** ← CURRENT
-2. **Phase 8-B — Empty states on all views that can be empty**
+1. **Phase 8-A — Loading skeletons** ✅ COMPLETE
+2. **Phase 8-B — Empty states on all views that can be empty** ← CURRENT
 3. **Phase 8-C — Error boundaries on all major views**
 4. **Phase 8-D — Tone audit** (grep for: overdue, late, missed, behind, failed,
    incomplete, "you should", "you need to" across all JSX files)

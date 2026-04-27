@@ -36,7 +36,7 @@ export function AppLayout() {
 			<SidebarInset className="flex flex-col relative overflow-hidden">
 				<TopBar />
 				<div className="flex flex-1 min-h-0 overflow-hidden">
-					<main className="flex-1 min-w-0 p-4 overflow-y-auto">
+					<main className="flex-1 min-w-0 flex flex-col overflow-hidden">
 						<ErrorBoundary>
 							<Outlet />
 						</ErrorBoundary>
