@@ -74,10 +74,9 @@
 ## Phase 8 — Polish and Launch 🔄
 
 - [x] 8-A: Loading skeletons on all data-fetching views
-- [ ] 8-B: Empty states on all views that can be empty ← CURRENT
-- [ ] 8-C: Error boundaries on all major views
-- [ ] 8-D: Tone audit — search for banned words across all JSX files
-- [ ] 8-E: Deploy to Vercel
+- [x] 8-B: Empty states on all views that can be empty
+- [x] 8-C: Error boundaries on all major views
+- [ ] 8-E: Deploy to Vercel ← CURRENT
 
 ## Phase 6-X — Jotion-Style Page Headers ⏳ (after Phase 8)
 

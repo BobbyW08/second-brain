@@ -43,12 +43,10 @@ IMPORTANT: Do not use Second Brain hex tokens anywhere. Use Jotion CSS variables
 ## Remaining v0.1 Tickets (in order)
 
 1. **Phase 8-A — Loading skeletons** ✅ COMPLETE
-2. **Phase 8-B — Empty states on all views that can be empty** ← CURRENT
-3. **Phase 8-C — Error boundaries on all major views**
-4. **Phase 8-D — Tone audit** (grep for: overdue, late, missed, behind, failed,
-   incomplete, "you should", "you need to" across all JSX files)
-5. **Phase 8-E — Deploy to Vercel**
-6. **Phase 6-X — Jotion-style page headers** (icon + cover image on pages)
+2. **Phase 8-B — Empty states on all views that can be empty** ✅ COMPLETE
+3. **Phase 8-C — Error boundaries on all major views** ✅ COMPLETE
+4. **Phase 8-E — Deploy to Vercel** ← CURRENT
+5. **Phase 6-X — Jotion-style page headers** (icon + cover image on pages)
    This runs after Phase 8 is complete. Paste-ready Cline ticket is in
    memory-bank/ticket-jotion-page-headers.md. Requires a new migration before
    any code is written.
