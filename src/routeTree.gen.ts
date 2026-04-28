@@ -17,7 +17,6 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -59,11 +58,6 @@ const AdminInviteRoute = AdminInviteRouteImport.update({
   path: '/admin/invite',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -77,7 +71,6 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -88,7 +81,6 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -101,7 +93,6 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -114,7 +105,6 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/dashboard'
-    | '/settings'
     | '/admin/invite'
     | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -125,7 +115,6 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/dashboard'
-    | '/settings'
     | '/admin/invite'
     | '/auth/callback'
   id:
@@ -137,7 +126,6 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/_authenticated/dashboard'
-    | '/_authenticated/settings'
     | '/admin/invite'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
@@ -211,13 +199,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -230,12 +211,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

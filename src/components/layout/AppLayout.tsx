@@ -3,7 +3,9 @@ import { useEffect } from "react";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import { FilesLandingPage } from "@/components/files/FilesLandingPage";
 import { PageView } from "@/components/pages/PageView";
+import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
 import { useUIStore } from "@/stores/useUIStore";
 import { archiveCompletedTasks } from "@/utils/archiveTasks";
@@ -15,7 +17,8 @@ export function AppLayout() {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
 	const userId = user?.id ?? "";
-	const { leftPanelMode, activePageId } = useUIStore();
+	const { leftPanelMode, activePageId, settingsOpen, setSettingsOpen } =
+		useUIStore();
 
 	// Archive tasks completed before today — runs once per authenticated session
 	useEffect(() => {
@@ -51,6 +54,11 @@ export function AppLayout() {
 				</div>
 			</main>
 			<MiniCalendarDrawer />
+			<Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+				<SheetContent side="right" className="w-[500px] overflow-y-auto">
+					<SettingsPage />
+				</SheetContent>
+			</Sheet>
 		</div>
 	);
 }

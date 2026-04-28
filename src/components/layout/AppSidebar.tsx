@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useEffect } from "react";
 import { FolderTree } from "@/components/folders/FolderTree";
 import { BucketPanel } from "@/components/tasks/BucketPanel";
@@ -117,15 +116,6 @@ export function AppSidebar() {
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent side="top" align="start" className="w-48">
-						<DropdownMenuItem asChild>
-							<Link
-								to="/settings"
-								className="flex items-center gap-2 cursor-pointer"
-							>
-								<Settings className="h-4 w-4" />
-								Settings
-							</Link>
-						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							onClick={handleSignOut}

@@ -22,6 +22,9 @@ interface UIState {
 	miniCalendarOpen: boolean;
 	setMiniCalendarOpen: (open: boolean) => void;
 
+	settingsOpen: boolean;
+	setSettingsOpen: (open: boolean) => void;
+
 	commandMode: "navigation" | "link";
 	setCommandMode: (mode: "navigation" | "link") => void;
 
@@ -62,6 +65,9 @@ export const useUIStore = create<UIState>((set) => ({
 
 	miniCalendarOpen: false,
 	setMiniCalendarOpen: (open) => set({ miniCalendarOpen: open }),
+
+	settingsOpen: false,
+	setSettingsOpen: (open) => set({ settingsOpen: open }),
 
 	scrollToTaskId: null,
 	setScrollToTaskId: (id) => set({ scrollToTaskId: id }),
