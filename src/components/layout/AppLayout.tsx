@@ -32,13 +32,13 @@ export function AppLayout() {
 	}, [userId, queryClient]);
 
 	return (
-		<div className="flex h-screen w-screen overflow-hidden bg-[hsl(var(--background))]">
+		<div className="flex h-screen w-full overflow-hidden bg-[hsl(var(--background))]">
 			<AppSidebar />
 			{/* min-w-0 prevents FullCalendar from blowing out the flex layout */}
-			<main className="flex-1 min-w-100 overflow-hidden flex flex-col">
+			<main className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
 				<TopBar />
 				{/* min-h-0 is required inside a flex column to allow children to scroll */}
-				<div className="flex-1 min-h-100 overflow-hidden">
+				<div className="flex-1 min-h-0 overflow-hidden">
 					<ErrorBoundary>
 						{leftPanelMode === "priorities" ? (
 							<CalendarView />
