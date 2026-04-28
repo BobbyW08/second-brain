@@ -18,13 +18,16 @@ with zero imports after the rewrite:
 
 Verified: npm run build, check, typecheck all pass. No banned words. File count 88 → 83.
 
-**Next Task:**
-Phase 8-E: Deploy to Vercel (time to ship v0.1 MVP)
- 
+**Next Task (in order):**
+1. **Phase 8-E: Deploy to Vercel** — ship v0.1 MVP
+2. **Phase 6-X: Jotion page headers** — add pages.icon + pages.cover_url columns, emoji picker, cover upload
+   (Paste-ready ticket in memory-bank/ticket-jotion-page-headers.md)
+3. **v0.5 Planning** — begin only after v0.1 has been in daily use 2+ weeks
+
 ---
-## Remaining Issues
-- ~~Ticket A (calendar overflow)~~ ✓ Fixed April 27 — CalendarView.tsx wrapper now uses flex-1 min-h-0 h-full overflow-hidden
-- Ticket B (Files panel overlay + FolderTree) — still open. Fix prompt is Prompt 2 in fix-prompts-v2.md. Depends on nothing — can be run next.
+## Issue Resolution
+- ~~Ticket A (calendar overflow)~~ ✓ Fixed — CalendarView.tsx flex constraints
+- ~~Ticket B (Files panel overlay)~~ ✓ Fixed by Sessions 1-4 Jotion rewrites (ternary swap pattern)
 
 ## Issues
 
