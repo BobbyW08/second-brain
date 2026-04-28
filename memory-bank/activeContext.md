@@ -2,23 +2,24 @@
 
 ## Current Ticket
 
-**Session 2: Fix Ticket B — Files panel overlay + FolderTree rendering**
+**Phase 8-E: Deploy to Vercel** ← READY
 
-*All Phase 8 items (8-A, 8-B, 8-C) are complete. Build, check, and typecheck all pass clean.*
+*All Phase 8 items complete (8-A, 8-B, 8-C, 8-D). Sessions 1-4 Jotion rewrites complete.
+Session 5 dead file cleanup complete. Build, check, and typecheck all pass clean.*
 
-**Previous Session Summary:**
-Fixed critical PageView routing bug (id=eq.:1 errors) by:
-- Removed useParams() from PageView.tsx, now takes pageId prop from parent
-- Updated CommandDialog to set activePageId in UIStore instead of navigating to deleted route
-- Fixed dashboard.tsx to pass activePageId prop to PageView
-- Verified all builds pass (build, check, typecheck)
+**Session 5 Summary (Dead File Cleanup):**
+Sessions 1-4 replaced major components with Jotion architecture. Cleaned up 5 orphaned files
+with zero imports after the rewrite:
+- src/components/layout/NotFound.tsx (unused 404 component)
+- src/components/shared/LoadingScreen.tsx (replaced by Skeletons)
+- src/components/ui/drawer.tsx (not used in Jotion)
+- src/components/ui/scroll-area.tsx (not used in Jotion)
+- src/hooks/useMediaQuery.ts (not used in Jotion components)
 
-**Current Task:**
-Fix Ticket B as described in fix-prompts-v2.md Prompt 2. Symptoms:
-- Switching to Files mode may render BucketPanel on top of FolderTree (overlay)
-- FolderTree may render empty even when folders/pages exist in Supabase
+Verified: npm run build, check, typecheck all pass. No banned words. File count 88 → 83.
 
-Focus: Use ternary swap pattern (not display:none stacking) in AppSidebar content area.
+**Next Task:**
+Phase 8-E: Deploy to Vercel (time to ship v0.1 MVP)
  
 ---
 ## Remaining Issues

@@ -79,17 +79,26 @@
 - [x] 8-D: Tone audit — no banned words found
 - [ ] 8-E: Deploy to Vercel ← NEXT
 
-## Fix Session: PageView Routing Bug ✅ (April 27, 2026)
+## Session 1–4: Jotion Component Rewrites ✅
 
-Fixed critical issue where Supabase queries received literal `:1` param instead of UUID.
-Root cause: PageView extracted pageId from URL params even though it's rendered in /dashboard
-route with no pageId param.
+Sessions 1–4 replaced major components with Jotion-based architecture (satnaing/notion-clone):
+- AppLayout: replaced SidebarProvider with plain flexbox layout
+- AppSidebar: replaced shadcn Sidebar with plain aside element
+- TopBar, CalendarView, PageView, FolderTree, FilesLandingPage, CommandDialog all updated
+- Full routing system cleanup, UIStore enhancements
+All Phase 8 items (8-A, 8-B, 8-C, 8-D) verified complete.
 
-Solution:
-- Removed useParams() from PageView.tsx, added pageId prop from parent
-- Updated CommandDialog to set activePageId in UIStore instead of navigating to deleted route
-- Fixed dashboard.tsx to pass activePageId prop to PageView
-- Verified all builds pass: npm run build, npm run check, npm run typecheck
+## Session 5: Dead File Cleanup ✅ (April 27, 2026)
+
+Removed 5 orphaned files with zero imports after Jotion rewrites:
+- src/components/layout/NotFound.tsx
+- src/components/shared/LoadingScreen.tsx
+- src/components/ui/drawer.tsx
+- src/components/ui/scroll-area.tsx
+- src/hooks/useMediaQuery.ts
+
+Verified: npm run build, check, typecheck all pass. File count 88 → 83.
+No stray hex tokens, no deleted file imports, no banned words.
 
 ## Phase 6-X — Jotion-Style Page Headers ⏳ (after Phase 8)
 
