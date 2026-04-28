@@ -3,17 +3,15 @@
 ---
 
 ## Phase 0 — Project Cleanup ✅
-
 - [x] 0-A: Fix Nitro version (^3.0.0)
 - [x] 0-B: Remove AI/googleapis packages, add chrono-node
 - [x] 0-C: Delete files that don't belong in v0.1
 - [x] 0-D: Gut references to deleted packages in existing files
-- [x] 0-E: Fix priority naming in src/lib/taskConstants.ts (urgent/important/someday/unsorted)
-- [x] 0-F: Verify clean build (npm run build + npm run check pass)
+- [x] 0-E: Fix priority naming in src/lib/taskConstants.ts
+- [x] 0-F: Verify clean build
 - [x] 0-G: Commit and push cleanup
 
 ## Phase 1 — Database Migrations ✅
-
 - [x] Migration 1: Create buckets table + update handle_new_user trigger
 - [x] Migration 2: Add new columns to tasks table
 - [x] Migration 3: Add position column to pages
@@ -23,8 +21,7 @@
 - [x] Regenerate src/types/database.types.ts
 
 ## Phase 2 — Route and Layout Restructure ✅
-
-- [x] 2-A: Fix root redirect (check session before redirecting)
+- [x] 2-A: Fix root redirect
 - [x] 2-B: Remove journal routes and components
 - [x] 2-C: Remove tables routes and components
 - [x] 2-D: Remove standalone tasks route
@@ -32,139 +29,91 @@
 - [x] 2-F: Confirm routeTree.gen.ts regenerates cleanly
 
 ## Phase 3 — Custom Buckets ✅
-
-- [x] 3-A: src/queries/buckets.ts — CRUD hooks with optimistic updates
-- [x] 3-B: src/components/tasks/BucketPanel.tsx — full left panel in Priorities mode
+- [x] 3-A: src/queries/buckets.ts
+- [x] 3-B: src/components/tasks/BucketPanel.tsx
 - [x] 3-C: Sidebar collapse with ⌘B shortcut
 - [x] 3-D: Bucket settings section in SettingsPage
 
 ## Phase 4 — Task Card Redesign ✅
-
-- [x] 4-A: src/components/tasks/TaskCard.tsx — closed state with data attributes
+- [x] 4-A: TaskCard closed state with data attributes
 - [x] 4-B: TaskCard open state — all fields, chrono-node date parsing
-- [x] 4-C: Completed Today section + fix undo button onClick
+- [x] 4-C: Completed Today section + undo button
 
 ## Phase 5 — Calendar and Google Sync ✅
-
-- [x] 5-A: Fix FullCalendar missing droppable and editable props
-- [x] 5-B: Clean up Morning/Afternoon/Evening zones with design tokens
-- [x] 5-C: Calendar block appearance (source colors, wrapping titles)
-- [x] 5-D: Journal link on day column headers
-- [x] 5-E: src/components/calendar/EventSidePanel.tsx
-- [x] 5-F: Create blocks by clicking and dragging on calendar
-- [x] 5-G: Delete calendar block from EventSidePanel
-- [x] 5-H: src/components/layout/MiniCalendarDrawer.tsx (Files mode)
-- [x] 5-I: Rewrite src/server/googleCalendar.ts using direct fetch (no googleapis)
-- [x] 5-J: Restore Google Calendar section in SettingsPage
+- [x] 5-A through 5-J: all complete — see previous progress entries
 
 ## Phase 6 — Files and Editor ✅
-
-- [x] 6-A: Left panel toggle behavior (Priorities ↔ Files)
-- [x] 6-B: Fix FolderTree mutation onSuccess callbacks (pass userId, invalidate queries)
-- [x] 6-C: src/components/files/FilesLandingPage.tsx
-- [x] 6-D: Confirm PageView works correctly after Phase 0 cleanup
-- [x] 6-E: Confirm Journal folder auto-creation on signup (handle_new_user trigger)
+- [x] 6-A through 6-E: all complete
 
 ## Phase 7 — Global Search ✅
-
-- [x] 7-A: Remove table rows from search, add tasks to search results
-- [x] 7-B: Confirm ⌘K shortcut still works after cleanup
-- [x] 7-C: Confirm link-picker mode works end to end
+- [x] 7-A through 7-C: all complete
 
 ## Phase 8 — Polish and Launch ✅
-
-- [x] 8-A: Loading skeletons on all data-fetching views
-- [x] 8-B: Empty states on all views that can be empty
-- [x] 8-C: Error boundaries on all major views
+- [x] 8-A: Loading skeletons
+- [x] 8-B: Empty states
+- [x] 8-C: Error boundaries
 - [x] 8-D: Tone audit — no banned words found
-- [x] 8-E: ~~Deploy to Vercel~~ — superseded by Sessions 1-4 full Jotion rewrite
+- [x] 8-E: Deploy to Vercel ✅ — commit c897259, April 28 2026
 
-## Session 1–4: Jotion Component Rewrites ✅
+## Sessions 1–4: Jotion Component Rewrites ✅
+- AppLayout, AppSidebar, TopBar, CalendarView, PageView, FolderTree,
+  FilesLandingPage, CommandDialog — all rebuilt with Jotion architecture
+- Plain flexbox layout replaces SidebarProvider
+- Page headers (icon + cover) included natively — Phase 6-X superseded
 
-Sessions 1–4 replaced major components with Jotion-based architecture (satnaing/notion-clone):
-- AppLayout: replaced SidebarProvider with plain flexbox layout
-- AppSidebar: replaced shadcn Sidebar with plain aside element
-- TopBar, CalendarView, PageView, FolderTree, FilesLandingPage, CommandDialog all updated
-- Full routing system cleanup, UIStore enhancements
-All Phase 8 items (8-A, 8-B, 8-C, 8-D) verified complete.
+## Session 5: Dead File Cleanup ✅ (April 27 2026)
+- Removed 5 orphaned files. File count 88 → 83.
 
-## Session 5: Dead File Cleanup ✅ (April 27, 2026)
+## TICKET-CAL-CSS ✅ (April 28 2026)
+- calendar.css: full robskinney --fc-* variable wiring + dark mode scoping
 
-Removed 5 orphaned files with zero imports after Jotion rewrites:
-- src/components/layout/NotFound.tsx
-- src/components/shared/LoadingScreen.tsx
-- src/components/ui/drawer.tsx
-- src/components/ui/scroll-area.tsx
-- src/hooks/useMediaQuery.ts
+## TICKET-TOKENS ✅ (April 28 2026)
+- globals.css: Jotion token gap-fill — sidebar + chart tokens added
 
-Verified: npm run build, check, typecheck all pass. File count 88 → 83.
-No stray hex tokens, no deleted file imports, no banned words.
-
-## TICKET-CAL-CSS: FullCalendar CSS Refactoring ✅ (April 28, 2026)
-
-Rewrote src/components/calendar/styles/calendar.css using robskinney pattern:
-- All FullCalendar --fc-* variables mapped to shadcn tokens at :root level
-- Dark mode scoping under .dark (tokens auto-resolve to dark values)
-- Business rules preserved: zone backgrounds, zone labels, event pill styling
-- npm run build, check, typecheck all pass
-- Grid lines, today highlight, event pills, button states all use design tokens
-
-## TICKET-TOKENS: Design Token Completeness Audit ✅ (April 28, 2026)
-
-Audited src/styles.css against Jotion reference globals.css:
-- Added missing sidebar tokens: --sidebar, --sidebar-foreground, --sidebar-primary,
-  --sidebar-primary-foreground, --sidebar-accent, --sidebar-accent-foreground,
-  --sidebar-border, --sidebar-ring (light + dark modes)
-- Added missing chart tokens: --chart-1 through --chart-5 (light + dark modes)
-- Values match shadcn/ui defaults from Jotion architecture
-- All tokens referenced in @theme inline block now defined in :root and .dark
-- npm run build, check, typecheck all pass
-
-## Phase 6-X — Jotion-Style Page Headers ~~⏳~~ ✅ (superseded)
-
-Jotion page header features included natively in Sessions 1–4 full shell replacement.
-Original phase ticket (memory-bank/ticket-jotion-page-headers.md) no longer needed.
+## TICKET-DEAD-CODE ✅ (April 28 2026)
+- No dead imports, no banned words, no AI packages, no googleapis
+- v0.1 deployed: commit c897259 → Vercel auto-deploy triggered
 
 ---
 
-## v0.5 Features (confirmed — do not start until v0.1 in daily use 2+ weeks)
+## v0.5 Features
 
-- [ ] Supabase MCP server — expose tasks, pages, calendar to Claude.ai
-- [ ] Scheduled AI via pg_cron + Edge Functions (daily brief, weekly review)
-- [ ] Event-triggered AI via database webhooks (task complete, calendar debrief)
-- [ ] AI chat panel — tanchat pattern, Vercel AI SDK, assistant-ui, right side panel
-- [ ] AI writing toolbar — floating, useCompletion(), text selection trigger
-- [ ] AI journal prompts — generateText() on empty entry, dismissable card
-- [ ] Scheduling suggestions — manual "Suggest my day" button, drag-to-accept
-- [ ] Inline page linking + backlinks — /link slash command, [[PageTitle]] chip
-- [ ] Task icons — emoji picker in TaskCard open state, icon column on tasks table
-- [ ] Mobile layout — bottom nav drawer, single-day calendar, swipe-up bucket
-- [ ] Recurring event editing — "This / Following / All" dialog, RRULE
-- [ ] Attendee response tracking — accept/decline display in EventSidePanel
-- [ ] Google Drive folder import — use google-drive-import-recovered.md
+- [ ] v0.5-0 — Folder tree migration (react-arborist → aldhyx/station-a-notion-clone) ← CURRENT
+- [ ] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration)
+- [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence)
+- [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
+- [ ] v0.5-4 — AI journal prompts (generateText on empty journal entry)
+- [ ] v0.5-5 — Scheduling suggestions ("Suggest my day" manual trigger)
+- [ ] v0.5-6 — Supabase MCP server setup
+- [ ] v0.5-7 — Universal Capture System (⌘J modal + AI pipeline + _system folder)
+- [ ] v0.5-8 — Contacts & Interactions (People CRM + Google Contacts sync)
+- [ ] v0.5-9 — Universal backlink graph + inline page linking (/link slash command)
+- [ ] v0.5-10 — Capture Review Queue + Action Approval UI
+- [ ] v0.5-11 — Calendar Drafts from Capture Text
+- [ ] v0.5-12 — SMS / Outreach Draft Actions from Capture
+- [ ] v0.5-13 — Temporary External Capture Bridge (optional)
+- [ ] v0.5-14 — Google Drive folder import
+- [ ] v0.5-15 — Mobile layout (bottom nav, single-day calendar, swipe-up bucket)
 
-## v1.0 Features (confirmed — do not start until v0.5 in daily use)
+## v1.0 Features
 
-- [ ] Inbox Folder — system folder, default capture destination
-- [ ] Page Tags — page_tags join table, tag browser in sidebar, ⌘K # prefix search
-- [ ] Web Clipper Browser Extension — Chrome MV3, save to Inbox, article + full page + selection
-- [ ] PDF and Article Capture + AI Summarize — /pdf and /article slash commands,
-      Supabase Storage, Summarize button → Claude → new block below
-- [ ] Page Reminders — reminder_at column, in-app Sonner toast notification
-- [ ] Presentation Mode — H1 headings as slides, fullscreen, arrow key navigation
+- [ ] v1.0-1 — Web Clipper Chrome Extension (theluckystrike MV3 scaffold + obsidian-clipper extraction)
+- [ ] v1.0-2 — Presentation Mode (reveal.js)
+- [ ] v1.0-3 — Page Tags (page_tags join table + ⌘K # prefix)
+- [ ] v1.0-4 — PDF & Article Capture (/pdf and /article slash commands)
+- [ ] v1.0-5 — Page Reminders (reminder_at + Sonner toast)
 
 ---
 
 ## What Is Already Built and Working
 
-Documented in full in CLAUDE.md under "What is already built and working."
-
-Key items: Auth (Google OAuth + invite gate), all v0.1 database tables with RLS,
-app shell (AppLayout + AppSidebar + TopBar + dark mode), global search (⌘K CommandDialog
-with tasks + pages + folders + link-picker mode), BlockNote PageView with 800ms autosave,
-FolderTree with react-arborist, all TanStack Query hooks in src/queries/, BucketPanel
-with configurable buckets, TaskCard (closed + open state + chrono-node), CompletedTodaySection
-with undo, FullCalendar (3-day view, zone colors, droppable, editable, drag-to-schedule,
+Auth (Google OAuth + invite gate), all v0.1 database tables with RLS,
+app shell (AppLayout + AppSidebar + TopBar + dark mode — plain flexbox, Jotion architecture),
+global search (⌘K CommandDialog — tasks + pages + folders + link-picker mode),
+BlockNote PageView with 800ms autosave, FolderTree (react-arborist — migration pending v0.5-0),
+all TanStack Query hooks in src/queries/, BucketPanel with configurable buckets,
+TaskCard (closed + open state + chrono-node), CompletedTodaySection with undo,
+FullCalendar (3-day view, zone colors, droppable, editable, drag-to-schedule,
 drag-to-reschedule), EventSidePanel, MiniCalendarDrawer, FilesLandingPage,
 googleCalendar.ts (direct fetch rewrite), SettingsPage (profile + theme + Google Calendar),
-Vitest tests (8 passing).
+calendar.css (robskinney pattern), globals.css (full Jotion token set), Vitest (8 passing).

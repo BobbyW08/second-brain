@@ -209,7 +209,7 @@ export function CalendarView() {
 	const initialView = isMobile ? "timeGridDay" : "timeGridThreeDay";
 
 	return (
-		<div className="flex-1 min-h-0 h-full overflow-hidden">
+		<div className="flex-1 min-h-0 h-full overflow-hidden bg-background">
 			<FullCalendar
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
 				initialView={initialView}

@@ -30,7 +30,8 @@
       "Bash(cat)",
       "Bash(bash /tmp/color_mappings.sh)",
       "Bash(git push *)",
-      "Bash(pkill -f \"npm run dev\")"
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(git -C C:/dev/second_brain status --short)"
     ]
   }
 }
