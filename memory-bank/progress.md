@@ -77,7 +77,7 @@
 - [x] 8-B: Empty states on all views that can be empty
 - [x] 8-C: Error boundaries on all major views
 - [x] 8-D: Tone audit — no banned words found
-- [ ] 8-E: Deploy to Vercel ← NEXT
+- [x] 8-E: ~~Deploy to Vercel~~ — superseded by Sessions 1-4 full Jotion rewrite
 
 ## Session 1–4: Jotion Component Rewrites ✅
 
@@ -100,20 +100,10 @@ Removed 5 orphaned files with zero imports after Jotion rewrites:
 Verified: npm run build, check, typecheck all pass. File count 88 → 83.
 No stray hex tokens, no deleted file imports, no banned words.
 
-## Phase 6-X — Jotion-Style Page Headers ⏳ (after Phase 8)
+## Phase 6-X — Jotion-Style Page Headers ~~⏳~~ ✅ (superseded)
 
-New phase added April 25, 2026. Adds Notion-style cover images and emoji icons
-to pages, ported from sanidhyy/notion-clone (MIT). Full ticket in
-memory-bank/ticket-jotion-page-headers.md.
-
-- [ ] 6-X-migration: Add pages.icon (text) and pages.cover_url (text) columns +
-      create page-covers Supabase Storage bucket
-- [ ] 6-X-A: src/server/pageHeader.ts — uploadPageCover + removePageCover
-- [ ] 6-X-B: src/components/editor/IconPicker.tsx — emoji picker (hardcoded array)
-- [ ] 6-X-C: src/components/editor/PageCover.tsx — cover upload/display/remove
-- [ ] 6-X-D: src/components/editor/PageHeader.tsx — toolbar above editor
-- [ ] 6-X-E: Wire PageHeader into PageView
-- [ ] 6-X-F: Show page icon in FolderTree item
+Jotion page header features included natively in Sessions 1–4 full shell replacement.
+Original phase ticket (memory-bank/ticket-jotion-page-headers.md) no longer needed.
 
 ---
 

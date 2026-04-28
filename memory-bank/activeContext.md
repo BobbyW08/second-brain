@@ -18,11 +18,14 @@ with zero imports after the rewrite:
 
 Verified: npm run build, check, typecheck all pass. No banned words. File count 88 → 83.
 
-**Next Task (in order):**
-1. **Phase 8-E: Deploy to Vercel** — ship v0.1 MVP
-2. **Phase 6-X: Jotion page headers** — add pages.icon + pages.cover_url columns, emoji picker, cover upload
-   (Paste-ready ticket in memory-bank/ticket-jotion-page-headers.md)
-3. **v0.5 Planning** — begin only after v0.1 has been in daily use 2+ weeks
+**v0.1 Status: COMPLETE ✅**
+
+Full Jotion shell replacement in Sessions 1–4 includes page headers natively.
+Phase 8-E (Vercel deploy) and Phase 6-X (page headers) are superseded by the full rewrite.
+
+**Next: v0.5 Planning**
+Begin only after v0.1 has been in daily personal use for 2+ weeks.
+See memory-bank/second-brain-build-plan-addendum-v2.md for v0.5 feature specs.
 
 ---
 ## Issue Resolution
