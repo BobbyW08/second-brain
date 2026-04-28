@@ -71,12 +71,25 @@
 - [x] 7-B: Confirm ⌘K shortcut still works after cleanup
 - [x] 7-C: Confirm link-picker mode works end to end
 
-## Phase 8 — Polish and Launch 🔄
+## Phase 8 — Polish and Launch ✅
 
 - [x] 8-A: Loading skeletons on all data-fetching views
 - [x] 8-B: Empty states on all views that can be empty
 - [x] 8-C: Error boundaries on all major views
-- [ ] 8-E: Deploy to Vercel ← CURRENT
+- [x] 8-D: Tone audit — no banned words found
+- [ ] 8-E: Deploy to Vercel ← NEXT
+
+## Fix Session: PageView Routing Bug ✅ (April 27, 2026)
+
+Fixed critical issue where Supabase queries received literal `:1` param instead of UUID.
+Root cause: PageView extracted pageId from URL params even though it's rendered in /dashboard
+route with no pageId param.
+
+Solution:
+- Removed useParams() from PageView.tsx, added pageId prop from parent
+- Updated CommandDialog to set activePageId in UIStore instead of navigating to deleted route
+- Fixed dashboard.tsx to pass activePageId prop to PageView
+- Verified all builds pass: npm run build, npm run check, npm run typecheck
 
 ## Phase 6-X — Jotion-Style Page Headers ⏳ (after Phase 8)
 

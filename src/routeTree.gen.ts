@@ -19,8 +19,6 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
-import { Route as AuthenticatedPagesPageIdRouteImport } from './routes/_authenticated/pages/$pageId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -71,17 +69,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedPagesIndexRoute = AuthenticatedPagesIndexRouteImport.update({
-  id: '/pages/',
-  path: '/pages/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedPagesPageIdRoute =
-  AuthenticatedPagesPageIdRouteImport.update({
-    id: '/pages/$pageId',
-    path: '/pages/$pageId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -93,8 +80,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/pages/': typeof AuthenticatedPagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -106,8 +91,6 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/pages': typeof AuthenticatedPagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,8 +104,6 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/admin/invite': typeof AdminInviteRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/_authenticated/pages/$pageId': typeof AuthenticatedPagesPageIdRoute
-  '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,8 +117,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/pages/$pageId'
-    | '/pages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -149,8 +128,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/pages/$pageId'
-    | '/pages'
   id:
     | '__root__'
     | '/'
@@ -163,8 +140,6 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/admin/invite'
     | '/auth/callback'
-    | '/_authenticated/pages/$pageId'
-    | '/_authenticated/pages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -250,35 +225,17 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/pages/': {
-      id: '/_authenticated/pages/'
-      path: '/pages'
-      fullPath: '/pages/'
-      preLoaderRoute: typeof AuthenticatedPagesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/pages/$pageId': {
-      id: '/_authenticated/pages/$pageId'
-      path: '/pages/$pageId'
-      fullPath: '/pages/$pageId'
-      preLoaderRoute: typeof AuthenticatedPagesPageIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedPagesPageIdRoute: typeof AuthenticatedPagesPageIdRoute
-  AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedPagesPageIdRoute: AuthenticatedPagesPageIdRoute,
-  AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

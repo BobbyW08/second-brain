@@ -170,7 +170,10 @@ export function CommandDialogComponent({
 		performSearch();
 	}, [searchTerm, user, searchPages, searchTasks, searchFolders]);
 
-	const resolveLinkPicker = useUIStore((state) => state.resolveLinkPicker);
+	const { resolveLinkPicker, setActivePageId } = useUIStore((state) => ({
+		resolveLinkPicker: state.resolveLinkPicker,
+		setActivePageId: state.setActivePageId,
+	}));
 
 	const handleSelect = (result: SearchResult) => {
 		if (mode === "link") {
@@ -178,11 +181,16 @@ export function CommandDialogComponent({
 		} else {
 			switch (result.type) {
 				case "page":
-					router.navigate({ to: `/pages/${result.id}` });
+					setActivePageId(result.id);
+					router.navigate({ to: "/dashboard" });
 					break;
 				case "task":
 					// Navigate to dashboard where tasks live
-					router.navigate({ to: `/dashboard` });
+					router.navigate({ to: "/dashboard" });
+					break;
+				case "folder":
+					// Navigate to dashboard (folder selection is handled by FolderTree navigation)
+					router.navigate({ to: "/dashboard" });
 					break;
 			}
 		}

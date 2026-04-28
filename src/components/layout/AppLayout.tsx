@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { CalendarView } from "@/components/calendar/CalendarView";
+import { FilesLandingPage } from "@/components/files/FilesLandingPage";
+import { PageView } from "@/components/pages/PageView";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useUIStore } from "@/stores/useUIStore";
 import { archiveCompletedTasks } from "@/utils/archiveTasks";
@@ -13,8 +14,8 @@ import { TopBar } from "./TopBar";
 export function AppLayout() {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
-	const userId = user?.id;
-	const { leftPanelMode } = useUIStore();
+	const userId = user?.id ?? "";
+	const { leftPanelMode, activePageId } = useUIStore();
 
 	// Archive tasks completed before today — runs once per authenticated session
 	useEffect(() => {
@@ -31,19 +32,25 @@ export function AppLayout() {
 	}, [userId, queryClient]);
 
 	return (
-		<SidebarProvider>
+		<div className="flex h-screen w-screen overflow-hidden bg-[hsl(var(--background))]">
 			<AppSidebar />
-			<SidebarInset className="flex flex-col relative overflow-hidden">
+			{/* min-w-0 prevents FullCalendar from blowing out the flex layout */}
+			<main className="flex-1 min-w-0 overflow-hidden flex flex-col">
 				<TopBar />
-				<div className="flex flex-1 min-h-0 overflow-hidden">
-					<main className="flex-1 min-w-0 flex flex-col overflow-hidden">
-						<ErrorBoundary>
-							<Outlet />
-						</ErrorBoundary>
-					</main>
-					{leftPanelMode === "files" && <MiniCalendarDrawer />}
+				{/* min-h-0 is required inside a flex column to allow children to scroll */}
+				<div className="flex-1 min-h-0 overflow-hidden">
+					<ErrorBoundary>
+						{leftPanelMode === "priorities" ? (
+							<CalendarView />
+						) : activePageId ? (
+							<PageView pageId={activePageId} />
+						) : (
+							<FilesLandingPage userId={userId} />
+						)}
+					</ErrorBoundary>
 				</div>
-			</SidebarInset>
-		</SidebarProvider>
+			</main>
+			<MiniCalendarDrawer />
+		</div>
 	);
 }

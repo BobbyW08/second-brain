@@ -28,7 +28,8 @@
       "Bash(curl:*)",
       "Bash(git clone *)",
       "Bash(cat)",
-      "Bash(bash /tmp/color_mappings.sh)"
+      "Bash(bash /tmp/color_mappings.sh)",
+      "Bash(git push *)"
     ]
   }
 }

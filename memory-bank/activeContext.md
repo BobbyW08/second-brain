@@ -2,21 +2,23 @@
 
 ## Current Ticket
 
-**Phase 8-B — Empty states on all views that can be empty**
+**Session 2: Fix Ticket B — Files panel overlay + FolderTree rendering**
 
-*Phases 0–7 and 8-A complete. Build, check, and typecheck all pass clean.*
+*All Phase 8 items (8-A, 8-B, 8-C) are complete. Build, check, and typecheck all pass clean.*
 
-Add empty state UI (via EmptyState component) to all views that can render with no data:
-1. BucketPanel when no buckets exist
-2. FolderTree when no folders/pages exist
-3. FilesLandingPage when no recent pages or upcoming events
-4. CalendarView when no events in the date range (rare but possible)
+**Previous Session Summary:**
+Fixed critical PageView routing bug (id=eq.:1 errors) by:
+- Removed useParams() from PageView.tsx, now takes pageId prop from parent
+- Updated CommandDialog to set activePageId in UIStore instead of navigating to deleted route
+- Fixed dashboard.tsx to pass activePageId prop to PageView
+- Verified all builds pass (build, check, typecheck)
 
-Match existing EmptyState usage. Use consistent icons and messaging.
+**Current Task:**
+Fix Ticket B as described in fix-prompts-v2.md Prompt 2. Symptoms:
+- Switching to Files mode may render BucketPanel on top of FolderTree (overlay)
+- FolderTree may render empty even when folders/pages exist in Supabase
 
-
-IMPORTANT: Do not use Second Brain hex tokens anywhere. Use Jotion CSS variables.
- See second-brain-master-reference.md for the full decision log.
+Focus: Use ternary swap pattern (not display:none stacking) in AppSidebar content area.
  
 ---
 ## Remaining Issues

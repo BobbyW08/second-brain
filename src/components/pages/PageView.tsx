@@ -1,6 +1,5 @@
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
-import { useParams } from "@tanstack/react-router";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import "@blocknote/mantine/style.css";
@@ -11,10 +10,9 @@ import { useAutosave } from "@/hooks/useAutosave";
 import { usePage, useUpdatePage } from "@/queries/pages";
 import type { Json } from "@/types/database.types";
 
-export function PageView() {
+export function PageView({ pageId }: { pageId: string }) {
 	const { theme } = useTheme();
-	const { pageId } = useParams({ strict: false });
-	const resolvedPageId = pageId ?? "";
+	const resolvedPageId = pageId;
 
 	const { data: page, isLoading } = usePage(resolvedPageId);
 	const { mutate: updatePage } = useUpdatePage();

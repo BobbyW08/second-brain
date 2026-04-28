@@ -1,12 +1,13 @@
-import { Moon, Search, Sun } from "lucide-react";
+import { Menu, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { CommandDialogComponent } from "@/components/search/CommandDialog";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useUIStore } from "@/stores/useUIStore";
 
 export function TopBar() {
 	const { theme, setTheme } = useTheme();
+	const { sidebarCollapsed, setSidebarCollapsed } = useUIStore();
 	const [searchOpen, setSearchOpen] = useState(false);
 
 	function toggleTheme() {
@@ -15,7 +16,14 @@ export function TopBar() {
 
 	return (
 		<header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
-			<SidebarTrigger className="-ml-1" />
+			<Button
+				variant="ghost"
+				size="icon"
+				onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+				aria-label="Toggle sidebar"
+			>
+				<Menu className="h-4 w-4" />
+			</Button>
 			<div className="flex-1" />
 			<Button
 				variant="ghost"

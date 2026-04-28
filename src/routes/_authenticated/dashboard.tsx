@@ -37,7 +37,7 @@ function DashboardPage() {
 					{leftPanelMode === "priorities" ? (
 						<CalendarView />
 					) : activePageId ? (
-						<PageView />
+						<PageView pageId={activePageId} />
 					) : (
 						<FilesLandingPage userId={userId} />
 					)}

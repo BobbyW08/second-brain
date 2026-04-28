@@ -10,6 +10,9 @@ interface UIState {
 	leftPanelMode: "priorities" | "files";
 	setLeftPanelMode: (mode: "priorities" | "files") => void;
 
+	sidebarCollapsed: boolean;
+	setSidebarCollapsed: (collapsed: boolean) => void;
+
 	openTaskId: string | null;
 	setOpenTaskId: (id: string | null) => void;
 
@@ -47,6 +50,9 @@ export const useUIStore = create<UIState>((set) => ({
 
 	leftPanelMode: "priorities",
 	setLeftPanelMode: (mode) => set({ leftPanelMode: mode }),
+
+	sidebarCollapsed: false,
+	setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 
 	openTaskId: null,
 	setOpenTaskId: (id) => set({ openTaskId: id }),
