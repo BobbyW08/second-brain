@@ -133,7 +133,7 @@ export function EventSidePanel({
 						<div className="mt-8 border-t border-border pt-4">
 							<button
 								type="button"
-								className="text-[11px] text-muted-foreground hover:text-[#E05555] transition-colors"
+								className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
 								onClick={handleRemove}
 							>
 								Remove from calendar
@@ -156,8 +156,8 @@ export function EventSidePanel({
 							</div>
 						</div>
 						<div className="flex items-center gap-2 py-1">
-							<div className="h-2 w-2 rounded-full bg-[#3A8A3A]" />
-							<span className="text-[11px] text-[#3A8A3A]">
+							<div className="h-2 w-2 rounded-full bg-[var(--color-google-event)]" />
+							<span className="text-[11px] text-[var(--color-google-event)]">
 								Google Calendar event
 							</span>
 						</div>

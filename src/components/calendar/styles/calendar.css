@@ -20,28 +20,29 @@
 	--fc-button-active-bg-color: hsl(var(--accent));
 	--fc-button-active-border-color: hsl(var(--border));
 	--fc-list-event-hover-bg-color: hsl(var(--muted));
-	--fc-now-indicator-color: #e05555;
+	--fc-now-indicator-color: hsl(var(--destructive));
+
+	/* Event border colors */
+	--color-task-event: #3a8fd4;
+	--color-google-event: #3a8a3a;
+
+	/* Zone colors — light mode */
+	--morning-bg: #f5f1e8;
+	--morning-label: #92703d;
+	--afternoon-bg: #e8f2fb;
+	--afternoon-label: #2c5a8f;
+	--evening-bg: #f1e8fb;
+	--evening-label: #6b3a8f;
 }
 
 .dark {
-	/* Same overrides — tokens auto-resolve to dark values */
-	--fc-page-bg-color: hsl(var(--background));
-	--fc-border-color: hsl(var(--border));
-	--fc-neutral-bg-color: hsl(var(--muted));
-	--fc-neutral-text-color: hsl(var(--muted-foreground));
-	--fc-highlight-color: hsl(var(--accent));
-	--fc-today-bg-color: hsl(var(--accent));
-	--fc-event-bg-color: hsl(var(--card));
-	--fc-event-border-color: hsl(var(--border));
-	--fc-event-text-color: hsl(var(--card-foreground));
-	--fc-button-bg-color: hsl(var(--card));
-	--fc-button-border-color: hsl(var(--border));
-	--fc-button-text-color: hsl(var(--foreground));
-	--fc-button-hover-bg-color: hsl(var(--accent));
-	--fc-button-active-bg-color: hsl(var(--accent));
-	--fc-button-active-border-color: hsl(var(--border));
-	--fc-list-event-hover-bg-color: hsl(var(--muted));
-	--fc-now-indicator-color: #e05555;
+	/* Zone colors — dark mode */
+	--morning-bg: #1a1600;
+	--morning-label: #7a6830;
+	--afternoon-bg: #001520;
+	--afternoon-label: #2e5a7a;
+	--evening-bg: #0f0820;
+	--evening-label: #5a3a7a;
 }
 
 /* ============================================================
@@ -54,13 +55,6 @@
 	--app-base: hsl(var(--background));
 	--text-primary: hsl(var(--foreground));
 	--text-secondary: hsl(var(--muted-foreground));
-
-	--morning-bg: #1a1600;
-	--morning-label: #7a6830;
-	--afternoon-bg: #001520;
-	--afternoon-label: #2e5a7a;
-	--evening-bg: #0f0820;
-	--evening-label: #5a3a7a;
 }
 
 /* Zone background tints */
