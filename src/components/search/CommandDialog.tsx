@@ -170,10 +170,8 @@ export function CommandDialogComponent({
 		performSearch();
 	}, [searchTerm, user, searchPages, searchTasks, searchFolders]);
 
-	const { resolveLinkPicker, setActivePageId } = useUIStore((state) => ({
-		resolveLinkPicker: state.resolveLinkPicker,
-		setActivePageId: state.setActivePageId,
-	}));
+	const resolveLinkPicker = useUIStore((state) => state.resolveLinkPicker);
+	const setActivePageId = useUIStore((state) => state.setActivePageId);
 
 	const handleSelect = (result: SearchResult) => {
 		if (mode === "link") {
