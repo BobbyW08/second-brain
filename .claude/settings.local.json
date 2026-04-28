@@ -29,7 +29,8 @@
       "Bash(git clone *)",
       "Bash(cat)",
       "Bash(bash /tmp/color_mappings.sh)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(pkill -f \"npm run dev\")"
     ]
   }
 }

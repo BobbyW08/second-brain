@@ -100,6 +100,26 @@ Removed 5 orphaned files with zero imports after Jotion rewrites:
 Verified: npm run build, check, typecheck all pass. File count 88 → 83.
 No stray hex tokens, no deleted file imports, no banned words.
 
+## TICKET-CAL-CSS: FullCalendar CSS Refactoring ✅ (April 28, 2026)
+
+Rewrote src/components/calendar/styles/calendar.css using robskinney pattern:
+- All FullCalendar --fc-* variables mapped to shadcn tokens at :root level
+- Dark mode scoping under .dark (tokens auto-resolve to dark values)
+- Business rules preserved: zone backgrounds, zone labels, event pill styling
+- npm run build, check, typecheck all pass
+- Grid lines, today highlight, event pills, button states all use design tokens
+
+## TICKET-TOKENS: Design Token Completeness Audit ✅ (April 28, 2026)
+
+Audited src/styles.css against Jotion reference globals.css:
+- Added missing sidebar tokens: --sidebar, --sidebar-foreground, --sidebar-primary,
+  --sidebar-primary-foreground, --sidebar-accent, --sidebar-accent-foreground,
+  --sidebar-border, --sidebar-ring (light + dark modes)
+- Added missing chart tokens: --chart-1 through --chart-5 (light + dark modes)
+- Values match shadcn/ui defaults from Jotion architecture
+- All tokens referenced in @theme inline block now defined in :root and .dark
+- npm run build, check, typecheck all pass
+
 ## Phase 6-X — Jotion-Style Page Headers ~~⏳~~ ✅ (superseded)
 
 Jotion page header features included natively in Sessions 1–4 full shell replacement.

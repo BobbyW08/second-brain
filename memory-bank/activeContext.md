@@ -5,7 +5,8 @@
 **Phase 8-E: Deploy to Vercel** ← READY
 
 *All Phase 8 items complete (8-A, 8-B, 8-C, 8-D). Sessions 1-4 Jotion rewrites complete.
-Session 5 dead file cleanup complete. Build, check, and typecheck all pass clean.*
+Session 5 dead file cleanup complete. CSS refactoring (TICKET-CAL-CSS) and token audit
+(TICKET-TOKENS) complete. Build, check, and typecheck all pass clean.*
 
 **Session 5 Summary (Dead File Cleanup):**
 Sessions 1-4 replaced major components with Jotion architecture. Cleaned up 5 orphaned files
