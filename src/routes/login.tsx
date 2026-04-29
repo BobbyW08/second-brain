@@ -35,7 +35,7 @@ export const Route = createFileRoute("/login")({
 		const session = await getSessionReady();
 
 		if (session) {
-			throw redirect({ to: "/dashboard" });
+			throw redirect({ to: "/" });
 		}
 	},
 	component: LoginPage,
@@ -50,7 +50,7 @@ function LoginPage() {
 	useEffect(() => {
 		getSessionReady().then((session) => {
 			if (session) {
-				navigate({ to: "/dashboard" });
+				navigate({ to: "/" });
 			}
 		});
 	}, [navigate]);
@@ -95,7 +95,7 @@ function LoginPage() {
 			return;
 		}
 
-		navigate({ to: "/dashboard" });
+		navigate({ to: "/" });
 	}
 
 	return (

@@ -72,7 +72,7 @@ function ResetPasswordPage() {
 		}
 
 		setSuccess(true);
-		setTimeout(() => navigate({ to: "/dashboard" }), 2000);
+		setTimeout(() => navigate({ to: "/" }), 2000);
 	}
 
 	if (!hasSession) {

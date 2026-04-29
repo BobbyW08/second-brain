@@ -1,4 +1,3 @@
-import { useRouter } from "@tanstack/react-router";
 import { FileText, Folder, ListTodo } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -50,7 +49,6 @@ export function CommandDialogComponent({
 	const [searchTerm, setSearchTerm] = useState("");
 	const [results, setResults] = useState<SearchResult[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const router = useRouter();
 	const { user } = useAuth();
 
 	// Handle keyboard shortcuts
@@ -180,15 +178,10 @@ export function CommandDialogComponent({
 			switch (result.type) {
 				case "page":
 					setActivePageId(result.id);
-					router.navigate({ to: "/dashboard" });
 					break;
 				case "task":
-					// Navigate to dashboard where tasks live
-					router.navigate({ to: "/dashboard" });
 					break;
 				case "folder":
-					// Navigate to dashboard (folder selection is handled by FolderTree navigation)
-					router.navigate({ to: "/dashboard" });
 					break;
 			}
 		}

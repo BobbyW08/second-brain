@@ -205,43 +205,6 @@ export function useDeleteBlock() {
 	});
 }
 
-// ─── Undo Delete ───────────────────────────────────────────────────────────────
-
-export function useUndoDeleteCalendarBlock() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: async (blockData: CalendarBlock) => {
-			// Re-insert the deleted block with its original data
-			const { data } = await supabase
-				.from("calendar_blocks")
-				.insert(blockData)
-				.select()
-				.throwOnError();
-
-			return data[0];
-		},
-		onMutate: async (blockData) => {
-			const previous = queryClient.getQueryData<CalendarBlock[]>([
-				"calendar-blocks",
-			]);
-			// Optimistically add the block back to the cache
-			queryClient.setQueryData<CalendarBlock[]>(["calendar-blocks"], (old) => [
-				...(old ?? []),
-				blockData,
-			]);
-			return { previous };
-		},
-		onError: (_err, _blockData, context) => {
-			// Revert optimistic update on error
-			queryClient.setQueryData(["calendar-blocks"], context?.previous);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
-		},
-	});
-}
-
 // ─── Sync Google Events ────────────────────────────────────────────────────────
 
 export function useSyncGoogleEvents() {
