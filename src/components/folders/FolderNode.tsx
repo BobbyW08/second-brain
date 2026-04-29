@@ -1,5 +1,5 @@
 import { ChevronRight, FileText, Folder, MoreHorizontal } from "lucide-react";
-import type { NodeRendererProps } from "react-arborist";
+import { useEffect, useRef } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -8,89 +8,143 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { TreeNode } from "@/queries/folders";
 
+interface FolderNodeProps {
+	node: TreeNode;
+	expanded: boolean;
+	onToggleExpand: (id: string) => void;
+	editing: boolean;
+	onStartEdit: () => void;
+	onRename: (node: TreeNode, newName: string) => void;
+	onDelete: (node: TreeNode) => void;
+	onSelect: (node: TreeNode) => void;
+	depth: number;
+	allNodes: TreeNode[];
+}
+
 export function FolderNode({
 	node,
-	style,
-	dragHandle,
-}: NodeRendererProps<TreeNode>) {
-	const isFolder = node.data.type === "folder";
+	expanded,
+	onToggleExpand,
+	editing,
+	onStartEdit,
+	onRename,
+	onDelete,
+	onSelect,
+	depth,
+	allNodes,
+}: FolderNodeProps) {
+	const isFolder = node.type === "folder";
+	const children = allNodes.filter((n) => n.parent_id === node.id);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (editing && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [editing]);
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			onRename(node, e.currentTarget.value);
+		}
+		if (e.key === "Escape") {
+			onRename(node, node.name);
+		}
+	};
 
 	return (
-		<div
-			style={style}
-			ref={dragHandle}
-			className={`flex items-center gap-1 px-2 py-1 rounded group ${node.isSelected ? "bg-accent" : ""}`}
-		>
-			{/* Clickable area: chevron + icon + title */}
-			<button
-				type="button"
-				className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer hover:bg-accent rounded"
-				onClick={() => (node.isInternal ? node.toggle() : node.select())}
+		<>
+			<div
+				className="flex items-center gap-1 px-2 py-1 rounded group hover:bg-muted"
+				style={{ paddingLeft: `${depth * 16 + 8}px` }}
 			>
-				{/* Chevron for folders */}
-				{isFolder && (
-					<ChevronRight
-						className={`h-3 w-3 text-muted-foreground transition-transform flex-shrink-0 ${node.isOpen ? "rotate-90" : ""}`}
-					/>
-				)}
-
-				{!isFolder && <span className="w-3 flex-shrink-0" />}
-
-				{/* Icon */}
-				{isFolder ? (
-					<Folder className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+				{/* Chevron for folders with children */}
+				{isFolder && children.length > 0 ? (
+					<button
+						type="button"
+						onClick={() => onToggleExpand(node.id)}
+						className="p-0.5 flex items-center justify-center flex-shrink-0"
+						aria-label={expanded ? "Collapse" : "Expand"}
+					>
+						<ChevronRight
+							className={`h-3 w-3 text-muted-foreground transition-transform ${expanded ? "rotate-90" : ""}`}
+						/>
+					</button>
 				) : (
-					<FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+					<span className="w-4 flex-shrink-0" />
 				)}
 
-				{/* Title — editable on double-click via arborist's built-in edit mode */}
-				<span className="flex-1 text-sm truncate text-left">
-					{node.isEditing ? (
+				{/* Icon + Title */}
+				<button
+					type="button"
+					onClick={() => onSelect(node)}
+					className="flex items-center gap-1 flex-1 min-w-0 text-left"
+				>
+					{isFolder ? (
+						<Folder className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+					) : (
+						<FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+					)}
+
+					{editing ? (
 						<input
-							defaultValue={node.data.name}
-							onBlur={(e) => node.submit(e.currentTarget.value)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") node.submit(e.currentTarget.value);
-								if (e.key === "Escape") node.reset();
-							}}
-							className="bg-transparent outline-none border-b border-primary w-full"
+							ref={inputRef}
+							type="text"
+							defaultValue={node.name}
+							onChange={() => {}} // Controlled by onBlur
+							onBlur={(e) => onRename(node, e.currentTarget.value)}
+							onKeyDown={handleKeyDown}
+							className="bg-transparent outline-none border-b border-primary w-full text-sm"
 						/>
 					) : (
-						node.data.name
+						<span className="text-sm truncate flex-1">{node.name}</span>
 					)}
-				</span>
-			</button>
+				</button>
 
-			{/* Context menu — only visible on hover */}
-			<DropdownMenu>
-				<DropdownMenuTrigger
-					onClick={(e) => e.stopPropagation()}
-					className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted"
-					aria-label="Options"
-				>
-					<MoreHorizontal className="h-3 w-3" />
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem onClick={() => node.edit()}>
-						Rename
-					</DropdownMenuItem>
-					{isFolder && (
-						<DropdownMenuItem
-							onClick={() => {
-								/* handled by create button */
-							}}
-						>
-							Add page
-						</DropdownMenuItem>
-					)}
-					<DropdownMenuItem
-						onClick={() => node.tree.delete(node.id)}
-						className="text-destructive"
+				{/* Context menu */}
+				<DropdownMenu>
+					<DropdownMenuTrigger
+						onClick={(e) => e.stopPropagation()}
+						className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-opacity flex-shrink-0"
+						aria-label="Options"
 					>
-						Delete
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</div>
+						<MoreHorizontal className="h-3 w-3" />
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" className="w-48">
+						<DropdownMenuItem onClick={() => onStartEdit()}>
+							Rename
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => onDelete(node)}
+							className="text-destructive"
+						>
+							Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
+
+			{/* Children */}
+			{isFolder && expanded && children.length > 0 && (
+				<div>
+					{children.map((child) => (
+						<FolderNode
+							key={child.id}
+							node={child}
+							expanded={expanded}
+							onToggleExpand={onToggleExpand}
+							editing={false}
+							onStartEdit={() => {}}
+							onRename={onRename}
+							onDelete={onDelete}
+							onSelect={onSelect}
+							depth={depth + 1}
+							allNodes={allNodes}
+						/>
+					))}
+				</div>
+			)}
+		</>
 	);
 }

@@ -1,11 +1,11 @@
 import { FileText, Plus } from "lucide-react";
-import { Tree } from "react-arborist";
+import { useState } from "react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+	type TreeNode,
 	useDeleteNode,
 	useFoldersAndPages,
-	useMoveNode,
 	useRenameNode,
 } from "@/queries/folders";
 import { useCreatePage } from "@/queries/pages";
@@ -15,11 +15,42 @@ import { FolderNode } from "./FolderNode";
 export function FolderTree({ userId }: { userId: string }) {
 	const { data: tree, isLoading } = useFoldersAndPages(userId);
 	const { setActivePageId } = useUIStore();
+	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+	const [editingId, setEditingId] = useState<string | null>(null);
 
 	const { mutate: createPage } = useCreatePage();
 	const { mutate: renameNode } = useRenameNode();
-	const { mutate: moveNode } = useMoveNode();
 	const { mutate: deleteNode } = useDeleteNode();
+
+	const toggleExpanded = (id: string) => {
+		const newSet = new Set(expandedIds);
+		if (newSet.has(id)) {
+			newSet.delete(id);
+		} else {
+			newSet.add(id);
+		}
+		setExpandedIds(newSet);
+	};
+
+	const handleRename = (node: TreeNode, newName: string) => {
+		renameNode({
+			type: node.type,
+			id: node.id,
+			name: newName,
+			user_id: userId,
+		});
+		setEditingId(null);
+	};
+
+	const handleDelete = (node: TreeNode) => {
+		deleteNode({ type: node.type, id: node.id, user_id: userId });
+	};
+
+	const handleSelectPage = (node: TreeNode) => {
+		if (node.type === "page") {
+			setActivePageId(node.id);
+		}
+	};
 
 	if (isLoading || !tree) {
 		return (
@@ -67,44 +98,23 @@ export function FolderTree({ userId }: { userId: string }) {
 					/>
 				</div>
 			) : (
-				<Tree
-					data={tree ?? []}
-					onRename={({ id, name, node }) =>
-						renameNode({ type: node.data.type, id, name, user_id: userId })
-					}
-					onMove={({ dragIds, parentId, index }) =>
-						dragIds.forEach((id) => {
-							const node = tree.find((n) => n.id === id);
-							if (node) {
-								moveNode({
-									type: node.type,
-									id,
-									parent_id: parentId,
-									position: index,
-									user_id: userId,
-								});
-							}
-						})
-					}
-					onDelete={({ ids, nodes }) =>
-						ids.forEach((id, i) => {
-							deleteNode({ type: nodes[i].data.type, id, user_id: userId });
-						})
-					}
-					onSelect={(nodes) => {
-						const node = nodes[0];
-						if (node && node.data.type === "page") {
-							setActivePageId(node.id);
-						}
-					}}
-					openByDefault={false}
-					width="100%"
-					height={600}
-					indent={16}
-					rowHeight={32}
-				>
-					{FolderNode}
-				</Tree>
+				<div className="flex-1 overflow-y-auto px-1">
+					{tree?.map((node) => (
+						<FolderNode
+							key={node.id}
+							node={node}
+							expanded={expandedIds.has(node.id)}
+							onToggleExpand={toggleExpanded}
+							editing={editingId === node.id}
+							onStartEdit={() => setEditingId(node.id)}
+							onRename={handleRename}
+							onDelete={handleDelete}
+							onSelect={handleSelectPage}
+							depth={0}
+							allNodes={tree}
+						/>
+					))}
+				</div>
 			)}
 		</div>
 	);

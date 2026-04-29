@@ -39,7 +39,9 @@
       "Bash(netstat -tlnp)",
       "Bash(pkill -9 node)",
       "Bash(fuser -k 42069/tcp)",
-      "Bash(lsof -ti:42069)"
+      "Bash(lsof -ti:42069)",
+      "Bash(npm install *)",
+      "PowerShell(Get-NetTCPConnection *)"
     ]
   }
 }
