@@ -161,7 +161,7 @@ export function AppLayout() {
 			{/* Right panel — 3/4 width */}
 			<main className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
 				<TopBar />
-				<div className="flex-1 min-h-0 overflow-hidden">
+				<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 					<ErrorBoundary>
 						{leftPanelMode === "priorities" ? (
 							<CalendarView />
