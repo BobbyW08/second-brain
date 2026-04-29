@@ -125,11 +125,8 @@ export function BucketPanel() {
 	if (loadingBuckets) {
 		return (
 			<div className="flex h-full flex-col gap-4 bg-[hsl(var(--secondary))] p-4">
-				{Array.from({ length: 3 }).map((_) => (
-					<div
-						key={`bucket-skeleton-${Math.random()}`}
-						className="flex flex-col gap-2"
-					>
+				{["a", "b", "c"].map((id) => (
+					<div key={`bucket-skeleton-${id}`} className="flex flex-col gap-2">
 						<Skeleton className="h-8 w-24 bg-accent" />
 						<Skeleton className="h-12 w-full bg-accent" />
 						<Skeleton className="h-12 w-full bg-accent" />

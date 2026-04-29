@@ -81,9 +81,9 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 				<h2 className="text-[16px] font-medium text-foreground mb-4">Recent</h2>
 				{isLoadingPages ? (
 					<div className="flex flex-col gap-2">
-						{Array.from({ length: 3 }).map((_) => (
+						{["a", "b", "c"].map((id) => (
 							<Skeleton
-								key={`page-skeleton-${Math.random()}`}
+								key={`page-skeleton-${id}`}
 								className="h-12 w-full bg-accent"
 							/>
 						))}
@@ -133,9 +133,9 @@ export function FilesLandingPage({ userId }: { userId: string }) {
 				</h2>
 				{isLoadingBlocks ? (
 					<div className="flex flex-col gap-2">
-						{Array.from({ length: 3 }).map((_) => (
+						{["a", "b", "c"].map((id) => (
 							<Skeleton
-								key={`block-skeleton-${Math.random()}`}
+								key={`block-skeleton-${id}`}
 								className="h-12 w-full bg-accent"
 							/>
 						))}
