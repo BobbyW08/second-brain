@@ -33,7 +33,13 @@
       "Bash(pkill -f \"npm run dev\")",
       "Bash(git -C C:/dev/second_brain status --short)",
       "Bash(pkill -f \"node.*vite\\\\|npm.*dev\")",
-      "Bash(pkill -9 -f \"node.*vite|npm.*dev\")"
+      "Bash(pkill -9 -f \"node.*vite|npm.*dev\")",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill *)",
+      "Bash(netstat -tlnp)",
+      "Bash(pkill -9 node)",
+      "Bash(fuser -k 42069/tcp)",
+      "Bash(lsof -ti:42069)"
     ]
   }
 }
