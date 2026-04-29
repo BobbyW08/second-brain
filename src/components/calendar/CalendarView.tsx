@@ -9,7 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
@@ -54,6 +54,18 @@ export function CalendarView() {
 	const { sidePanelBlockId, setSidePanelBlockId } = useUIStore();
 
 	const calendarRef = useRef<FullCalendar | null>(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
+
+	// Force FullCalendar to recalculate dimensions after hydration
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			const calendarApi = calendarRef.current?.getApi();
+			if (calendarApi) {
+				calendarApi.updateSize();
+			}
+		}, 100);
+		return () => clearTimeout(timer);
+	}, []);
 
 	const today = new Date();
 	const rangeStart = new Date(today);
@@ -172,7 +184,11 @@ export function CalendarView() {
 	}
 
 	return (
-		<div className="flex flex-col h-full w-full overflow-hidden bg-background">
+		<div
+			ref={containerRef}
+			className="flex flex-col w-full overflow-hidden bg-background"
+			style={{ height: "100%" }}
+		>
 			<FullCalendar
 				ref={calendarRef}
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
