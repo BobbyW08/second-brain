@@ -9,8 +9,10 @@ export type TreeNode = {
 	type: "folder" | "page";
 	children?: TreeNode[];
 	folder_id?: string | null;
+	parent_id?: string | null;
 	position?: number;
 	page_type?: string;
+	is_system?: boolean;
 };
 
 export function useFoldersAndPages(userId: string) {
@@ -54,6 +56,9 @@ export function buildTree(
 			name: folder.name,
 			type: "folder",
 			children: [],
+			parent_id: folder.parent_id,
+			is_system: folder.is_system,
+			position: folder.position ?? undefined,
 		});
 	});
 
@@ -114,19 +119,19 @@ export function buildTree(
 
 	// Sort the entire tree by position (folders first, then pages)
 	tree.sort((a, b) => {
-		// If both are folders, sort by position
+		const aIsSystem = a.type === "folder" && a.is_system;
+		const bIsSystem = b.type === "folder" && b.is_system;
+		if (aIsSystem && !bIsSystem) return -1;
+		if (!aIsSystem && bIsSystem) return 1;
 		if (a.type === "folder" && b.type === "folder") {
 			return (a.position || 0) - (b.position || 0);
 		}
-		// If only a is a folder, it comes first
 		if (a.type === "folder" && b.type === "page") {
 			return -1;
 		}
-		// If only b is a folder, it comes first
 		if (a.type === "page" && b.type === "folder") {
 			return 1;
 		}
-		// Both are pages, sort by position
 		return (a.position || 0) - (b.position || 0);
 	});
 

@@ -15,7 +15,7 @@ without it. Do not defer or stub it.
 ## Current version: v0.5
 
 v0.1 is complete and deployed to Vercel (commit c897259, April 28 2026).
-v0.5 work has begun. See memory-bank/activeContext.md for the current ticket.
+v0.5-0 (Folder Tree Migration) is complete. v0.5-1 (AI Infrastructure) is next.
 
 AI features are now being added in v0.5. The banned-AI-packages rule from v0.1
 no longer applies. However: NEVER install @blocknote/xl-ai — it is GPL-3.0 and
@@ -290,7 +290,8 @@ design tokens. Full ticket specs are in memory-bank/v05-v10-build-plan.md.
 ### Components
 - Global search: ⌘K CommandDialog with navigation, link-picker mode, tasks + pages + folders
 - BlockNote page editor: PageView with 800ms autosave, saving indicator, inline title editing
-- FolderTree: currently react-arborist — TICKET v0.5-0 replaces this with aldhyx pattern
+- FolderTree: rewritten v0.5-0 — recursive tree with Zustand expand state, New Folder button,
+  system folder guard, double-click rename, rich context menu (no react-arborist, no aldhyx deps)
 - BucketPanel: left panel in Priorities mode, configurable buckets, drag data attributes
 - TaskCard: closed state + expand-in-place open state, chrono-node date parsing, all fields
 - CompletedTodaySection: completed tasks with working undo
@@ -340,7 +341,7 @@ If any import references these files, remove the import.
 | Loading skeletons, empty states, error boundaries, tone audit | v0.1 | ✅ Complete |
 | Deploy to Vercel | v0.1 | ✅ Complete — commit c897259 |
 | Jotion page headers (icon + cover image) | v0.1 | ✅ Complete — included in Sessions 1-4 |
-| Folder tree migration (react-arborist → aldhyx pattern) | v0.5 | ⏳ TICKET v0.5-0 |
+| Folder tree migration (react-arborist → aldhyx pattern) | v0.5 | ✅ Complete |
 | AI infrastructure (route + constants + thread persistence) | v0.5 | ⏳ TICKET v0.5-1 |
 | AI chat panel (assistant-ui) | v0.5 | ⏳ TICKET v0.5-2 |
 | AI writing toolbar (FormattingToolbarController) | v0.5 | ⏳ TICKET v0.5-3 |

@@ -1,0 +1,1 @@
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS is_system boolean DEFAULT false NOT NULL;

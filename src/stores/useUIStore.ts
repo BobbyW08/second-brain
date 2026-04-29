@@ -39,6 +39,9 @@ interface UIState {
 		callback: (result: { id: string; type: string }) => void,
 	) => void;
 	resolveLinkPicker: (result: { id: string; type: string }) => void;
+
+	expandedFolderIds: string[];
+	toggleFolderExpanded: (id: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -88,4 +91,12 @@ export const useUIStore = create<UIState>((set) => ({
 			return { pendingLinkPickerCallback: null, commandMode: "navigation" };
 		});
 	},
+
+	expandedFolderIds: [],
+	toggleFolderExpanded: (id) =>
+		set((state) => ({
+			expandedFolderIds: state.expandedFolderIds.includes(id)
+				? state.expandedFolderIds.filter((i) => i !== id)
+				: [...state.expandedFolderIds, id],
+		})),
 }));

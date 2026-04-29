@@ -1,12 +1,21 @@
-import { ChevronRight, FileText, Folder, MoreHorizontal } from "lucide-react";
-import { useEffect, useRef } from "react";
+import {
+	ChevronRight,
+	FileText,
+	Folder,
+	FolderPlus,
+	MoreHorizontal,
+	Plus,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { TreeNode } from "@/queries/folders";
+import { useUIStore } from "@/stores/useUIStore";
 
 interface FolderNodeProps {
 	node: TreeNode;
@@ -17,6 +26,8 @@ interface FolderNodeProps {
 	onRename: (node: TreeNode, newName: string) => void;
 	onDelete: (node: TreeNode) => void;
 	onSelect: (node: TreeNode) => void;
+	onCreatePage: (folderId: string) => void;
+	onCreateFolder: (parentId: string) => void;
 	depth: number;
 	allNodes: TreeNode[];
 }
@@ -30,12 +41,17 @@ export function FolderNode({
 	onRename,
 	onDelete,
 	onSelect,
+	onCreatePage,
+	onCreateFolder,
 	depth,
 	allNodes,
 }: FolderNodeProps) {
+	const { expandedFolderIds } = useUIStore();
 	const isFolder = node.type === "folder";
+	const isSystem = node.is_system ?? false;
 	const children = allNodes.filter((n) => n.parent_id === node.id);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const [localName, setLocalName] = useState(node.name);
 
 	useEffect(() => {
 		if (editing && inputRef.current) {
@@ -44,14 +60,25 @@ export function FolderNode({
 		}
 	}, [editing]);
 
+	useEffect(() => {
+		setLocalName(node.name);
+	}, [node.name]);
+
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
-			onRename(node, e.currentTarget.value);
+			const newName = e.currentTarget.value.trim();
+			if (newName && newName !== node.name) {
+				onRename(node, newName);
+			} else {
+				onRename(node, node.name);
+			}
 		}
 		if (e.key === "Escape") {
 			onRename(node, node.name);
 		}
 	};
+
+	const hasChildren = isFolder && children.length > 0;
 
 	return (
 		<>
@@ -59,8 +86,7 @@ export function FolderNode({
 				className="flex items-center gap-1 px-2 py-1 rounded group hover:bg-muted"
 				style={{ paddingLeft: `${depth * 16 + 8}px` }}
 			>
-				{/* Chevron for folders with children */}
-				{isFolder && children.length > 0 ? (
+				{hasChildren ? (
 					<button
 						type="button"
 						onClick={() => onToggleExpand(node.id)}
@@ -75,10 +101,12 @@ export function FolderNode({
 					<span className="w-4 flex-shrink-0" />
 				)}
 
-				{/* Icon + Title */}
 				<button
 					type="button"
 					onClick={() => onSelect(node)}
+					onDoubleClick={() => {
+						if (!isSystem) onStartEdit();
+					}}
 					className="flex items-center gap-1 flex-1 min-w-0 text-left"
 				>
 					{isFolder ? (
@@ -91,8 +119,8 @@ export function FolderNode({
 						<input
 							ref={inputRef}
 							type="text"
-							defaultValue={node.name}
-							onChange={() => {}} // Controlled by onBlur
+							value={localName}
+							onChange={(e) => setLocalName(e.target.value)}
 							onBlur={(e) => onRename(node, e.currentTarget.value)}
 							onKeyDown={handleKeyDown}
 							className="bg-transparent outline-none border-b border-primary w-full text-sm"
@@ -102,7 +130,6 @@ export function FolderNode({
 					)}
 				</button>
 
-				{/* Context menu */}
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						onClick={(e) => e.stopPropagation()}
@@ -112,33 +139,56 @@ export function FolderNode({
 						<MoreHorizontal className="h-3 w-3" />
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="w-48">
-						<DropdownMenuItem onClick={() => onStartEdit()}>
-							Rename
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={() => onDelete(node)}
-							className="text-destructive"
-						>
-							Delete
-						</DropdownMenuItem>
+						{isFolder && (
+							<>
+								<DropdownMenuItem onClick={() => onCreatePage(node.id)}>
+									<Plus className="h-3.5 w-3.5 mr-2" />
+									New Page
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => onCreateFolder(node.id)}>
+									<FolderPlus className="h-3.5 w-3.5 mr-2" />
+									New Folder
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+							</>
+						)}
+						{!isSystem && (
+							<DropdownMenuItem onClick={() => onStartEdit()}>
+								Rename
+							</DropdownMenuItem>
+						)}
+						{!isSystem && (
+							<DropdownMenuItem
+								onClick={() => onDelete(node)}
+								className="text-destructive"
+							>
+								Delete
+							</DropdownMenuItem>
+						)}
+						{isSystem && (
+							<span className="px-2 py-1.5 text-xs text-muted-foreground">
+								System folder
+							</span>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
 
-			{/* Children */}
 			{isFolder && expanded && children.length > 0 && (
 				<div>
 					{children.map((child) => (
 						<FolderNode
 							key={child.id}
 							node={child}
-							expanded={expanded}
+							expanded={expandedFolderIds.includes(child.id)}
 							onToggleExpand={onToggleExpand}
 							editing={false}
 							onStartEdit={() => {}}
 							onRename={onRename}
 							onDelete={onDelete}
 							onSelect={onSelect}
+							onCreatePage={onCreatePage}
+							onCreateFolder={onCreateFolder}
 							depth={depth + 1}
 							allNodes={allNodes}
 						/>

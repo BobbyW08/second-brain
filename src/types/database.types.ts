@@ -159,6 +159,7 @@ export type Database = {
 					created_at: string;
 					icon: string | null;
 					id: string;
+					is_system: boolean;
 					name: string;
 					parent_id: string | null;
 					position: number | null;
@@ -169,6 +170,7 @@ export type Database = {
 					created_at?: string;
 					icon?: string | null;
 					id?: string;
+					is_system?: boolean;
 					name: string;
 					parent_id?: string | null;
 					position?: number | null;
@@ -179,6 +181,7 @@ export type Database = {
 					created_at?: string;
 					icon?: string | null;
 					id?: string;
+					is_system?: boolean;
 					name?: string;
 					parent_id?: string | null;
 					position?: number | null;

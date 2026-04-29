@@ -2,14 +2,25 @@
 
 ## Current Ticket
 
-**TICKET v0.5-0 — Folder Tree Migration** ← CURRENT
+**TICKET v0.5-1 — AI Infrastructure** ← CURRENT
 
-Full ticket spec: memory-bank/v05-v10-build-plan.md → TICKET v0.5-0
+Full ticket spec: memory-bank/v05-v10-build-plan.md → TICKET v0.5-1
 
-Summary: react-arborist is abandoned (June 2025). Replace FolderTree.tsx by lifting
-the sidebar tree component and Supabase wiring from aldhyx/station-a-notion-clone (MIT).
-Translate Next.js App Router patterns → TanStack Start. Wire to existing query hooks
-in src/queries/folders.ts and src/queries/pages.ts — do not change those hooks.
+Summary: Create AI route (tanchat pattern), aiConstants.ts, and ai_threads table migration.
+
+---
+
+## v0.5-0 Complete ✅
+
+Folder tree migration complete. react-arborist replaced with recursive tree adapted from
+aldhyx/station-a-notion-clone. Key changes:
+- FolderTree.tsx rewritten: Zustand-backed expand state, New Folder button (+ icon),
+  system folder sorting (is_system pins to top)
+- FolderNode.tsx rewritten: double-click rename, richer context menu (New Page,
+  New Folder for folders), system folder guard (non-deletable, non-renameable)
+- TreeNode type extended with is_system + parent_id
+- Migration 0011 adds is_system boolean column to folders table
+- Query hooks unchanged (useFoldersAndPages, buildTree only updated type mapping)
 
 ---
 
@@ -23,8 +34,8 @@ Full Jotion shell replacement (Sessions 1-4) includes page headers natively.
 
 ## v0.5 Ticket Queue (in order)
 
-- [ ] v0.5-0 — Folder tree migration (react-arborist → aldhyx pattern) ← CURRENT
-- [ ] v0.5-1 — AI infrastructure (route + aiConstants.ts + ai_threads table)
+- [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx pattern) ← COMPLETE
+- [ ] v0.5-1 — AI infrastructure (route + aiConstants.ts + ai_threads table) ← CURRENT
 - [ ] v0.5-2 — AI chat panel (assistant-ui)
 - [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
 - [ ] v0.5-4 — AI journal prompts

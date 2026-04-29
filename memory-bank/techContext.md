@@ -12,7 +12,7 @@
 | Styling | Tailwind CSS | v4 | Utility-first, dark mode via CSS vars |
 | Calendar | FullCalendar React | v6 | timeGrid + interaction + dayGrid plugins |
 | Block editor | BlockNote + @blocknote/mantine | latest | Default schema in v0.1; custom inline content in v0.5 |
-| Folder tree | Migrating from react-arborist (abandoned June 2025) to pattern from aldhyx/station-a-notion-clone (MIT). See TICKET v0.5-0. No new tree library installed — aldhyx renders recursively with plain React components. | — | — |
+| Folder tree | Custom recursive tree (v0.5-0) | Adapted from aldhyx/station-a-notion-clone (MIT). No external tree library. Zustand-backed expand state, system folder guard, double-click rename. | — | — |
 | Date parsing | chrono-node | latest | Free-text date input in task cards |
 | State (client) | Zustand | latest | UI state only |
 | State (server) | TanStack Query | latest | All async/server state, caching, optimistic updates |
