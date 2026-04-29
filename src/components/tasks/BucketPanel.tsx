@@ -19,8 +19,7 @@ import { useUIStore } from "@/stores/useUIStore";
 
 export function BucketPanel() {
 	const { userId } = useCurrentUser();
-	const { leftPanelMode, setLeftPanelMode, scrollToTaskId, setScrollToTaskId } =
-		useUIStore();
+	const { scrollToTaskId, setScrollToTaskId } = useUIStore();
 	const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(
 		new Set(),
 	);
@@ -35,7 +34,6 @@ export function BucketPanel() {
 	const deleteBucket = useDeleteBucket(userId);
 	const createTask = useCreateTask();
 
-	// Group tasks by bucket_id
 	const tasksByBucket: Record<string, typeof tasks> = {};
 	for (const task of tasks) {
 		const bid = task.bucket_id || "unsorted";
@@ -43,14 +41,12 @@ export function BucketPanel() {
 		tasksByBucket[bid].push(task);
 	}
 
-	// Default all buckets to expanded on initial load
 	useEffect(() => {
 		if (buckets.length > 0 && expandedBuckets.size === 0) {
 			setExpandedBuckets(new Set(buckets.map((b) => b.id)));
 		}
 	}, [buckets, expandedBuckets.size]);
 
-	// Initialize FullCalendar Draggable
 	useEffect(() => {
 		if (!bucketListRef.current) return;
 		const draggable = new Draggable(bucketListRef.current, {
@@ -64,21 +60,17 @@ export function BucketPanel() {
 		return () => draggable.destroy();
 	}, []);
 
-	// Handle scrolling to a specific task
 	useEffect(() => {
 		if (!scrollToTaskId) return;
 
-		// Find which bucket contains this task
 		const task = tasks.find((t) => t.id === scrollToTaskId);
 		if (task?.bucket_id) {
-			// Expand the bucket containing the task
 			setExpandedBuckets((prev) => {
 				const next = new Set(prev);
 				next.add(task.bucket_id as string);
 				return next;
 			});
 
-			// Scroll to the task element
 			setTimeout(() => {
 				const taskElement = document.querySelector(
 					`[data-task-id="${scrollToTaskId}"]`,
@@ -112,7 +104,6 @@ export function BucketPanel() {
 				onSuccess: (data) => {
 					if (data) {
 						setNewBucketId(data.id);
-						// Ensure it's expanded
 						const next = new Set(expandedBuckets);
 						next.add(data.id);
 						setExpandedBuckets(next);
@@ -138,37 +129,6 @@ export function BucketPanel() {
 
 	return (
 		<div className="flex h-full flex-col bg-[hsl(var(--secondary))]">
-			{/* Mode Toggle */}
-			<div className="px-2 pt-2">
-				<div className="flex border-b border-border">
-					<button
-						type="button"
-						onClick={() => setLeftPanelMode("priorities")}
-						className={`relative flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
-							leftPanelMode === "priorities"
-								? "text-foreground"
-								: "text-muted-foreground"
-						}`}
-					>
-						Priorities
-						{leftPanelMode === "priorities" && (
-							<div className="absolute bottom-0 left-0 h-[1px] w-full bg-[#3A8FD4]" />
-						)}
-					</button>
-					<button
-						type="button"
-						onClick={() => setLeftPanelMode("files")}
-						className={`flex-1 px-3 py-2 text-[12px] font-medium transition-colors ${
-							leftPanelMode === "files"
-								? "text-foreground"
-								: "text-muted-foreground"
-						}`}
-					>
-						Files
-					</button>
-				</div>
-			</div>
-
 			<div className="flex-1 overflow-y-auto" ref={bucketListRef}>
 				{buckets.map((bucket) => {
 					const bucketTasks = tasksByBucket[bucket.id] || [];
