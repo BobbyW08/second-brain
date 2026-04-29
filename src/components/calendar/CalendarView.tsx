@@ -172,7 +172,7 @@ export function CalendarView() {
 	}
 
 	return (
-		<div className="flex-1 min-h-0 h-full overflow-hidden bg-background">
+		<div className="flex flex-col h-full w-full overflow-hidden bg-background">
 			<FullCalendar
 				ref={calendarRef}
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
@@ -184,8 +184,6 @@ export function CalendarView() {
 				allDayText="Anytime"
 				slotMinTime="06:00:00"
 				slotMaxTime="22:00:00"
-				height="100%"
-				contentHeight="auto"
 				displayEventEnd={true}
 				headerToolbar={{
 					left: "prev,next today",

@@ -167,6 +167,12 @@
 	overflow: auto;
 }
 
+/* Flex container fill */
+.fc {
+	width: 100%;
+	height: 100%;
+}
+
 /* Ensure events are visible and properly spaced */
 .fc .fc-daygrid-day-frame {
 	min-height: auto;

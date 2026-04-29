@@ -30,7 +30,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ModeToggle } from "@/components/ui/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import {
 	useBuckets,
@@ -193,22 +192,6 @@ export function SettingsPage() {
 						</Button>
 					</form>
 				</Form>
-
-				<Separator className="my-8" />
-
-				{/* SECTION 2 — APPEARANCE */}
-				<div className="space-y-4">
-					<div>
-						<h2 className="text-lg font-semibold">Appearance</h2>
-						<p className="text-sm text-muted-foreground">
-							Customize the look and feel of the app
-						</p>
-					</div>
-					<div className="flex items-center justify-between">
-						<Label>Theme</Label>
-						<ModeToggle />
-					</div>
-				</div>
 
 				<Separator className="my-8" />
 
