@@ -1,28 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-	AttendeesField,
-	BucketSelector,
-	ColorSwatches,
-	DateTimeField,
-	DescriptionField,
-	LabelsField,
-	LinksField,
-	LocationField,
-	RecurringField,
-	TitleField,
-} from "@/components/tasks/TaskFields";
-import {
-	useDeleteBlock,
-	useUndoDeleteCalendarBlock,
-} from "@/queries/calendarBlocks";
-import { useUpdateTask } from "@/queries/tasks";
+import { useDeleteBlock } from "@/queries/calendarBlocks";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
-type Task = Database["public"]["Tables"]["tasks"]["Row"];
+type Block = Database["public"]["Tables"]["calendar_blocks"]["Row"];
 
 interface EventSidePanelProps {
 	blockId: string;
@@ -30,137 +14,109 @@ interface EventSidePanelProps {
 	userId: string;
 }
 
-export function EventSidePanel({
-	blockId,
-	onClose,
-	userId,
-}: EventSidePanelProps) {
+export function EventSidePanel({ blockId, onClose }: EventSidePanelProps) {
 	const [isClosing, setIsClosing] = useState(false);
+	const queryClient = useQueryClient();
+	const { mutate: deleteBlock } = useDeleteBlock();
 
 	const { data: block, isLoading } = useQuery({
 		queryKey: ["calendar-block", blockId],
 		queryFn: async () => {
 			const { data } = await supabase
 				.from("calendar_blocks")
-				.select("*, task:tasks(*)")
+				.select("*")
 				.eq("id", blockId)
 				.single()
 				.throwOnError();
-			return data;
+			return data as Block;
 		},
 	});
 
-	const deleteBlock = useDeleteBlock();
-	const undoDelete = useUndoDeleteCalendarBlock();
-	const updateTask = useUpdateTask(userId);
+	if (isLoading || !block) {
+		return null;
+	}
 
 	const handleClose = () => {
 		setIsClosing(true);
 		setTimeout(onClose, 200);
 	};
 
-	const handleRemove = () => {
-		if (!block) return;
-		deleteBlock.mutate(blockId);
-
-		// Restore task status to 'active' if this block is linked to a task
-		if (block.task_id && task) {
-			updateTask.mutate({
-				taskId: block.task_id,
-				updates: { status: "active" },
-			});
-		}
-
-		toast("Removed from calendar", {
-			action: {
-				label: "Undo",
-				onClick: () => undoDelete.mutate(block),
+	const handleDelete = () => {
+		deleteBlock(blockId, {
+			onSuccess: () => {
+				toast.success("Event deleted");
+				queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+				handleClose();
+			},
+			onError: (error: Error) => {
+				toast.error(`Failed to delete: ${error.message}`);
 			},
 		});
-		handleClose();
 	};
 
-	if (isLoading || !block) return null;
-
-	const isTask = !!block.task_id;
-	const task = block.task as Task | null;
+	const isGoogleEvent = block.google_event_id !== null;
+	const startTime = new Date(block.start_time);
+	const endTime = block.end_time ? new Date(block.end_time) : null;
 
 	return (
 		<div
-			style={{
-				position: "absolute",
-				right: 0,
-				top: 0,
-				height: "100%",
-				width: "320px",
-				background: "hsl(var(--card))",
-				borderLeft: "1px solid hsl(var(--border))",
-				borderRadius: "12px 0 0 12px",
-				boxShadow: "0 0 24px rgba(0,0,0,0.4)",
-				zIndex: 10,
-				overflowY: "auto",
-				transform: isClosing ? "translateX(100%)" : "translateX(0)",
-				transition: "transform 200ms ease",
-			}}
-			className="flex flex-col p-4 gap-6"
+			className={`absolute right-0 top-0 bottom-0 w-80 bg-background border-l border-border shadow-lg transform transition-transform duration-200 ${
+				isClosing ? "translate-x-full" : "translate-x-0"
+			} overflow-y-auto z-50`}
 		>
-			<div className="flex items-center justify-between">
-				<X
-					className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-foreground"
+			<div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card">
+				<h2 className="font-semibold text-lg truncate">{block.title}</h2>
+				<button
+					type="button"
 					onClick={handleClose}
-				/>
-				<h2 className="text-[16px] font-medium text-foreground">
-					{isTask ? "Edit task" : "Event details"}
-				</h2>
-				<div className="w-5" />
+					className="p-1 hover:bg-muted rounded-md transition flex-shrink-0"
+					aria-label="Close event panel"
+				>
+					<X className="w-5 h-5" />
+				</button>
 			</div>
 
-			<div className="flex flex-col gap-4">
-				{isTask && task ? (
-					<>
-						<TitleField task={task} userId={userId} />
-						<DescriptionField task={task} userId={userId} />
-						<div className="h-[1px] bg-border my-2" />
-						<BucketSelector task={task} userId={userId} />
-						<ColorSwatches task={task} userId={userId} />
-						<LabelsField task={task} userId={userId} />
-						<DateTimeField task={task} userId={userId} />
-						<RecurringField task={task} userId={userId} />
-						<LocationField task={task} userId={userId} />
-						<AttendeesField task={task} userId={userId} />
-						<LinksField task={task} />
+			<div className="p-4 space-y-4">
+				<div>
+					<div className="text-sm font-medium text-muted-foreground">Start</div>
+					<p className="text-sm">{startTime.toLocaleString()}</p>
+				</div>
 
-						<div className="mt-8 border-t border-border pt-4">
-							<button
-								type="button"
-								className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
-								onClick={handleRemove}
-							>
-								Remove from calendar
-							</button>
+				{endTime && (
+					<div>
+						<div className="text-sm font-medium text-muted-foreground">End</div>
+						<p className="text-sm">{endTime.toLocaleString()}</p>
+					</div>
+				)}
+
+				{block.task_id && (
+					<div>
+						<div className="text-sm font-medium text-muted-foreground">
+							Task ID
 						</div>
-					</>
-				) : (
-					// Google Calendar Read-only View
-					<div className="flex flex-col gap-4">
-						<div className="text-[16px] font-medium text-foreground">
-							{block.title}
-						</div>
-						<div className="flex flex-col gap-1">
-							<span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-								Date & time
-							</span>
-							<div className="text-[11px] font-mono text-foreground">
-								{new Date(block.start_time).toLocaleString()} -{" "}
-								{new Date(block.end_time).toLocaleTimeString()}
-							</div>
-						</div>
-						<div className="flex items-center gap-2 py-1">
-							<div className="h-2 w-2 rounded-full bg-[var(--color-google-event)]" />
-							<span className="text-[11px] text-[var(--color-google-event)]">
-								Google Calendar event
-							</span>
-						</div>
+						<p className="text-xs font-mono text-muted-foreground">
+							{block.task_id}
+						</p>
+					</div>
+				)}
+
+				{isGoogleEvent && (
+					<div className="p-3 bg-muted rounded-md border border-border">
+						<p className="text-sm text-muted-foreground">
+							📅 Google Calendar Event
+						</p>
+					</div>
+				)}
+
+				{!isGoogleEvent && (
+					<div className="pt-4 border-t">
+						<button
+							type="button"
+							onClick={handleDelete}
+							className="w-full px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition"
+						>
+							Delete Event
+						</button>
 					</div>
 				)}
 			</div>

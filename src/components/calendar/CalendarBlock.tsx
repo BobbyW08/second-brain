@@ -8,10 +8,8 @@ interface CalendarBlockProps {
 
 export function CalendarBlock({ event, timeText }: CalendarBlockProps) {
 	const source = event.extendedProps.source as "task" | "google";
-	const borderColor =
-		source === "task" ? "var(--color-task-event)" : "var(--color-google-event)";
+	const borderColor = source === "task" ? "#3a8fd4" : "#3a8a3a";
 
-	// Show time if duration >= 45 minutes
 	const start = event.start;
 	const end = event.end;
 	const showTime =

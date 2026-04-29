@@ -46,20 +46,67 @@
 }
 
 /* ============================================================
+   FullCalendar robskinney base styles
+   ============================================================ */
+
+.fc {
+	font-family: inherit;
+}
+
+.fc .fc-button-primary {
+	background-color: hsl(var(--primary));
+	border-color: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+}
+
+.fc .fc-button-primary:hover {
+	background-color: hsl(var(--primary) / 0.9);
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+	background-color: hsl(var(--primary) / 0.8);
+}
+
+.fc .fc-daygrid-day.fc-day-other {
+	opacity: 0.5;
+}
+
+.fc .fc-event {
+	border-radius: 6px;
+	border: none;
+}
+
+.fc .fc-event-main {
+	padding: 4px;
+}
+
+.fc .fc-event-title {
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.fc .fc-timegrid-slot {
+	height: 3em;
+}
+
+.fc .fc-col-header-cell {
+	padding: 8px 4px;
+	font-weight: 500;
+}
+
+.fc .fc-daygrid-day-number {
+	padding: 4px;
+}
+
+/* ============================================================
    Second Brain calendar business rules
    (zones, event pills, task-pill drag data, layout)
    ============================================================ */
 
-/* Design Tokens — migrated to Jotion CSS variables */
-:root {
-	--app-base: hsl(var(--background));
-	--text-primary: hsl(var(--foreground));
-	--text-secondary: hsl(var(--muted-foreground));
-}
-
 /* Zone background tints */
 .fc-timegrid-slot-lane {
-	background-color: var(--app-base);
+	background-color: hsl(var(--background));
 }
 
 .fc-timegrid-slot[data-time^="06"],
@@ -113,20 +160,18 @@
 	color: var(--evening-label);
 }
 
-/* Event pill styling */
-.fc-event {
-	background: hsl(var(--card));
-	border: none;
-	border-radius: 8px;
+/* Event pill styling — use .fc- prefixed selectors for consistency */
+
+/* Scrollable container */
+.fc .fc-scroller-harness {
+	overflow: auto;
 }
 
-.fc-v-event {
-	background: hsl(var(--card));
-	border: none;
+/* Ensure events are visible and properly spaced */
+.fc .fc-daygrid-day-frame {
+	min-height: auto;
 }
 
-.fc-event-title {
-	font-size: 13px;
-	font-weight: 400;
-	color: var(--text-primary);
+.fc .fc-timegrid-cell {
+	vertical-align: top;
 }

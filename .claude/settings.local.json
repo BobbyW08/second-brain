@@ -31,7 +31,9 @@
       "Bash(bash /tmp/color_mappings.sh)",
       "Bash(git push *)",
       "Bash(pkill -f \"npm run dev\")",
-      "Bash(git -C C:/dev/second_brain status --short)"
+      "Bash(git -C C:/dev/second_brain status --short)",
+      "Bash(pkill -f \"node.*vite\\\\|npm.*dev\")",
+      "Bash(pkill -9 -f \"node.*vite|npm.*dev\")"
     ]
   }
 }
