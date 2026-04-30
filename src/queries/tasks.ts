@@ -110,42 +110,6 @@ export function useCreateTask() {
 	});
 }
 
-// ─── Move (priority + position) ──────────────────────────────────────────────
-
-// userId passed as hook param because mutation input doesn't carry it
-export function useMoveTask(userId: string) {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async (input: {
-			taskId: string;
-			priority: string;
-			position: number;
-		}) => {
-			await supabase
-				.from("tasks")
-				.update({ priority: input.priority, position: input.position })
-				.eq("id", input.taskId)
-				.throwOnError();
-		},
-		onMutate: async ({ taskId, priority, position }) => {
-			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
-			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
-			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
-				(old ?? []).map((t) =>
-					t.id === taskId ? { ...t, priority, position } : t,
-				),
-			);
-			return { previous };
-		},
-		onError: (_err, _input, context) => {
-			queryClient.setQueryData(["tasks", userId], context?.previous);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
-		},
-	});
-}
-
 // ─── Complete ────────────────────────────────────────────────────────────────
 
 export function useCompleteTask(userId: string) {
@@ -199,40 +163,6 @@ export function useCompleteTask(userId: string) {
 	});
 }
 
-// ─── Archive ─────────────────────────────────────────────────────────────────
-
-export function useArchiveTask(userId: string) {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async (taskId: string) => {
-			await supabase
-				.from("tasks")
-				.update({ status: "archived" })
-				.eq("id", taskId)
-				.throwOnError();
-		},
-		onMutate: async (taskId) => {
-			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
-			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
-			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
-				(old ?? []).map((t) =>
-					t.id === taskId ? { ...t, status: "archived" } : t,
-				),
-			);
-			return { previous };
-		},
-		onError: (_err, _taskId, context) => {
-			queryClient.setQueryData(["tasks", userId], context?.previous);
-		},
-		onSuccess: () => {
-			toast.success("Task removed");
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
-		},
-	});
-}
-
 // ─── Update (title / block_size edits) ───────────────────────────────────────
 
 export function useUpdateTask(userId: string) {
@@ -251,77 +181,6 @@ export function useUpdateTask(userId: string) {
 			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
 				(old ?? []).map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
 			);
-			return { previous };
-		},
-		onError: (_err, _input, context) => {
-			queryClient.setQueryData(["tasks", userId], context?.previous);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
-		},
-	});
-}
-
-// ─── Task Details ──────────────────────────────────────────────────────────────
-
-export function useTask(taskId: string) {
-	return useQuery({
-		queryKey: ["task", taskId],
-		enabled: !!taskId,
-		queryFn: async () => {
-			const { data } = await supabase
-				.from("tasks")
-				.select("*")
-				.eq("id", taskId)
-				.single()
-				.throwOnError();
-			return data;
-		},
-	});
-}
-
-// ─── Reorder ───────────────────────────────────────────────────────────────────
-
-export function useReorderTasks(userId: string) {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async (input: {
-			taskIds: string[];
-			newPositions: number[];
-		}) => {
-			const { taskIds, newPositions } = input;
-			// Update positions individually — upsert requires all required fields
-			await Promise.all(
-				taskIds.map((taskId, index) =>
-					supabase
-						.from("tasks")
-						.update({ position: newPositions[index] })
-						.eq("id", taskId)
-						.throwOnError(),
-				),
-			);
-		},
-		onMutate: async (input) => {
-			const { taskIds, newPositions } = input;
-			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
-			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
-
-			// Optimistically update positions
-			queryClient.setQueryData<Task[]>(["tasks", userId], (old) => {
-				if (!old) return old;
-				const updatedTasks = [...old];
-				taskIds.forEach((taskId, index) => {
-					const taskIndex = updatedTasks.findIndex((t) => t.id === taskId);
-					if (taskIndex !== -1) {
-						updatedTasks[taskIndex] = {
-							...updatedTasks[taskIndex],
-							position: newPositions[index],
-						};
-					}
-				});
-				return updatedTasks;
-			});
-
 			return { previous };
 		},
 		onError: (_err, _input, context) => {
@@ -376,25 +235,6 @@ export function useUndoCompleteTask(userId: string) {
 			queryClient.invalidateQueries({
 				queryKey: ["tasks-completed-today", userId],
 			});
-		},
-	});
-}
-
-// ─── Archive Completed ─────────────────────────────────────────────────────────
-
-export function useArchiveCompletedBefore(userId: string) {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async (threshold: string) => {
-			await supabase
-				.from("tasks")
-				.update({ status: "archived" })
-				.eq("user_id", userId)
-				.lt("completed_at", threshold)
-				.throwOnError();
-		},
-		onSuccess: (_data, _threshold) => {
-			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 		},
 	});
 }

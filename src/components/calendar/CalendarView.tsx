@@ -9,7 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
@@ -55,17 +55,23 @@ export function CalendarView() {
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [isClient, setIsClient] = useState(false);
+
+	useEffect(() => {
+		setIsClient(true);
+	}, []);
 
 	// Force FullCalendar to recalculate dimensions after hydration
 	useEffect(() => {
+		if (!isClient) return;
 		const timer = setTimeout(() => {
 			const calendarApi = calendarRef.current?.getApi();
 			if (calendarApi) {
 				calendarApi.updateSize();
 			}
-		}, 100);
+		}, 300);
 		return () => clearTimeout(timer);
-	}, []);
+	}, [isClient]);
 
 	const today = new Date();
 	const rangeStart = new Date(today);
@@ -73,11 +79,14 @@ export function CalendarView() {
 	const rangeEnd = new Date(today);
 	rangeEnd.setDate(today.getDate() + 14);
 
-	const { data: calendarBlocks = [], isLoading: loadingBlocks } =
-		useCalendarBlocks({
-			start: rangeStart.toISOString(),
-			end: rangeEnd.toISOString(),
-		});
+	const {
+		data: calendarBlocks = [],
+		isLoading: loadingBlocks,
+		isError,
+	} = useCalendarBlocks(userId ?? "", {
+		start: rangeStart.toISOString(),
+		end: rangeEnd.toISOString(),
+	});
 
 	const handleDrop = async (info: DropArg) => {
 		const taskId = info.draggedEl.getAttribute("data-task-id");
@@ -91,7 +100,6 @@ export function CalendarView() {
 		endDate.setHours(endDate.getHours() + dHours, endDate.getMinutes() + dMins);
 		const end_time = endDate.toISOString();
 
-		// Create the calendar block
 		const { data: newBlock } = await supabase
 			.from("calendar_blocks")
 			.insert({
@@ -106,7 +114,6 @@ export function CalendarView() {
 			.single()
 			.throwOnError();
 
-		// Update the task status to 'scheduled'
 		await supabase
 			.from("tasks")
 			.update({ status: "scheduled" })
@@ -116,8 +123,6 @@ export function CalendarView() {
 
 		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
 		queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
-
-		// Open the side panel for the new block
 		setSidePanelBlockId(newBlock.id);
 	};
 
@@ -154,7 +159,7 @@ export function CalendarView() {
 		setSidePanelBlockId(info.event.id);
 	};
 
-	if (loadingBlocks) {
+	if (!userId || (loadingBlocks && !isError)) {
 		return (
 			<div className="h-full p-2 flex flex-col gap-1">
 				{/* Day header row */}
@@ -186,62 +191,64 @@ export function CalendarView() {
 	return (
 		<div
 			ref={containerRef}
-			className="flex flex-col w-full overflow-hidden bg-background"
-			style={{ height: "100%" }}
+			className="flex flex-col w-full overflow-auto bg-background"
 		>
-			<FullCalendar
-				ref={calendarRef}
-				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
-				initialView="timeGridThreeDay"
-				droppable={true}
-				editable={true}
-				nowIndicator={true}
-				allDaySlot={true}
-				allDayText="Anytime"
-				slotMinTime="06:00:00"
-				slotMaxTime="22:00:00"
-				displayEventEnd={true}
-				headerToolbar={{
-					left: "prev,next today",
-					center: "title",
-					right: "timeGridDay,timeGridThreeDay,dayGridMonth",
-				}}
-				views={{
-					timeGridThreeDay: {
-						type: "timeGrid",
-						duration: { days: 3 },
-						buttonText: "3 day",
-					},
-				}}
-				eventTimeFormat={{
-					hour: "numeric",
-					minute: "2-digit",
-					hour12: true,
-				}}
-				events={(calendarBlocks ?? []).map((block) => {
-					const source = block.task_id ? "task" : "google";
-					return {
-						id: block.id,
-						title: block.title,
-						start: block.start_time,
-						end: block.end_time,
-						backgroundColor: source === "task" ? "#3a8fd4" : "#3a8a3a",
-						extendedProps: {
-							source,
-							taskId: block.task_id,
-							googleEventId: block.google_event_id,
-							block_type: block.block_type,
-							is_synced: block.is_synced,
+			{isClient && (
+				<FullCalendar
+					ref={calendarRef}
+					plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
+					initialView="timeGridThreeDay"
+					droppable={true}
+					editable={true}
+					nowIndicator={true}
+					allDaySlot={true}
+					allDayText="Anytime"
+					slotMinTime="06:00:00"
+					slotMaxTime="22:00:00"
+					height="100%"
+					displayEventEnd={true}
+					headerToolbar={{
+						left: "prev,next today",
+						center: "title",
+						right: "timeGridDay,timeGridThreeDay,dayGridMonth",
+					}}
+					views={{
+						timeGridThreeDay: {
+							type: "timeGrid",
+							duration: { days: 3 },
+							buttonText: "3 day",
 						},
-					};
-				})}
-				eventContent={(arg) => <EventItem info={arg} />}
-				eventClick={handleEventClick}
-				eventChange={handleEventChange}
-				eventResize={handleEventResize}
-				drop={handleDrop}
-				dateClick={() => setSidePanelBlockId(null)}
-			/>
+					}}
+					eventTimeFormat={{
+						hour: "numeric",
+						minute: "2-digit",
+						hour12: true,
+					}}
+					events={(calendarBlocks ?? []).map((block) => {
+						const source = block.task_id ? "task" : "google";
+						return {
+							id: block.id,
+							title: block.title,
+							start: block.start_time,
+							end: block.end_time,
+							backgroundColor: source === "task" ? "#3a8fd4" : "#3a8a3a",
+							extendedProps: {
+								source,
+								taskId: block.task_id,
+								googleEventId: block.google_event_id,
+								block_type: block.block_type,
+								is_synced: block.is_synced,
+							},
+						};
+					})}
+					eventContent={(arg) => <EventItem info={arg} />}
+					eventClick={handleEventClick}
+					eventChange={handleEventChange}
+					eventResize={handleEventResize}
+					drop={handleDrop}
+					dateClick={() => setSidePanelBlockId(null)}
+				/>
+			)}
 
 			{sidePanelBlockId && (
 				<EventSidePanel

@@ -2,12 +2,14 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import listPlugin from "@fullcalendar/list";
 import FullCalendar from "@fullcalendar/react";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
 import { useUIStore } from "@/stores/useUIStore";
 
 export function MiniCalendarDrawer() {
 	const { miniCalendarOpen, setMiniCalendarOpen, leftPanelMode } = useUIStore();
+	const { userId } = useCurrentUser();
 
 	// Calculate range for mini calendar (roughly 14 days back/forward for agenda)
 	const today = new Date();
@@ -16,7 +18,7 @@ export function MiniCalendarDrawer() {
 	const rangeEnd = new Date(today);
 	rangeEnd.setDate(today.getDate() + 14);
 
-	const { data: calendarBlocks = [] } = useCalendarBlocks({
+	const { data: calendarBlocks = [] } = useCalendarBlocks(userId ?? "", {
 		start: rangeStart.toISOString(),
 		end: rangeEnd.toISOString(),
 	});

@@ -210,46 +210,6 @@ export function useRenameNode() {
 	});
 }
 
-export function useMoveNode() {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: async ({
-			type,
-			id,
-			parent_id,
-			position,
-		}: {
-			type: "folder" | "page";
-			id: string;
-			parent_id: string | null;
-			position: number;
-			user_id: string;
-		}) => {
-			if (type === "folder") {
-				const { data } = await supabase
-					.from("folders")
-					.update({ parent_id, position })
-					.eq("id", id)
-					.select()
-					.single()
-					.throwOnError();
-				return data;
-			}
-			const { data } = await supabase
-				.from("pages")
-				.update({ folder_id: parent_id, position })
-				.eq("id", id)
-				.select()
-				.single()
-				.throwOnError();
-			return data;
-		},
-		onSuccess: (_data, { user_id }) => {
-			queryClient.invalidateQueries({ queryKey: ["folders-pages", user_id] });
-		},
-	});
-}
-
 export function useDeleteNode() {
 	const queryClient = useQueryClient();
 	return useMutation({
