@@ -23,18 +23,6 @@ export const Route = createRootRoute({
 		],
 		links: [
 			{ rel: "stylesheet", href: appCss },
-			{
-				rel: "stylesheet",
-				href: "https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.20/main.min.css",
-			},
-			{
-				rel: "stylesheet",
-				href: "https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.20/main.min.css",
-			},
-			{
-				rel: "stylesheet",
-				href: "https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.20/main.min.css",
-			},
 			{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 			{ rel: "apple-touch-icon", href: "/logo192.svg" },
 			{ rel: "manifest", href: "/manifest.json" },
