@@ -42,6 +42,9 @@ interface UIState {
 
 	expandedFolderIds: string[];
 	toggleFolderExpanded: (id: string) => void;
+
+	calendarGoogleSyncEnabled: boolean;
+	setCalendarGoogleSyncEnabled: (val: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -99,4 +102,7 @@ export const useUIStore = create<UIState>((set) => ({
 				? state.expandedFolderIds.filter((i) => i !== id)
 				: [...state.expandedFolderIds, id],
 		})),
+
+	calendarGoogleSyncEnabled: false,
+	setCalendarGoogleSyncEnabled: (val) => set({ calendarGoogleSyncEnabled: val }),
 }));

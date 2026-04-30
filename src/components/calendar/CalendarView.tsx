@@ -8,19 +8,28 @@ import type { DropArg, EventResizeDoneArg } from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
+import {
+	fetchGoogleCalendarEvents,
+	triggerFullSync,
+	updateGoogleCalendarEvent,
+} from "@/server/googleCalendar";
 import { useUIStore } from "@/stores/useUIStore";
 import { supabase } from "@/utils/supabase";
 import { EventSidePanel } from "./EventSidePanel";
+import { GoogleSyncDialog } from "./GoogleSyncDialog";
+import { RecurringEditDialog } from "./RecurringEditDialog";
 import "./styles/calendar.css";
 
 const EventItem = ({ info }: { info: EventContentArg }) => {
 	const { event } = info;
-	const [left, right] = info.timeText.split(" - ");
+	const timeText = info.timeText || "";
+	const [left, right] = timeText.split(" - ");
 	return (
 		<div style={{ overflow: "hidden", width: "100%" }}>
 			<div
@@ -51,7 +60,12 @@ const EventItem = ({ info }: { info: EventContentArg }) => {
 export function CalendarView() {
 	const { userId } = useCurrentUser();
 	const queryClient = useQueryClient();
-	const { sidePanelBlockId, setSidePanelBlockId } = useUIStore();
+	const {
+		sidePanelBlockId,
+		setSidePanelBlockId,
+		calendarGoogleSyncEnabled,
+		setCalendarGoogleSyncEnabled,
+	} = useUIStore();
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 
@@ -61,14 +75,97 @@ export function CalendarView() {
 	const rangeEnd = new Date(today);
 	rangeEnd.setDate(today.getDate() + 14);
 
-	const {
-		data: calendarBlocks = [],
-		isLoading: loadingBlocks,
-		isError,
-	} = useCalendarBlocks(userId ?? "", {
+	const { data: calendarBlocks = [] } = useCalendarBlocks(userId ?? "", {
 		start: rangeStart.toISOString(),
 		end: rangeEnd.toISOString(),
 	});
+
+	const { data: googleEvents = [], refetch: refetchGoogle } = useQuery({
+		queryKey: ["google-events", userId],
+		enabled: !!userId && calendarGoogleSyncEnabled,
+		queryFn: async () => {
+			if (!userId) return [];
+			const result = await fetchGoogleCalendarEvents({
+				data: { userId },
+			});
+			return result as never[];
+		},
+	});
+
+	const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+	const [recurringDialog, setRecurringDialog] = useState<{
+		open: boolean;
+		eventId: string;
+		recurringEventId: string;
+		newStart: string;
+		newEnd: string | null;
+		info: EventChangeArg | EventResizeDoneArg | null;
+	}>({
+		open: false,
+		eventId: "",
+		recurringEventId: "",
+		newStart: "",
+		newEnd: null,
+		info: null,
+	});
+
+	const triggerSyncMutation = useMutation({
+		mutationFn: async () => {
+			if (!userId) return null;
+			return triggerFullSync({ data: { userId } });
+		},
+		onSuccess: () => {
+			toast.success("Synced");
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			refetchGoogle();
+		},
+		onError: (err: Error) => {
+			toast.error(`Sync issue: ${err.message}`);
+		},
+	});
+
+	const updateGoogleMutation = useMutation({
+		mutationFn: async ({
+			googleEventId,
+			start_time,
+			end_time,
+			title,
+		}: {
+			googleEventId: string;
+			start_time: string;
+			end_time: string | undefined;
+			title: string;
+		}) => {
+			return updateGoogleCalendarEvent({
+				data: {
+					userId: userId ?? "",
+					googleEventId,
+					block: { title, start_time, end_time },
+				},
+			});
+		},
+	});
+
+	// Merge local blocks and Google events
+	const mergedEvents = [
+		// Local blocks (tasks + manually created)
+		...(calendarBlocks || []).map((block) => ({
+			id: block.id,
+			title: block.title,
+			start: block.start_time,
+			end: block.end_time,
+			backgroundColor: block.task_id ? "#3a8fd4" : "#34d399",
+			extendedProps: {
+				source: block.task_id ? "task" : "local",
+				taskId: block.task_id,
+				googleEventId: block.google_event_id,
+				is_synced: block.is_synced,
+				block_type: block.block_type,
+			},
+		})),
+		// Google events (from fetchGoogleCalendarEvents)
+		...(calendarGoogleSyncEnabled ? googleEvents : []),
+	];
 
 	const handleDrop = async (info: DropArg) => {
 		const taskId = info.draggedEl.getAttribute("data-task-id");
@@ -103,6 +200,18 @@ export function CalendarView() {
 			.eq("user_id", userId)
 			.throwOnError();
 
+		// If sync enabled, also push to Google
+		if (calendarGoogleSyncEnabled) {
+			try {
+				await fetchGoogleCalendarEvents({
+					data: { userId },
+				});
+				// The full sync will handle pushing this new block
+			} catch {
+				// Non-blocking
+			}
+		}
+
 		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
 		queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 		setSidePanelBlockId(newBlock.id);
@@ -114,12 +223,51 @@ export function CalendarView() {
 		const start_time = event.start?.toISOString() ?? null;
 		const end_time = event.end?.toISOString() ?? undefined;
 		if (!blockId || !start_time || !userId) return;
+
+		const source = event.extendedProps.source;
+		const isSynced = event.extendedProps.is_synced;
+		const googleEventId = event.extendedProps.googleEventId;
+		const recurringEventId = event.extendedProps.recurringEventId;
+
+		// Handle recurring Google event
+		if (source === "google" && recurringEventId) {
+			setRecurringDialog({
+				open: true,
+				eventId: blockId,
+				recurringEventId,
+				newStart: start_time,
+				newEnd: end_time ?? "",
+				info,
+			});
+			return;
+		}
+
+		// Save locally
 		await supabase
 			.from("calendar_blocks")
 			.update({ start_time, end_time })
 			.eq("id", blockId)
 			.eq("user_id", userId)
 			.throwOnError();
+
+	// If synced to Google, update there too
+		if (
+			(source === "local" || source === "task") &&
+			isSynced &&
+			googleEventId
+		) {
+			try {
+				await updateGoogleMutation.mutateAsync({
+					googleEventId,
+					start_time: event.start?.toISOString() ?? "",
+					end_time,
+					title: event.title,
+				});
+			} catch {
+				toast("Saved. Google Calendar will update on next sync.");
+			}
+		}
+
 		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
 	};
 
@@ -128,12 +276,47 @@ export function CalendarView() {
 		const blockId = event.id;
 		const end_time = event.end?.toISOString() ?? undefined;
 		if (!blockId || !end_time || !userId) return;
+
+		const source = event.extendedProps.source;
+		const isSynced = event.extendedProps.is_synced;
+		const googleEventId = event.extendedProps.googleEventId;
+		const recurringEventId = event.extendedProps.recurringEventId;
+
+		// Handle recurring Google event
+		if (source === "google" && recurringEventId) {
+			setRecurringDialog({
+				open: true,
+				eventId: blockId,
+				recurringEventId,
+				newStart: event.start?.toISOString() ?? "",
+				newEnd: end_time,
+				info,
+			});
+			return;
+		}
+
+		// Save locally
 		await supabase
 			.from("calendar_blocks")
 			.update({ end_time })
 			.eq("id", blockId)
 			.eq("user_id", userId)
 			.throwOnError();
+
+		// If synced to Google, update there too
+		if ((source === "local" || source === "task") && isSynced && googleEventId) {
+			try {
+				await updateGoogleMutation.mutateAsync({
+					googleEventId,
+					start_time: event.start?.toISOString() ?? "",
+					end_time,
+					title: event.title,
+				});
+			} catch {
+				toast("Saved. Google Calendar will update on next sync.");
+			}
+		}
+
 		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
 	};
 
@@ -141,35 +324,43 @@ export function CalendarView() {
 		setSidePanelBlockId(info.event.id);
 	};
 
-	if (!userId || (loadingBlocks && !isError)) {
-		return (
-			<div className="h-full p-2 flex flex-col gap-1">
-				<div className="flex gap-1 mb-2">
-					<div className="w-12 shrink-0" />
-					{[0, 1, 2].map((i) => (
-						<Skeleton key={i} className="h-8 flex-1 bg-accent" />
-					))}
-				</div>
-				{Array.from({ length: 10 }).map((_, rowIdx) => {
-					const hour = 6 + rowIdx;
-					return (
-						<div key={`skeleton-hour-${hour}`} className="flex gap-1">
-							<Skeleton className="h-12 w-12 shrink-0 bg-accent" />
-							{[1, 2, 3].map((colId) => (
-								<Skeleton
-									key={`skeleton-col-${colId}`}
-									className="h-12 flex-1 bg-accent opacity-40"
-								/>
-							))}
-						</div>
-					);
-				})}
-			</div>
-		);
-	}
+	const handleSyncToggle = () => {
+		if (!calendarGoogleSyncEnabled) {
+			// First time — show dialog
+			setSyncDialogOpen(true);
+		} else {
+			// Already enabled — run sync
+			triggerSyncMutation.mutate();
+		}
+	};
+
+	const handleConnect = () => {
+		setCalendarGoogleSyncEnabled(true);
+		triggerSyncMutation.mutate();
+	};
+
+	if (!userId) return null;
 
 	return (
 		<div className="flex flex-col w-full overflow-auto bg-background">
+			{/* Sync toggle + view switcher row */}
+			<div className="flex items-center justify-end gap-2 px-2 py-1 border-b border-border">
+				<button
+					type="button"
+					onClick={handleSyncToggle}
+					className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition"
+					style={{ minWidth: "44px", minHeight: "44px" }}
+					title="Google Calendar sync"
+				>
+					<RefreshCw
+						className={`w-4 h-4 ${triggerSyncMutation.isPending ? "animate-spin" : ""}`}
+					/>
+					<span className="text-xs text-muted-foreground">
+						{calendarGoogleSyncEnabled ? "Synced" : "Sync"}
+					</span>
+				</button>
+			</div>
+
 			<FullCalendar
 				ref={calendarRef}
 				plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
@@ -200,23 +391,7 @@ export function CalendarView() {
 					minute: "2-digit",
 					hour12: true,
 				}}
-				events={(calendarBlocks ?? []).map((block) => {
-					const source = block.task_id ? "task" : "google";
-					return {
-						id: block.id,
-						title: block.title,
-						start: block.start_time,
-						end: block.end_time,
-						backgroundColor: source === "task" ? "#3a8fd4" : "#3a8a3a",
-						extendedProps: {
-							source,
-							taskId: block.task_id,
-							googleEventId: block.google_event_id,
-							block_type: block.block_type,
-							is_synced: block.is_synced,
-						},
-					};
-				})}
+				events={mergedEvents}
 				eventContent={(arg) => <EventItem info={arg} />}
 				eventClick={handleEventClick}
 				eventChange={handleEventChange}
@@ -232,6 +407,21 @@ export function CalendarView() {
 					userId={userId ?? ""}
 				/>
 			)}
+
+			<GoogleSyncDialog
+				open={syncDialogOpen}
+				onOpenChange={setSyncDialogOpen}
+				onConnect={handleConnect}
+			/>
+
+			<RecurringEditDialog
+				open={recurringDialog.open}
+				onOpenChange={(open) =>
+					setRecurringDialog((prev) => ({ ...prev, open }))
+				}
+				onJustThisTime={() => handleRecurringUpdate(false)}
+				onAllTimes={() => handleRecurringUpdate(true)}
+			/>
 		</div>
 	);
 }

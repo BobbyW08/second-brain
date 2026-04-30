@@ -2,11 +2,17 @@
 
 ## Current Ticket
 
-**TICKET v0.5-1 — AI Infrastructure** ← CURRENT
+**Google Calendar Two-Way Sync** ← IN PROGRESS
 
-Full ticket spec: memory-bank/v05-v10-build-plan.md → TICKET v0.5-1
+Full ticket spec: Cline ticket at start of session.
 
-Summary: Create AI route (tanchat pattern), aiConstants.ts, and ai_threads table migration.
+Summary: Implement two-way Google Calendar sync with:
+- event_mappings table (migration 012)
+- 8 server functions in googleCalendar.ts (token refresh, create/update/delete/fetch events, sync both directions)
+- UI: CalendarView merges Google + local events, sync toggle, recurring event dialog
+- Zustand store: calendarGoogleSyncEnabled flag
+
+Status: Code complete. Build ✅ Typecheck ✅ Lint ✅
 
 ---
 

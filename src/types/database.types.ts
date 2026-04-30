@@ -154,6 +154,60 @@ export type Database = {
 					},
 				];
 			};
+			event_mappings: {
+				Row: {
+					id: string;
+					user_id: string;
+					local_block_id: string | null;
+					google_event_id: string;
+					google_calendar_id: string;
+					sync_cluster_id: string;
+					content_hash: string | null;
+					origin: "local" | "google";
+					last_synced_at: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					local_block_id?: string | null;
+					google_event_id: string;
+					google_calendar_id?: string;
+					sync_cluster_id?: string;
+					content_hash?: string | null;
+					origin: "local" | "google";
+					last_synced_at?: string | null;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					user_id?: string;
+					local_block_id?: string | null;
+					google_event_id?: string;
+					google_calendar_id?: string;
+					sync_cluster_id?: string;
+					content_hash?: string | null;
+					origin?: "local" | "google";
+					last_synced_at?: string | null;
+					created_at?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "event_mappings_user_id_fkey";
+						columns: ["user_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "event_mappings_local_block_id_fkey";
+						columns: ["local_block_id"];
+						isOneToOne: false;
+						referencedRelation: "calendar_blocks";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			folders: {
 				Row: {
 					created_at: string;

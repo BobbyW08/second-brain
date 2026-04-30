@@ -1,6 +1,6 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowDown, ArrowLeft, ArrowUp } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -38,7 +38,7 @@ import {
 	useReorderBuckets,
 	useUpdateBucket,
 } from "@/queries/buckets";
-import { useSyncGoogleEvents } from "@/queries/calendarBlocks";
+import { triggerFullSync } from "@/server/googleCalendar";
 import {
 	useDisconnectGoogle,
 	useProfile,
@@ -68,7 +68,18 @@ export function SettingsPage() {
 	const reorderBuckets = useReorderBuckets(userId);
 
 	const disconnectGoogle = useDisconnectGoogle();
-	const syncGoogle = useSyncGoogleEvents();
+	const queryClient = useQueryClient();
+
+	const syncGoogle = useMutation({
+		mutationFn: async () => {
+			if (!userId) return;
+			return triggerFullSync({ data: { userId } });
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			queryClient.invalidateQueries({ queryKey: ["google-events"] });
+		},
+	});
 
 	const { data: taskCounts = {} } = useQuery({
 		queryKey: ["tasks-by-bucket-count", userId],
@@ -387,7 +398,7 @@ export function SettingsPage() {
 									<div className="flex gap-2">
 										<Button
 											size="sm"
-											onClick={() => syncGoogle.mutate(userId)}
+											onClick={() => syncGoogle.mutate()}
 											disabled={syncGoogle.isPending}
 										>
 											{syncGoogle.isPending ? "Syncing..." : "Sync now"}

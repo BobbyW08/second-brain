@@ -79,7 +79,7 @@
 ## v0.5 Features
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx/station-a-notion-clone) ← COMPLETE
-- [ ] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration) ← CURRENT
+- [ ] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration)
 - [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence)
 - [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
 - [ ] v0.5-4 — AI journal prompts (generateText on empty journal entry)

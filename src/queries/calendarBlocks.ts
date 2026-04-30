@@ -1,5 +1,8 @@
+import {
+	createGoogleCalendarEvent,
+	deleteGoogleCalendarEvent,
+} from "@/server/googleCalendar";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteGoogleEvent, syncGoogleCalendar } from "@/server/googleCalendar";
 import type { Tables } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
@@ -38,35 +41,26 @@ export function useDeleteBlock() {
 				.single()
 				.throwOnError();
 
+			// If synced, delete from Google + clean up event_mappings
+			if (currentBlock.is_synced && currentBlock.google_event_id) {
+				try {
+					await deleteGoogleCalendarEvent({
+						data: {
+							userId: currentBlock.user_id,
+							googleEventId: currentBlock.google_event_id,
+						},
+					});
+				} catch {
+					// Google delete failed — still clean up local
+				}
+			}
+
+			// Delete local block (event_mappings cleaned up by server function)
 			await supabase
 				.from("calendar_blocks")
 				.delete()
 				.eq("id", blockId)
 				.throwOnError();
-
-			// If this is a synced block, also delete from Google Calendar
-			if (currentBlock.is_synced && currentBlock.google_event_id) {
-				// Get the user's Google tokens from the profile
-				const { data: profileData } = await supabase
-					.from("profiles")
-					.select("google_access_token, google_refresh_token")
-					.eq("id", currentBlock.user_id)
-					.single()
-					.throwOnError();
-
-				if (
-					!profileData.google_access_token ||
-					!profileData.google_refresh_token
-				)
-					return;
-
-				await deleteGoogleEvent({
-					data: {
-						googleEventId: currentBlock.google_event_id,
-						accessToken: profileData.google_access_token,
-					},
-				});
-			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
@@ -74,30 +68,81 @@ export function useDeleteBlock() {
 	});
 }
 
-// ─── Sync Google Events ────────────────────────────────────────────────────────
-
-export function useSyncGoogleEvents() {
+export function useCreateBlock() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async (userId: string) => {
-			const { data: profile } = await supabase
-				.from("profiles")
-				.select("google_access_token, google_refresh_token")
-				.eq("id", userId)
+		mutationFn: async ({
+			block,
+			syncToGoogle,
+		}: {
+			block: {
+				user_id: string;
+				title: string;
+				start_time: string;
+				end_time: string;
+				block_type?: string | null;
+				task_id?: string | null;
+			};
+			syncToGoogle?: boolean;
+		}) => {
+			const { data: newBlock } = await supabase
+				.from("calendar_blocks")
+				.insert(block)
+				.select()
 				.single()
 				.throwOnError();
 
-			if (!profile?.google_access_token || !profile?.google_refresh_token)
-				return;
+			// If sync enabled, push to Google
+			if (syncToGoogle && newBlock) {
+				try {
+					await createGoogleCalendarEvent({
+						data: {
+							userId: block.user_id,
+							block: {
+								id: newBlock.id,
+								title: block.title,
+								start_time: block.start_time,
+								end_time: block.end_time,
+							},
+						},
+					});
+				} catch {
+					// Non-blocking
+				}
+			}
 
-			await syncGoogleCalendar({
-				data: {
-					userId,
-					accessToken: profile.google_access_token,
-					refreshToken: profile.google_refresh_token,
-				},
-			});
+			return newBlock;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+		},
+	});
+}
+
+export function useUpdateBlock() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			blockId,
+			userId,
+			updates,
+		}: {
+			blockId: string;
+			userId: string;
+			updates: {
+				start_time?: string;
+				end_time?: string;
+				title?: string;
+			};
+		}) => {
+			await supabase
+				.from("calendar_blocks")
+				.update(updates)
+				.eq("id", blockId)
+				.eq("user_id", userId)
+				.throwOnError();
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
