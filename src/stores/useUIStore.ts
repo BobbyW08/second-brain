@@ -104,5 +104,6 @@ export const useUIStore = create<UIState>((set) => ({
 		})),
 
 	calendarGoogleSyncEnabled: false,
-	setCalendarGoogleSyncEnabled: (val) => set({ calendarGoogleSyncEnabled: val }),
+	setCalendarGoogleSyncEnabled: (val) =>
+		set({ calendarGoogleSyncEnabled: val }),
 }));

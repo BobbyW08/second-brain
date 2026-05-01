@@ -1,6 +1,6 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowDown, ArrowLeft, ArrowUp } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -38,12 +38,12 @@ import {
 	useReorderBuckets,
 	useUpdateBucket,
 } from "@/queries/buckets";
-import { triggerFullSync } from "@/server/googleCalendar";
 import {
 	useDisconnectGoogle,
 	useProfile,
 	useUpdateProfile,
 } from "@/queries/profile";
+import { triggerFullSync } from "@/server/googleCalendar";
 import { supabase } from "@/utils/supabase";
 
 const profileSchema = z.object({

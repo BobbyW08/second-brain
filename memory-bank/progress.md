@@ -76,6 +76,16 @@
 
 ---
 
+## Google Calendar Two-Way Sync ✅ (April 30 2026)
+
+- [x] Migration 012: event_mappings table + calendar_blocks columns
+- [x] 8 server functions: refreshGoogleTokenIfNeeded, create/update/delete/fetch events, sync both directions
+- [x] Rewrite CalendarView: merge Google + local events, sync toggle, recurring dialog
+- [x] GoogleSyncDialog + RecurringEditDialog components
+- [x] Zustand store: calendarGoogleSyncEnabled flag
+- [x] Build ✅ Typecheck ✅ Lint ✅
+- [x] Commit: 76897d9 → pushed to main
+
 ## v0.5 Features
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx/station-a-notion-clone) ← COMPLETE

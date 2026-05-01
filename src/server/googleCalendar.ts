@@ -64,11 +64,7 @@ export const refreshGoogleTokenIfNeeded = createServerFn({ method: "POST" })
 			: null;
 		const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000);
 
-		if (
-			profile.google_access_token &&
-			expiry &&
-			expiry > fiveMinutesFromNow
-		) {
+		if (profile.google_access_token && expiry && expiry > fiveMinutesFromNow) {
 			return { access_token: profile.google_access_token as string };
 		}
 
@@ -296,11 +292,8 @@ export const updateGoogleCalendarEvent = createServerFn({ method: "POST" })
 
 export const deleteGoogleCalendarEvent = createServerFn({ method: "POST" })
 	.inputValidator(
-		(data: {
-			userId: string;
-			googleEventId: string;
-			calendarId?: string;
-		}) => data,
+		(data: { userId: string; googleEventId: string; calendarId?: string }) =>
+			data,
 	)
 	.handler(async ({ data }) => {
 		const { userId, googleEventId, calendarId = "primary" } = data;
@@ -344,9 +337,7 @@ export const deleteGoogleCalendarEvent = createServerFn({ method: "POST" })
 // ─── FUNCTION 5: fetchGoogleCalendarEvents ──────────────────────────────────
 
 export const fetchGoogleCalendarEvents = createServerFn({ method: "POST" })
-	.inputValidator(
-		(data: { userId: string; calendarId?: string }) => data,
-	)
+	.inputValidator((data: { userId: string; calendarId?: string }) => data)
 	.handler(async ({ data }) => {
 		const { userId, calendarId = "primary" } = data;
 
@@ -370,22 +361,20 @@ export const fetchGoogleCalendarEvents = createServerFn({ method: "POST" })
 		const events = googleEvents
 			.filter((ev: { status?: string }) => ev.status !== "cancelled")
 			.map(
-				(
-					ev: {
-						id: string;
-						summary?: string;
-						start?: { dateTime?: string; date?: string };
-						end?: { dateTime?: string; date?: string };
-						recurringEventId?: string;
-						extendedProperties?: {
-							shared?: {
-								sync_cluster_id?: string;
-								origin?: string;
-								source_id?: string;
-							};
+				(ev: {
+					id: string;
+					summary?: string;
+					start?: { dateTime?: string; date?: string };
+					end?: { dateTime?: string; date?: string };
+					recurringEventId?: string;
+					extendedProperties?: {
+						shared?: {
+							sync_cluster_id?: string;
+							origin?: string;
+							source_id?: string;
 						};
-					},
-				) => ({
+					};
+				}) => ({
 					id: ev.id,
 					title: ev.summary || "(no title)",
 					start: ev.start?.dateTime || ev.start?.date || "",
@@ -397,8 +386,7 @@ export const fetchGoogleCalendarEvents = createServerFn({ method: "POST" })
 						recurringEventId: ev.recurringEventId || null,
 						syncClusterId:
 							ev.extendedProperties?.shared?.sync_cluster_id || null,
-						origin:
-							ev.extendedProperties?.shared?.origin || "google",
+						origin: ev.extendedProperties?.shared?.origin || "google",
 					},
 				}),
 			);
@@ -409,17 +397,14 @@ export const fetchGoogleCalendarEvents = createServerFn({ method: "POST" })
 // ─── FUNCTION 6: syncGoogleToLocal ──────────────────────────────────────────
 
 export const syncGoogleToLocal = createServerFn({ method: "POST" })
-	.inputValidator(
-		(data: { userId: string; calendarId?: string }) => data,
-	)
+	.inputValidator((data: { userId: string; calendarId?: string }) => data)
 	.handler(async ({ data }) => {
 		const { userId, calendarId = "primary" } = data;
 
 		// Fetch Google events
-		const googleEvents =
-			await fetchGoogleCalendarEvents({
-				data: { userId, calendarId },
-			});
+		const googleEvents = await fetchGoogleCalendarEvents({
+			data: { userId, calendarId },
+		});
 
 		let created = 0;
 		let updated = 0;
@@ -498,8 +483,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 						local_block_id: inserted.id,
 						google_event_id: googleEventId,
 						google_calendar_id: calendarId,
-						sync_cluster_id:
-							props.syncClusterId || crypto.randomUUID(),
+						sync_cluster_id: props.syncClusterId || crypto.randomUUID(),
 						content_hash: contentHash,
 						origin: "google",
 						last_synced_at: new Date().toISOString(),
@@ -546,9 +530,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 // ─── FUNCTION 7: syncLocalToGoogle ──────────────────────────────────────────
 
 export const syncLocalToGoogle = createServerFn({ method: "POST" })
-	.inputValidator(
-		(data: { userId: string; calendarId?: string }) => data,
-	)
+	.inputValidator((data: { userId: string; calendarId?: string }) => data)
 	.handler(async ({ data }) => {
 		const { userId, calendarId = "primary" } = data;
 
@@ -606,9 +588,7 @@ export const syncLocalToGoogle = createServerFn({ method: "POST" })
 // ─── FUNCTION 8: triggerFullSync ────────────────────────────────────────────
 
 export const triggerFullSync = createServerFn({ method: "POST" })
-	.inputValidator(
-		(data: { userId: string; calendarId?: string }) => data,
-	)
+	.inputValidator((data: { userId: string; calendarId?: string }) => data)
 	.handler(async ({ data }) => {
 		const { userId, calendarId = "primary" } = data;
 

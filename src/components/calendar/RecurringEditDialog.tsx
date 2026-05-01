@@ -28,8 +28,8 @@ export function RecurringEditDialog({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Adjust recurring event</AlertDialogTitle>
 					<AlertDialogDescription>
-						Would you like to adjust just this occurrence, or all
-						occurrences in this series?
+						Would you like to adjust just this occurrence, or all occurrences in
+						this series?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex-col sm:flex-row gap-2">

@@ -19,7 +19,7 @@ export const Route = createRootRoute({
 				name: "description",
 				content: "Your personal second brain.",
 			},
-			{ name: "theme-color", content: "#0a0a0a" },
+			{ name: "theme-color", content: "#ffffff" },
 		],
 		links: [
 			{ rel: "stylesheet", href: appCss },

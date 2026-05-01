@@ -1,8 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createGoogleCalendarEvent,
 	deleteGoogleCalendarEvent,
 } from "@/server/googleCalendar";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Tables } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 

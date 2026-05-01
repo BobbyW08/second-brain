@@ -69,7 +69,7 @@ export function AppLayout() {
 
 	async function handleSignOut() {
 		await supabase.auth.signOut();
-		window.location.href = "/login";
+		window.location.href = "/";
 	}
 
 	return (
@@ -159,12 +159,14 @@ export function AppLayout() {
 			</aside>
 
 			{/* Right panel — 3/4 width */}
-			<main className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
+			<main className="flex flex-col flex-1 min-h-0 min-w-0">
 				<TopBar />
-				<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+				<div className="flex-1 min-h-0 flex flex-col">
 					<ErrorBoundary>
 						{leftPanelMode === "priorities" ? (
-							<CalendarView />
+							<div className="flex-1 min-h-0">
+								<CalendarView />
+							</div>
 						) : activePageId ? (
 							<PageView pageId={activePageId} />
 						) : (

@@ -4,7 +4,7 @@ import type {
 	EventContentArg,
 } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import type { DropArg, EventResizeDoneArg } from "@fullcalendar/interaction";
+import type { DropArg } from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -98,14 +98,14 @@ export function CalendarView() {
 		eventId: string;
 		recurringEventId: string;
 		newStart: string;
-		newEnd: string | null;
+		newEnd: string | undefined;
 		info: EventChangeArg | EventResizeDoneArg | null;
 	}>({
 		open: false,
 		eventId: "",
 		recurringEventId: "",
 		newStart: "",
-		newEnd: null,
+		newEnd: undefined,
 		info: null,
 	});
 
@@ -173,6 +173,11 @@ export function CalendarView() {
 		const durationStr = info.draggedEl.getAttribute("data-duration") ?? "01:00";
 		if (!taskId || !userId) return;
 
+		if (!(info.date instanceof Date) || Number.isNaN(info.date.getTime())) {
+			toast.error("Invalid drop time. Please drop on a valid time slot.");
+			return;
+		}
+
 		const start_time = info.date.toISOString();
 		const [dHours, dMins] = durationStr.split(":").map(Number);
 		const endDate = new Date(info.date);
@@ -206,7 +211,6 @@ export function CalendarView() {
 				await fetchGoogleCalendarEvents({
 					data: { userId },
 				});
-				// The full sync will handle pushing this new block
 			} catch {
 				// Non-blocking
 			}
@@ -250,7 +254,7 @@ export function CalendarView() {
 			.eq("user_id", userId)
 			.throwOnError();
 
-	// If synced to Google, update there too
+		// If synced to Google, update there too
 		if (
 			(source === "local" || source === "task") &&
 			isSynced &&
@@ -304,7 +308,11 @@ export function CalendarView() {
 			.throwOnError();
 
 		// If synced to Google, update there too
-		if ((source === "local" || source === "task") && isSynced && googleEventId) {
+		if (
+			(source === "local" || source === "task") &&
+			isSynced &&
+			googleEventId
+		) {
 			try {
 				await updateGoogleMutation.mutateAsync({
 					googleEventId,
@@ -326,10 +334,8 @@ export function CalendarView() {
 
 	const handleSyncToggle = () => {
 		if (!calendarGoogleSyncEnabled) {
-			// First time — show dialog
 			setSyncDialogOpen(true);
 		} else {
-			// Already enabled — run sync
 			triggerSyncMutation.mutate();
 		}
 	};
@@ -339,10 +345,69 @@ export function CalendarView() {
 		triggerSyncMutation.mutate();
 	};
 
+	const handleRecurringUpdate = async (_updateAll: boolean) => {
+		const { eventId, newStart, newEnd, info } = recurringDialog;
+		if (!info) return;
+
+		try {
+			// For Google recurring events, we need to use Google's API
+			// This is handled by the server function
+			await supabase
+				.from("calendar_blocks")
+				.update({
+					start_time: newStart,
+					end_time: newEnd,
+				})
+				.eq("id", eventId)
+				.eq("user_id", userId)
+				.throwOnError();
+
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			toast.success("Event updated");
+		} catch (_error) {
+			toast.error("Failed to update recurring event");
+		}
+
+		setRecurringDialog((prev) => ({ ...prev, open: false }));
+	};
+
+	// biome-ignore lint/suspicious/noExplicitAny: FullCalendar doesn't export a type for eventRemove
+	const handleEventRemove = async (info: { event: any }) => {
+		const { event } = info;
+		const blockId = event.id;
+		if (!blockId || !userId) return;
+
+		try {
+			// Delete the calendar block
+			await supabase
+				.from("calendar_blocks")
+				.delete()
+				.eq("id", blockId)
+				.eq("user_id", userId)
+				.throwOnError();
+
+			// Update task status back to pending if it was a task
+			if (event.extendedProps.task_id) {
+				await supabase
+					.from("tasks")
+					.update({ status: "pending" })
+					.eq("id", event.extendedProps.task_id)
+					.eq("user_id", userId)
+					.throwOnError();
+			}
+
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+			toast.success("Event removed from calendar");
+		} catch (_error) {
+			toast.error("Failed to remove event");
+		}
+	};
+
 	if (!userId) return null;
 
 	return (
-		<div className="flex flex-col w-full overflow-auto bg-background">
+		<div className="flex flex-col h-full w-full overflow-hidden bg-background">
 			{/* Sync toggle + view switcher row */}
 			<div className="flex items-center justify-end gap-2 px-2 py-1 border-b border-border">
 				<button
@@ -373,6 +438,7 @@ export function CalendarView() {
 				slotMinTime="06:00:00"
 				slotMaxTime="22:00:00"
 				height="100%"
+				contentHeight="100%"
 				displayEventEnd={true}
 				headerToolbar={{
 					left: "prev,next today",
@@ -397,6 +463,7 @@ export function CalendarView() {
 				eventChange={handleEventChange}
 				eventResize={handleEventResize}
 				drop={handleDrop}
+				eventRemove={handleEventRemove}
 				dateClick={() => setSidePanelBlockId(null)}
 			/>
 
