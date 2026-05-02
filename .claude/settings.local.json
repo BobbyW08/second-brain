@@ -41,7 +41,11 @@
       "Bash(fuser -k 42069/tcp)",
       "Bash(lsof -ti:42069)",
       "Bash(npm install *)",
-      "PowerShell(Get-NetTCPConnection *)"
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(git *)",
+      "Bash(rm -rf \"C:\\\\dev\\\\second_brain\\\\src\\\\components\\\\ai\")",
+      "Bash(rm -f \"C:\\\\dev\\\\second_brain\\\\src\\\\components\\\\layout\\\\AppShell.tsx\")",
+      "Bash(rm -f \"C:\\\\dev\\\\second_brain\\\\src\\\\queries\\\\aiThreads.ts\")"
     ]
   }
 }
