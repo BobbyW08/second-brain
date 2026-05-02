@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -52,6 +53,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminInviteRoute = AdminInviteRouteImport.update({
   id: '/admin/invite',
   path: '/admin/invite',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/chat'
     | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/chat'
     | '/auth/callback'
     | '/'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/chat'
     | '/auth/callback'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -125,6 +137,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   AdminInviteRoute: typeof AdminInviteRoute
+  ApiChatRoute: typeof ApiChatRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/invite': {
       id: '/admin/invite'
       path: '/admin/invite'
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   AdminInviteRoute: AdminInviteRoute,
+  ApiChatRoute: ApiChatRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
