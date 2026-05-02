@@ -34,10 +34,13 @@
 - [x] 3-C: Sidebar collapse with ⌘B shortcut
 - [x] 3-D: Bucket settings section in SettingsPage
 
-## Phase 4 — Task Card Redesign ✅
-- [x] 4-A: TaskCard closed state with data attributes
-- [x] 4-B: TaskCard open state — all fields, chrono-node date parsing
-- [x] 4-C: Completed Today section + undo button
+## Phase 4 — Priorities Panel Redesign ✅
+- [x] 4A: Closed TaskCard — 3px border, drag handle, metadata row
+- [x] 4B: Open TaskCard — inline expand, all fields, chrono-node dates, @notion-kit/tags-input
+- [x] 4C: BucketHeader redesign — popover bucket selector, hover menu
+- [x] 4D: dnd-kit task reorder — DndContext + SortableContext + reorderTasks mutation
+- [x] 4E: short_id migration + @paralleldrive/cuid2 integration
+- [x] 4F: Subtasks (after 4A-4E stable) — deferred
 
 ## Phase 5 — Calendar and Google Sync ✅
 - [x] 5-A through 5-J: all complete — see previous progress entries
@@ -89,7 +92,7 @@
 ## v0.5 Features
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx/station-a-notion-clone) ← COMPLETE
-- [ ] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration)
+- [x] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration) ← COMPLETE
 - [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence)
 - [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
 - [ ] v0.5-4 — AI journal prompts (generateText on empty journal entry)

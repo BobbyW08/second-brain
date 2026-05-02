@@ -1,6 +1,8 @@
-import { Draggable } from "@fullcalendar/interaction";
 import { Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AddTaskInline } from "@/components/tasks/AddTaskInline";
 import { BucketHeader } from "@/components/tasks/BucketHeader";
@@ -14,7 +16,7 @@ import {
 	useDeleteBucket,
 	useUpdateBucket,
 } from "@/queries/buckets";
-import { useCreateTask, useTasksByPriority } from "@/queries/tasks";
+import { useCreateTask, useTasksByPriority, useReorderTasks } from "@/queries/tasks";
 import { useUIStore } from "@/stores/useUIStore";
 
 export function BucketPanel() {
@@ -28,6 +30,7 @@ export function BucketPanel() {
 
 	const { data: buckets = [], isLoading: loadingBuckets } = useBuckets(userId);
 	const { data: tasks = [] } = useTasksByPriority(userId);
+	const reorderTasks = useReorderTasks(userId);
 
 	const createBucket = useCreateBucket(userId);
 	const updateBucket = useUpdateBucket(userId);
@@ -41,24 +44,29 @@ export function BucketPanel() {
 		tasksByBucket[bid].push(task);
 	}
 
+	// dnd-kit sensors for task reorder
+	const sensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+	);
+
+	const handleDragEnd = (bucketId: string) => {
+		return (event: DragEndEvent) => {
+			const { active, over } = event;
+			if (over && active.id !== over.id) {
+				reorderTasks.mutate({
+					taskId: String(active.id),
+					overId: String(over.id),
+					bucketId,
+				});
+			}
+		};
+	};
+
 	useEffect(() => {
 		if (buckets.length > 0 && expandedBuckets.size === 0) {
 			setExpandedBuckets(new Set(buckets.map((b) => b.id)));
 		}
 	}, [buckets, expandedBuckets.size]);
-
-	useEffect(() => {
-		if (!bucketListRef.current) return;
-		const draggable = new Draggable(bucketListRef.current, {
-			itemSelector: ".task-card",
-			eventData: (el) => ({
-				id: (el as HTMLElement).dataset.taskId,
-				title: (el as HTMLElement).dataset.title,
-				duration: (el as HTMLElement).dataset.duration,
-			}),
-		});
-		return () => draggable.destroy();
-	}, []);
 
 	useEffect(() => {
 		if (!scrollToTaskId) return;
@@ -149,9 +157,20 @@ export function BucketPanel() {
 							/>
 							{isExpanded && (
 								<div className="flex flex-col gap-1 px-2 pb-2">
-									{bucketTasks.map((task) => (
-										<TaskCard key={task.id} task={task} userId={userId} />
-									))}
+									<DndContext
+										sensors={sensors}
+										collisionDetection={closestCenter}
+										onDragEnd={handleDragEnd(bucket.id)}
+									>
+										<SortableContext
+											items={bucketTasks.map((t) => t.id)}
+											strategy={verticalListSortingStrategy}
+										>
+											{bucketTasks.map((task) => (
+												<TaskCard key={task.id} task={task} userId={userId} />
+											))}
+										</SortableContext>
+									</DndContext>
 
 									<AddTaskInline
 										bucketId={bucket.id}

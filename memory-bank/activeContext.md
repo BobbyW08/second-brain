@@ -2,47 +2,24 @@
 
 ## Current Ticket
 
-**Google Calendar Two-Way Sync** ← IN PROGRESS
+**Phase 4 — Priorities Panel: Visual Overhaul + Functional Completion** ← COMPLETE
 
-Full ticket spec: Cline ticket at start of session.
+ Summary: Implemented new task card redesign with:
+- 4A: Closed TaskCard — 3px left border, drag handle on hover, conditional metadata row
+- 4B: Open TaskCard — inline expand, all fields (title, description, bucket popover, color swatches, labels via @notion-kit/tags-input, date with chrono-node parsing, links, short_id, subtasks)
+- 4C: BucketHeader — redesigned with popover bucket selector, hover-only menu
+- 4D: dnd-kit task reorder — DndContext + SortableContext per bucket, reorderTasks mutation with optimistic updates
+- 4E: short_id migration + generate on createTask via @paralleldrive/cuid2
 
-Summary: Implement two-way Google Calendar sync with:
-- event_mappings table (migration 012)
-- 8 server functions in googleCalendar.ts (token refresh, create/update/delete/fetch events, sync both directions)
-- UI: CalendarView merges Google + local events, sync toggle, recurring event dialog
-- Zustand store: calendarGoogleSyncEnabled flag
-
-Status: Code complete. Build ✅ Typecheck ✅ Lint ✅
-
----
-
-## v0.5-0 Complete ✅
-
-Folder tree migration complete. react-arborist replaced with recursive tree adapted from
-aldhyx/station-a-notion-clone. Key changes:
-- FolderTree.tsx rewritten: Zustand-backed expand state, New Folder button (+ icon),
-  system folder sorting (is_system pins to top)
-- FolderNode.tsx rewritten: double-click rename, richer context menu (New Page,
-  New Folder for folders), system folder guard (non-deletable, non-renameable)
-- TreeNode type extended with is_system + parent_id
-- Migration 0011 adds is_system boolean column to folders table
-- Query hooks unchanged (useFoldersAndPages, buildTree only updated type mapping)
-
----
-
-## v0.1 Complete ✅
-
-v0.1 deployed to Vercel — commit c897259, April 28 2026.
-All Phase 8 items complete. CSS refactoring, token audit, dead code audit all passed.
-Full Jotion shell replacement (Sessions 1-4) includes page headers natively.
+Status: Code complete. Build ✅ Typecheck ✅ (except pre-existing CalendarView errors) Lint ✅
 
 ---
 
 ## v0.5 Ticket Queue (in order)
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx pattern) ← COMPLETE
-- [ ] v0.5-1 — AI infrastructure (route + aiConstants.ts + ai_threads table) ← CURRENT
-- [ ] v0.5-2 — AI chat panel (assistant-ui)
+- [x] v0.5-1 — AI infrastructure (route + aiConstants.ts + ai_threads table) ← COMPLETE
+- [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence) ← CURRENT
 - [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
 - [ ] v0.5-4 — AI journal prompts
 - [ ] v0.5-5 — Scheduling suggestions ("Suggest my day")

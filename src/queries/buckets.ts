@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
@@ -11,8 +12,8 @@ export type CreateBucketInput = {
 export type UpdateBucketInput = { id: string; name?: string; color?: string };
 export type ReorderBucketsInput = Array<{ id: string; position: number }>;
 
-export const useBuckets = (userId: string) =>
-	useQuery({
+export function useBuckets(userId: string) {
+	return useQuery({
 		queryKey: ["buckets", userId],
 		queryFn: async () => {
 			const { data } = await supabase
@@ -25,8 +26,9 @@ export const useBuckets = (userId: string) =>
 		},
 		enabled: !!userId,
 	});
+}
 
-export const useCreateBucket = (userId: string) => {
+export function useCreateBucket(userId: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -59,13 +61,16 @@ export const useCreateBucket = (userId: string) => {
 				queryClient.setQueryData(["buckets", userId], context.previous);
 			}
 		},
+		onSuccess: () => {
+			toast.success("Bucket created");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["buckets", userId] });
 		},
 	});
-};
+}
 
-export const useUpdateBucket = (userId: string) => {
+export function useUpdateBucket(userId: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -93,13 +98,16 @@ export const useUpdateBucket = (userId: string) => {
 				queryClient.setQueryData(["buckets", userId], context.previous);
 			}
 		},
+		onSuccess: () => {
+			toast.success("Bucket updated");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["buckets", userId] });
 		},
 	});
-};
+}
 
-export const useDeleteBucket = (userId: string) => {
+export function useDeleteBucket(userId: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -119,13 +127,16 @@ export const useDeleteBucket = (userId: string) => {
 				queryClient.setQueryData(["buckets", userId], context.previous);
 			}
 		},
+		onSuccess: () => {
+			toast.success("Bucket deleted");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["buckets", userId] });
 		},
 	});
-};
+}
 
-export const useReorderBuckets = (userId: string) => {
+export function useReorderBuckets(userId: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -161,8 +172,11 @@ export const useReorderBuckets = (userId: string) => {
 				queryClient.setQueryData(["buckets", userId], context.previous);
 			}
 		},
+		onSuccess: () => {
+			toast.success("Buckets reordered");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["buckets", userId] });
 		},
 	});
-};
+}

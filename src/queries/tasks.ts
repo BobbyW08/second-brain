@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { createId } from "@paralleldrive/cuid2";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
@@ -59,7 +60,11 @@ export function useCreateTask() {
 		}) => {
 			await supabase
 				.from("tasks")
-				.insert({ ...input, status: "active" })
+				.insert({
+					...input,
+					short_id: createId().slice(0, 7),
+					status: "active",
+				})
 				.throwOnError();
 		},
 		onMutate: async (input) => {
@@ -86,10 +91,14 @@ export function useCreateTask() {
 				bucket_id: input.bucket_id ?? null,
 				color: null,
 				description: null,
+				due_at: null,
 				end_time: null,
+				google_event_id: null,
 				labels: null,
 				location: null,
+				parent_task_id: null,
 				recurring: null,
+				short_id: createId().slice(0, 7),
 				start_time: null,
 			};
 			queryClient.setQueryData<Task[]>(["tasks", input.user_id], (old) => [
@@ -181,6 +190,77 @@ export function useUpdateTask(userId: string) {
 			queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
 				(old ?? []).map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
 			);
+			return { previous };
+		},
+		onError: (_err, _input, context) => {
+			queryClient.setQueryData(["tasks", userId], context?.previous);
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+		},
+	});
+}
+
+// ─── Undo Complete ─────────────────────────────────────────────────────
+// ─── Reorder Tasks ───────────────────────────────────────────────────
+
+export function useReorderTasks(userId: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (input: {
+			taskId: string;
+			overId: string;
+			bucketId: string;
+		}) => {
+			const { data: tasks } = await supabase
+				.from("tasks")
+				.select("id, position")
+				.eq("user_id", userId)
+				.eq("bucket_id", input.bucketId)
+				.order("position")
+				.throwOnError();
+
+			if (!tasks) return;
+
+			const taskIds = tasks.map((t) => t.id);
+			const fromIndex = taskIds.indexOf(input.taskId);
+			const toIndex = taskIds.indexOf(input.overId);
+
+			if (fromIndex === -1 || toIndex === -1) return;
+
+			taskIds.splice(fromIndex, 1);
+			taskIds.splice(toIndex, 0, input.taskId);
+
+			const updates = taskIds.map((id, index) =>
+				supabase
+					.from("tasks")
+					.update({ position: index })
+					.eq("id", id)
+					.throwOnError(),
+			);
+
+			await Promise.all(updates);
+		},
+		onMutate: async ({ taskId, overId, bucketId }) => {
+			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
+			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
+
+			queryClient.setQueryData<Task[]>(["tasks", userId], (old) => {
+				if (!old) return old;
+				const bucketTasks = old.filter((t) => t.bucket_id === bucketId);
+				const otherTasks = old.filter((t) => t.bucket_id !== bucketId);
+
+				const fromIndex = bucketTasks.findIndex((t) => t.id === taskId);
+				const toIndex = bucketTasks.findIndex((t) => t.id === overId);
+
+				if (fromIndex === -1 || toIndex === -1) return old;
+
+				const [moved] = bucketTasks.splice(fromIndex, 1);
+				bucketTasks.splice(toIndex, 0, moved);
+
+				return [...otherTasks, ...bucketTasks];
+			});
+
 			return { previous };
 		},
 		onError: (_err, _input, context) => {
