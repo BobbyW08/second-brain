@@ -186,7 +186,6 @@ export function AppLayout() {
 				<Separator className="w-px bg-[#2a2a30] hover:bg-[#3A8FD4] transition-colors cursor-col-resize" />
 
 				{/* Center — Calendar / Editor / Capture */}
-				{/* biome-ignore lint/correctness/useUniqueElementIds: Panel IDs are required for react-resizable-panels */}
 				<Panel id="main" minSize={30} className="flex flex-col min-h-0">
 					<div className="flex-1 min-h-0 flex flex-col">
 						<ErrorBoundary>
