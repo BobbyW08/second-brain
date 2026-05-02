@@ -1,8 +1,17 @@
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+	closestCenter,
+	DndContext,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import type { DragEndEvent } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AddTaskInline } from "@/components/tasks/AddTaskInline";
 import { BucketHeader } from "@/components/tasks/BucketHeader";
@@ -16,7 +25,11 @@ import {
 	useDeleteBucket,
 	useUpdateBucket,
 } from "@/queries/buckets";
-import { useCreateTask, useTasksByPriority, useReorderTasks } from "@/queries/tasks";
+import {
+	useCreateTask,
+	useReorderTasks,
+	useTasksByPriority,
+} from "@/queries/tasks";
 import { useUIStore } from "@/stores/useUIStore";
 
 export function BucketPanel() {

@@ -1,6 +1,6 @@
+import { createId } from "@paralleldrive/cuid2";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createId } from "@paralleldrive/cuid2";
 import type { Database } from "@/types/database.types";
 import { supabase } from "@/utils/supabase";
 
@@ -195,6 +195,9 @@ export function useUpdateTask(userId: string) {
 		onError: (_err, _input, context) => {
 			queryClient.setQueryData(["tasks", userId], context?.previous);
 		},
+		onSuccess: () => {
+			toast.success("Task updated");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 		},
@@ -266,6 +269,9 @@ export function useReorderTasks(userId: string) {
 		onError: (_err, _input, context) => {
 			queryClient.setQueryData(["tasks", userId], context?.previous);
 		},
+		onSuccess: () => {
+			toast.success("Tasks reordered");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 		},
@@ -310,6 +316,9 @@ export function useUndoCompleteTask(userId: string) {
 				context?.previous,
 			);
 		},
+		onSuccess: () => {
+			toast.success("Task restored");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 			queryClient.invalidateQueries({
@@ -340,6 +349,80 @@ export function useDeleteTask(userId: string) {
 		},
 		onSuccess: () => {
 			toast.success("Task deleted");
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+		},
+	});
+}
+
+// --- Reorder Subtasks ----------------------------------------------
+
+export function useReorderSubtasks(userId: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (input: {
+			taskId: string;
+			overId: string;
+			parentTaskId: string;
+		}) => {
+			const { data: subtasks } = await supabase
+				.from("tasks")
+				.select("id, position")
+				.eq("user_id", userId)
+				.eq("parent_task_id", input.parentTaskId)
+				.order("position")
+				.throwOnError();
+
+			if (!subtasks) return;
+
+			const ids = subtasks.map((t) => t.id);
+			const fromIndex = ids.indexOf(input.taskId);
+			const toIndex = ids.indexOf(input.overId);
+
+			if (fromIndex === -1 || toIndex === -1) return;
+
+			ids.splice(fromIndex, 1);
+			ids.splice(toIndex, 0, input.taskId);
+
+			const updates = ids.map((id, index) =>
+				supabase
+					.from("tasks")
+					.update({ position: index })
+					.eq("id", id)
+					.throwOnError(),
+			);
+
+			await Promise.all(updates);
+		},
+		onMutate: async ({ taskId, overId, parentTaskId }) => {
+			await queryClient.cancelQueries({ queryKey: ["tasks", userId] });
+			const previous = queryClient.getQueryData<Task[]>(["tasks", userId]);
+
+			queryClient.setQueryData<Task[]>(["tasks", userId], (old) => {
+				if (!old) return old;
+				const parentSubtasks = old.filter(
+					(t) => t.parent_task_id === parentTaskId,
+				);
+				const otherTasks = old.filter((t) => t.parent_task_id !== parentTaskId);
+				const fromIndex = parentSubtasks.findIndex((t) => t.id === taskId);
+				const toIndex = parentSubtasks.findIndex((t) => t.id === overId);
+
+				if (fromIndex === -1 || toIndex === -1) return old;
+
+				const [moved] = parentSubtasks.splice(fromIndex, 1);
+				parentSubtasks.splice(toIndex, 0, moved);
+
+				return [...otherTasks, ...parentSubtasks];
+			});
+
+			return { previous };
+		},
+		onError: (_err, _input, context) => {
+			queryClient.setQueryData(["tasks", userId], context?.previous);
+		},
+		onSuccess: () => {
+			toast.success("Subtasks reordered");
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });

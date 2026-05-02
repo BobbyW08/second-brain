@@ -100,6 +100,7 @@ export function BucketHeader({
 				</button>
 
 				<button
+					type="button"
 					className="opacity-0 group-hover:opacity-100 transition-opacity text-[#444450] hover:text-[#aaaaB8] min-w-[44px] min-h-[44px] flex items-center justify-center"
 					onClick={(e) => {
 						e.stopPropagation();
