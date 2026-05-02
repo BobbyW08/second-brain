@@ -45,6 +45,12 @@ interface UIState {
 
 	calendarGoogleSyncEnabled: boolean;
 	setCalendarGoogleSyncEnabled: (val: boolean) => void;
+
+	aiPanelOpen: boolean;
+	setAiPanelOpen: (open: boolean) => void;
+
+	leftCollapsed: boolean;
+	setLeftCollapsed: (v: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -106,4 +112,10 @@ export const useUIStore = create<UIState>((set) => ({
 	calendarGoogleSyncEnabled: false,
 	setCalendarGoogleSyncEnabled: (val) =>
 		set({ calendarGoogleSyncEnabled: val }),
+
+	aiPanelOpen: false,
+	setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+
+	leftCollapsed: false,
+	setLeftCollapsed: (v) => set({ leftCollapsed: v }),
 }));
