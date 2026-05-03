@@ -19,9 +19,9 @@ Status: Code complete. Build ✅ Typecheck ✅ (except pre-existing CalendarView
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx pattern) ← COMPLETE
 - [x] v0.5-1 — AI infrastructure (route + aiConstants.ts + ai_threads table) ← COMPLETE
-- [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence) ← CURRENT
-- [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
-- [ ] v0.5-4 — AI journal prompts
+- [x] v0.5-2 — AI chat panel (assistant-ui + thread persistence) ← COMPLETE
+- [x] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai) ← COMPLETE
+- [ ] v0.5-4 — AI journal prompts ← CURRENT
 - [ ] v0.5-5 — Scheduling suggestions ("Suggest my day")
 - [ ] v0.5-6 — Supabase MCP server setup
 - [ ] v0.5-7 — Universal Capture System (⌘J modal + AI pipeline + _system folder)

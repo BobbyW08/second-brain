@@ -113,7 +113,7 @@ export const useUIStore = create<UIState>((set) => ({
 	setCalendarGoogleSyncEnabled: (val) =>
 		set({ calendarGoogleSyncEnabled: val }),
 
-	aiPanelOpen: false,
+	aiPanelOpen: true,
 	setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
 
 	leftCollapsed: false,

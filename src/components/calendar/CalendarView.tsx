@@ -99,7 +99,7 @@ export function CalendarView() {
 		recurringEventId: string;
 		newStart: string;
 		newEnd: string | undefined;
-		info: EventChangeArg | EventResizeDoneArg | null;
+		info: EventChangeArg | null;
 	}>({
 		open: false,
 		eventId: "",
@@ -275,7 +275,7 @@ export function CalendarView() {
 		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
 	};
 
-	const handleEventResize = async (info: EventResizeDoneArg) => {
+	const handleEventResize = async (info: EventChangeArg) => {
 		const { event } = info;
 		const blockId = event.id;
 		const end_time = event.end?.toISOString() ?? undefined;

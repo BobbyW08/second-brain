@@ -495,7 +495,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 				// Hash differs — check origin
 				if (mapping.origin === "google") {
 					// Google is origin — update local block
-					if (!mapping.local_block_id) return; // Skip if no local block linked
+					if (!mapping.local_block_id) continue; // Skip if no local block linked
 
 					await supabase
 						.from("calendar_blocks")

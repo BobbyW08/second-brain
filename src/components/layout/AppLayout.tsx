@@ -93,13 +93,16 @@ export function AppLayout() {
 			<TopBar />
 
 			{/* Three-panel resizable layout */}
-			<Group orientation="horizontal" className="flex-1 min-h-0">
+			<Group
+				orientation="horizontal"
+				className="flex-1 min-h-0 overflow-hidden"
+			>
 				{/* Left — Priorities / Files sidebar */}
 				<Panel
 					panelRef={leftPanelRef}
 					id="left"
 					defaultSize={22}
-					minSize={15}
+					minSize={18}
 					maxSize={35}
 					collapsible
 					collapsedSize={0}

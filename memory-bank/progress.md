@@ -93,9 +93,9 @@
 
 - [x] v0.5-0 — Folder tree migration (react-arborist → aldhyx/station-a-notion-clone) ← COMPLETE
 - [x] v0.5-1 — AI infrastructure (tanchat route pattern, aiConstants.ts, ai_threads migration) ← COMPLETE
-- [ ] v0.5-2 — AI chat panel (assistant-ui + thread persistence)
-- [ ] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai)
-- [ ] v0.5-4 — AI journal prompts (generateText on empty journal entry)
+- [x] v0.5-2 — AI chat panel (assistant-ui + thread persistence) ← COMPLETE
+- [x] v0.5-3 — AI writing toolbar (FormattingToolbarController — NOT @blocknote/xl-ai) ← COMPLETE
+- [ ] v0.5-4 — AI journal prompts (generateText on empty journal entry) ← CURRENT
 - [ ] v0.5-5 — Scheduling suggestions ("Suggest my day" manual trigger)
 - [ ] v0.5-6 — Supabase MCP server setup
 - [ ] v0.5-7 — Universal Capture System (⌘J modal + AI pipeline + _system folder)
