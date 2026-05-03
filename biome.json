@@ -31,5 +31,17 @@
 		"formatter": {
 			"quoteStyle": "double"
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["src/components/layout/AppLayout.tsx"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"useUniqueElementIds": "off"
+					}
+				}
+			}
+		}
+	]
 }

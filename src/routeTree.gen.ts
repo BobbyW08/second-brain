@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiAiPromptRouteImport } from './routes/api/ai-prompt'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -58,6 +59,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiPromptRoute = ApiAiPromptRouteImport.update({
+  id: '/api/ai-prompt',
+  path: '/api/ai-prompt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminInviteRoute = AdminInviteRouteImport.update({
   id: '/admin/invite',
   path: '/admin/invite',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/ai-prompt': typeof ApiAiPromptRoute
   '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/ai-prompt': typeof ApiAiPromptRoute
   '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/invite': typeof AdminInviteRoute
+  '/api/ai-prompt': typeof ApiAiPromptRoute
   '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/ai-prompt'
     | '/api/chat'
     | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/ai-prompt'
     | '/api/chat'
     | '/auth/callback'
     | '/'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/reset-password'
     | '/admin/invite'
+    | '/api/ai-prompt'
     | '/api/chat'
     | '/auth/callback'
     | '/_authenticated/'
@@ -137,6 +149,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   AdminInviteRoute: typeof AdminInviteRoute
+  ApiAiPromptRoute: typeof ApiAiPromptRoute
   ApiChatRoute: typeof ApiChatRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-prompt': {
+      id: '/api/ai-prompt'
+      path: '/api/ai-prompt'
+      fullPath: '/api/ai-prompt'
+      preLoaderRoute: typeof ApiAiPromptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/invite': {
       id: '/admin/invite'
       path: '/admin/invite'
@@ -228,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   AdminInviteRoute: AdminInviteRoute,
+  ApiAiPromptRoute: ApiAiPromptRoute,
   ApiChatRoute: ApiChatRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
