@@ -36,6 +36,26 @@
 }
 
 .dark {
+	/* FullCalendar tokens — re-declared in .dark so they resolve against dark shadcn values
+	   regardless of cascade order. This duplicates the :root declarations intentionally. */
+	--fc-page-bg-color: hsl(var(--background));
+	--fc-border-color: hsl(var(--border));
+	--fc-neutral-bg-color: hsl(var(--muted));
+	--fc-neutral-text-color: hsl(var(--muted-foreground));
+	--fc-highlight-color: hsl(var(--accent));
+	--fc-today-bg-color: hsl(var(--accent));
+	--fc-event-bg-color: hsl(var(--card));
+	--fc-event-border-color: hsl(var(--border));
+	--fc-event-text-color: hsl(var(--card-foreground));
+	--fc-button-bg-color: hsl(var(--card));
+	--fc-button-border-color: hsl(var(--border));
+	--fc-button-text-color: hsl(var(--foreground));
+	--fc-button-hover-bg-color: hsl(var(--accent));
+	--fc-button-active-bg-color: hsl(var(--accent));
+	--fc-button-active-border-color: hsl(var(--border));
+	--fc-list-event-hover-bg-color: hsl(var(--muted));
+	--fc-now-indicator-color: hsl(var(--destructive));
+
 	/* Zone colors — dark mode */
 	--morning-bg: #1a1600;
 	--morning-label: #7a6830;

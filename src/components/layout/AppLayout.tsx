@@ -92,7 +92,9 @@ export function AppLayout() {
 			{/* TopBar spans all three panels */}
 			<TopBar />
 
-			{/* Three-panel resizable layout */}
+			{/* Three-panel resizable layout
+			    IMPORTANT: react-resizable-panels v4 treats bare numbers as PIXELS.
+			    All size props must use percentage strings ("22%") not integers (22). */}
 			<Group
 				orientation="horizontal"
 				className="flex-1 min-h-0 overflow-hidden"
@@ -101,11 +103,11 @@ export function AppLayout() {
 				<Panel
 					panelRef={leftPanelRef}
 					id="left"
-					defaultSize={22}
-					minSize={18}
-					maxSize={35}
+					defaultSize="22%"
+					minSize="15%"
+					maxSize="35%"
 					collapsible
-					collapsedSize={0}
+					collapsedSize="0%"
 					className="flex flex-col min-h-0 bg-[hsl(var(--secondary))] border-r border-border overflow-hidden"
 				>
 					{/* App name header */}
@@ -189,7 +191,7 @@ export function AppLayout() {
 				<Separator className="w-px bg-[#2a2a30] hover:bg-[#3A8FD4] transition-colors cursor-col-resize" />
 
 				{/* Center — Calendar / Editor / Capture */}
-				<Panel id="main" minSize={30} className="flex flex-col min-h-0">
+				<Panel id="main" minSize="25%" className="flex flex-col min-h-0">
 					<div className="flex-1 min-h-0 flex flex-col">
 						<ErrorBoundary>
 							{leftPanelMode === "priorities" ? (
@@ -211,11 +213,11 @@ export function AppLayout() {
 						<Separator className="w-px bg-[#2a2a30] hover:bg-[#3A8FD4] transition-colors cursor-col-resize" />
 						<Panel
 							id="right"
-							defaultSize={28}
-							minSize={20}
-							maxSize={45}
+							defaultSize="28%"
+							minSize="20%"
+							maxSize="45%"
 							collapsible
-							collapsedSize={0}
+							collapsedSize="0%"
 							className="flex flex-col min-h-0 bg-[#18181c] border-l border-[#2a2a30]"
 						>
 							<AIChatPanel />

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
-import { supabase } from "@/utils/supabase";
+import { supabaseAdmin } from "@/utils/supabaseAdmin";
 
 const GOOGLE_API_BASE = "https://www.googleapis.com/calendar/v3";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -47,7 +47,7 @@ export const refreshGoogleTokenIfNeeded = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const { userId } = data;
 
-		const { data: profile } = await supabase
+		const { data: profile } = await supabaseAdmin
 			.from("profiles")
 			.select("google_access_token, google_refresh_token, google_token_expiry")
 			.eq("id", userId)
@@ -98,7 +98,7 @@ export const refreshGoogleTokenIfNeeded = createServerFn({ method: "POST" })
 			Date.now() + (tokenData.expires_in || 3600) * 1000,
 		).toISOString();
 
-		await supabase
+		await supabaseAdmin
 			.from("profiles")
 			.update({
 				google_access_token: newAccessToken,
@@ -170,7 +170,7 @@ export const createGoogleCalendarEvent = createServerFn({ method: "POST" })
 			block.end_time,
 		);
 
-		await supabase
+		await supabaseAdmin
 			.from("event_mappings")
 			.upsert(
 				{
@@ -188,7 +188,7 @@ export const createGoogleCalendarEvent = createServerFn({ method: "POST" })
 			.throwOnError();
 
 		// Update calendar_blocks
-		await supabase
+		await supabaseAdmin
 			.from("calendar_blocks")
 			.update({
 				google_event_id: googleEventId,
@@ -233,7 +233,7 @@ export const updateGoogleCalendarEvent = createServerFn({ method: "POST" })
 				block.end_time,
 			);
 
-			const { data: mapping } = await supabase
+			const { data: mapping } = await supabaseAdmin
 				.from("event_mappings")
 				.select("content_hash")
 				.eq("user_id", userId)
@@ -274,7 +274,7 @@ export const updateGoogleCalendarEvent = createServerFn({ method: "POST" })
 				block.end_time,
 			);
 
-			await supabase
+			await supabaseAdmin
 				.from("event_mappings")
 				.update({
 					content_hash: newHash,
@@ -313,7 +313,7 @@ export const deleteGoogleCalendarEvent = createServerFn({ method: "POST" })
 		});
 
 		// Delete from event_mappings
-		await supabase
+		await supabaseAdmin
 			.from("event_mappings")
 			.delete()
 			.eq("user_id", userId)
@@ -321,7 +321,7 @@ export const deleteGoogleCalendarEvent = createServerFn({ method: "POST" })
 			.throwOnError();
 
 		// Update calendar_blocks
-		await supabase
+		await supabaseAdmin
 			.from("calendar_blocks")
 			.update({
 				google_event_id: null,
@@ -414,7 +414,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 			const googleEventId = ev.id as string;
 
 			// Check for existing mapping
-			const { data: mapping } = await supabase
+			const { data: mapping } = await supabaseAdmin
 				.from("event_mappings")
 				.select("*, local_block_id")
 				.eq("user_id", userId)
@@ -432,7 +432,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 				if (mapping) {
 					// Delete local block
 					if (mapping.local_block_id) {
-						await supabase
+						await supabaseAdmin
 							.from("calendar_blocks")
 							.delete()
 							.eq("id", mapping.local_block_id)
@@ -440,7 +440,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 							.throwOnError();
 					}
 					// Delete mapping
-					await supabase
+					await supabaseAdmin
 						.from("event_mappings")
 						.delete()
 						.eq("id", mapping.id)
@@ -468,7 +468,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 					is_google_synced: true,
 				};
 
-				const { data: inserted } = await supabase
+				const { data: inserted } = await supabaseAdmin
 					.from("calendar_blocks")
 					.insert(newBlock)
 					.select()
@@ -476,7 +476,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 					.throwOnError();
 
 				// Create event_mapping
-				await supabase
+				await supabaseAdmin
 					.from("event_mappings")
 					.insert({
 						user_id: userId,
@@ -497,7 +497,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 					// Google is origin — update local block
 					if (!mapping.local_block_id) continue; // Skip if no local block linked
 
-					await supabase
+					await supabaseAdmin
 						.from("calendar_blocks")
 						.update({
 							title: ev.title || "(no title)",
@@ -509,7 +509,7 @@ export const syncGoogleToLocal = createServerFn({ method: "POST" })
 						.throwOnError();
 
 					// Update mapping
-					await supabase
+					await supabaseAdmin
 						.from("event_mappings")
 						.update({
 							content_hash: contentHash,
@@ -535,7 +535,7 @@ export const syncLocalToGoogle = createServerFn({ method: "POST" })
 		const { userId, calendarId = "primary" } = data;
 
 		// Fetch local blocks that should be synced
-		const { data: blocks } = await supabase
+		const { data: blocks } = await supabaseAdmin
 			.from("calendar_blocks")
 			.select("*")
 			.eq("user_id", userId)

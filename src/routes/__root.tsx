@@ -38,7 +38,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				<ThemeProvider defaultTheme="system" storageKey="second-brain-theme">
+				<ThemeProvider defaultTheme="dark" storageKey="second-brain-theme">
 					<QueryClientProvider client={queryClient}>
 						<AuthProvider>
 							{children}
