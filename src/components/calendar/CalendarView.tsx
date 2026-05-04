@@ -10,7 +10,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
@@ -69,16 +69,22 @@ export function CalendarView() {
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 
-	const today = new Date();
-	const rangeStart = new Date(today);
-	rangeStart.setDate(today.getDate() - 14);
-	const rangeEnd = new Date(today);
-	rangeEnd.setDate(today.getDate() + 14);
+	const dateRange = useMemo(() => {
+		const today = new Date();
+		const rangeStart = new Date(today);
+		rangeStart.setDate(today.getDate() - 14);
+		const rangeEnd = new Date(today);
+		rangeEnd.setDate(today.getDate() + 14);
+		return {
+			start: rangeStart.toISOString(),
+			end: rangeEnd.toISOString(),
+		};
+	}, []);
 
-	const { data: calendarBlocks = [] } = useCalendarBlocks(userId ?? "", {
-		start: rangeStart.toISOString(),
-		end: rangeEnd.toISOString(),
-	});
+	const { data: calendarBlocks = [] } = useCalendarBlocks(
+		userId ?? "",
+		dateRange,
+	);
 
 	const { data: googleEvents = [], refetch: refetchGoogle } = useQuery({
 		queryKey: ["google-events", userId],

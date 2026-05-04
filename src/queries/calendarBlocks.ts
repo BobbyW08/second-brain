@@ -15,6 +15,7 @@ export function useCalendarBlocks(
 	return useQuery({
 		queryKey: ["calendar-blocks", userId, dateRange.start, dateRange.end],
 		enabled: !!userId,
+		staleTime: 30_000,
 		queryFn: async () => {
 			const { data } = await supabase
 				.from("calendar_blocks")
