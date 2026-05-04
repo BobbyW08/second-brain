@@ -14,41 +14,6 @@ export type Database = {
 	};
 	public: {
 		Tables: {
-			ai_threads: {
-				Row: {
-					created_at: string;
-					id: string;
-					messages: Json;
-					title: string | null;
-					updated_at: string;
-					user_id: string;
-				};
-				Insert: {
-					created_at?: string;
-					id?: string;
-					messages?: Json;
-					title?: string | null;
-					updated_at?: string;
-					user_id: string;
-				};
-				Update: {
-					created_at?: string;
-					id?: string;
-					messages?: Json;
-					title?: string | null;
-					updated_at?: string;
-					user_id?: string;
-				};
-				Relationships: [
-					{
-						foreignKeyName: "ai_threads_user_id_fkey";
-						columns: ["user_id"];
-						isOneToOne: false;
-						referencedRelation: "profiles";
-						referencedColumns: ["id"];
-					},
-				];
-			};
 			ai_usage: {
 				Row: {
 					created_at: string;
@@ -185,60 +150,6 @@ export type Database = {
 						columns: ["user_id"];
 						isOneToOne: false;
 						referencedRelation: "profiles";
-						referencedColumns: ["id"];
-					},
-				];
-			};
-			event_mappings: {
-				Row: {
-					id: string;
-					user_id: string;
-					local_block_id: string | null;
-					google_event_id: string;
-					google_calendar_id: string;
-					sync_cluster_id: string;
-					content_hash: string | null;
-					origin: "local" | "google";
-					last_synced_at: string | null;
-					created_at: string;
-				};
-				Insert: {
-					id?: string;
-					user_id: string;
-					local_block_id?: string | null;
-					google_event_id: string;
-					google_calendar_id?: string;
-					sync_cluster_id?: string;
-					content_hash?: string | null;
-					origin: "local" | "google";
-					last_synced_at?: string | null;
-					created_at?: string;
-				};
-				Update: {
-					id?: string;
-					user_id?: string;
-					local_block_id?: string | null;
-					google_event_id?: string;
-					google_calendar_id?: string;
-					sync_cluster_id?: string;
-					content_hash?: string | null;
-					origin?: "local" | "google";
-					last_synced_at?: string | null;
-					created_at?: string;
-				};
-				Relationships: [
-					{
-						foreignKeyName: "event_mappings_user_id_fkey";
-						columns: ["user_id"];
-						isOneToOne: false;
-						referencedRelation: "profiles";
-						referencedColumns: ["id"];
-					},
-					{
-						foreignKeyName: "event_mappings_local_block_id_fkey";
-						columns: ["local_block_id"];
-						isOneToOne: false;
-						referencedRelation: "calendar_blocks";
 						referencedColumns: ["id"];
 					},
 				];
@@ -484,19 +395,13 @@ export type Database = {
 					completed_at: string | null;
 					created_at: string;
 					description: string | null;
-					due_at: string | null;
-					end_time: string | null;
-					google_event_id: string | null;
 					id: string;
 					labels: string[] | null;
 					location: string | null;
 					notes: Json | null;
-					parent_task_id: string | null;
 					position: number | null;
 					priority: string;
 					recurring: string | null;
-					short_id: string | null;
-					start_time: string | null;
 					status: string;
 					title: string;
 					updated_at: string;
@@ -510,19 +415,13 @@ export type Database = {
 					completed_at?: string | null;
 					created_at?: string;
 					description?: string | null;
-					due_at?: string | null;
-					end_time?: string | null;
-					google_event_id?: string | null;
 					id?: string;
 					labels?: string[] | null;
 					location?: string | null;
 					notes?: Json | null;
-					parent_task_id?: string | null;
 					position?: number | null;
 					priority: string;
 					recurring?: string | null;
-					short_id?: string | null;
-					start_time?: string | null;
 					status?: string;
 					title: string;
 					updated_at?: string;
@@ -536,19 +435,13 @@ export type Database = {
 					completed_at?: string | null;
 					created_at?: string;
 					description?: string | null;
-					due_at?: string | null;
-					end_time?: string | null;
-					google_event_id?: string | null;
 					id?: string;
 					labels?: string[] | null;
 					location?: string | null;
 					notes?: Json | null;
-					parent_task_id?: string | null;
 					position?: number | null;
 					priority?: string;
 					recurring?: string | null;
-					short_id?: string | null;
-					start_time?: string | null;
 					status?: string;
 					title?: string;
 					updated_at?: string;
