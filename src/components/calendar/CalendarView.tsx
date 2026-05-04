@@ -69,19 +69,23 @@ export function CalendarView() {
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 
-	// Use date at component mount as stable reference (only recalc if today's date string changes)
+	// Stable day-only date strings to prevent queryKey churn
+	// (full ISO timestamps change with every render due to time precision)
 	const dateRange = useMemo(() => {
 		const now = new Date();
-		const year = now.getFullYear();
-		const month = now.getMonth();
-		const date = now.getDate();
+		const pad = (n: number) => String(n).padStart(2, "0");
+		const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+			now.getDate(),
+		)}`;
 
-		const rangeStart = new Date(year, month, date - 14);
-		const rangeEnd = new Date(year, month, date + 30);
+		const start = new Date(today);
+		start.setDate(start.getDate() - 14);
+		const end = new Date(today);
+		end.setDate(end.getDate() + 30);
 
 		return {
-			start: rangeStart.toISOString(),
-			end: rangeEnd.toISOString(),
+			start: start.toISOString().split("T")[0],
+			end: end.toISOString().split("T")[0],
 		};
 	}, []);
 
