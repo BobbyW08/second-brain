@@ -10,7 +10,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
@@ -69,17 +69,19 @@ export function CalendarView() {
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 
-	const dateRange = useMemo(() => {
+	// Calculate date range dynamically (cheap operation, no memoization needed)
+	const dateRange = (() => {
 		const today = new Date();
+		today.setHours(0, 0, 0, 0);
 		const rangeStart = new Date(today);
 		rangeStart.setDate(today.getDate() - 14);
 		const rangeEnd = new Date(today);
-		rangeEnd.setDate(today.getDate() + 14);
+		rangeEnd.setDate(today.getDate() + 30);
 		return {
 			start: rangeStart.toISOString(),
 			end: rangeEnd.toISOString(),
 		};
-	}, []);
+	})();
 
 	const { data: calendarBlocks = [] } = useCalendarBlocks(
 		userId ?? "",
@@ -122,7 +124,9 @@ export function CalendarView() {
 		},
 		onSuccess: () => {
 			toast.success("Synced");
-			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			queryClient.invalidateQueries({
+				queryKey: ["calendar-blocks", userId],
+			});
 			refetchGoogle();
 		},
 		onError: (err: Error) => {
@@ -222,7 +226,7 @@ export function CalendarView() {
 			}
 		}
 
-		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks", userId] });
 		queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 		setSidePanelBlockId(newBlock.id);
 	};
@@ -278,7 +282,7 @@ export function CalendarView() {
 			}
 		}
 
-		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks", userId] });
 	};
 
 	const handleEventResize = async (info: EventChangeArg) => {
@@ -331,7 +335,7 @@ export function CalendarView() {
 			}
 		}
 
-		queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+		queryClient.invalidateQueries({ queryKey: ["calendar-blocks", userId] });
 	};
 
 	const handleEventClick = (info: EventClickArg) => {
@@ -368,7 +372,7 @@ export function CalendarView() {
 				.eq("user_id", userId)
 				.throwOnError();
 
-			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks", userId] });
 			toast.success("Event updated");
 		} catch (_error) {
 			toast.error("Failed to update recurring event");
@@ -402,7 +406,7 @@ export function CalendarView() {
 					.throwOnError();
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["calendar-blocks"] });
+			queryClient.invalidateQueries({ queryKey: ["calendar-blocks", userId] });
 			queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
 			toast.success("Event removed from calendar");
 		} catch (_error) {
