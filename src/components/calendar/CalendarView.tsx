@@ -10,7 +10,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCalendarBlocks } from "@/queries/calendarBlocks";
@@ -69,19 +69,21 @@ export function CalendarView() {
 
 	const calendarRef = useRef<FullCalendar | null>(null);
 
-	// Calculate date range dynamically (cheap operation, no memoization needed)
-	const dateRange = (() => {
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		const rangeStart = new Date(today);
-		rangeStart.setDate(today.getDate() - 14);
-		const rangeEnd = new Date(today);
-		rangeEnd.setDate(today.getDate() + 30);
+	// Use date at component mount as stable reference (only recalc if today's date string changes)
+	const dateRange = useMemo(() => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = now.getMonth();
+		const date = now.getDate();
+
+		const rangeStart = new Date(year, month, date - 14);
+		const rangeEnd = new Date(year, month, date + 30);
+
 		return {
 			start: rangeStart.toISOString(),
 			end: rangeEnd.toISOString(),
 		};
-	})();
+	}, []);
 
 	const { data: calendarBlocks = [] } = useCalendarBlocks(
 		userId ?? "",
