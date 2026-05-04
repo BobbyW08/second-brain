@@ -54,11 +54,7 @@ export const refreshGoogleTokenIfNeeded = createServerFn({ method: "POST" })
 			.single()
 			.throwOnError();
 
-		if (!profile?.google_refresh_token) {
-			throw new Error("No Google refresh token available");
-		}
-
-		// Check if token is expired or expires within 5 minutes
+		// Check if we have a valid access token
 		const expiry = profile.google_token_expiry
 			? new Date(profile.google_token_expiry)
 			: null;
@@ -68,7 +64,13 @@ export const refreshGoogleTokenIfNeeded = createServerFn({ method: "POST" })
 			return { access_token: profile.google_access_token as string };
 		}
 
-		// Token expired or expiring soon — refresh
+		// Token expired or expiring soon — try to refresh
+		if (!profile?.google_refresh_token) {
+			throw new Error(
+				"Google token expired and no refresh token available. Please reconnect your Google Calendar in settings.",
+			);
+		}
+
 		const clientId = process.env.GOOGLE_CLIENT_ID;
 		const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 

@@ -44,12 +44,14 @@ function AuthCallbackPage() {
 				}
 			}
 
-			if (provider_refresh_token) {
+			if (provider_token) {
 				await supabase
 					.from("profiles")
 					.update({
 						google_access_token: provider_token,
-						google_refresh_token: provider_refresh_token,
+						...(provider_refresh_token && {
+							google_refresh_token: provider_refresh_token,
+						}),
 						google_token_expiry: new Date(
 							Date.now() + 3600 * 1000,
 						).toISOString(),
