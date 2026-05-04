@@ -380,6 +380,7 @@ export function SettingsPage() {
 													access_type: "offline",
 													prompt: "consent",
 												},
+												redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
 											},
 										})
 									}
