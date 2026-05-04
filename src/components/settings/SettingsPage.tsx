@@ -198,9 +198,22 @@ export function SettingsPage() {
 							)}
 						/>
 
-						<Button type="submit" disabled={isUpdating}>
-							{isUpdating ? "Saving..." : "Save profile"}
-						</Button>
+						<div className="flex gap-2">
+							<Button type="submit" disabled={isUpdating}>
+								{isUpdating ? "Saving..." : "Save profile"}
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => {
+									supabase.auth.signOut().then(() => {
+										navigate({ to: "/login" });
+									});
+								}}
+							>
+								Sign out
+							</Button>
+						</div>
 					</form>
 				</Form>
 
